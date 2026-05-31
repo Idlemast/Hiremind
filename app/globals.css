@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+/* ── Color palette — exact match from /raw prototypes ─────────────────── */
+@theme {
+  --color-surface-tint: #3755c3;
+  --color-surface-container-low: #f4f2fc;
+  --color-error: #ba1a1a;
+  --color-on-tertiary-fixed: #191c1e;
+  --color-outline: #757684;
+  --color-on-primary-container: #a8b8ff;
+  --color-secondary: #505f76;
+  --color-on-surface: #1a1b22;
+  --color-error-container: #ffdad6;
+  --color-on-surface-variant: #444653;
+  --color-tertiary-fixed: #e0e3e5;
+  --color-inverse-surface: #2f3037;
+  --color-secondary-fixed-dim: #b7c8e1;
+  --color-on-tertiary: #ffffff;
+  --color-on-primary: #ffffff;
+  --color-on-secondary-container: #54647a;
+  --color-primary-fixed: #dde1ff;
+  --color-surface-container-high: #e8e7f1;
+  --color-on-primary-fixed: #001453;
+  --color-on-error-container: #93000a;
+  --color-on-primary-fixed-variant: #173bab;
+  --color-inverse-on-surface: #f1f0fa;
+  --color-tertiary: #323537;
+  --color-background: #fbf8ff;
+  --color-surface-container: #eeedf7;
+  --color-primary: #00288e;
+  --color-outline-variant: #c4c5d5;
+  --color-primary-container: #1e40af;
+  --color-surface-container-lowest: #ffffff;
+  --color-secondary-container: #d0e1fb;
+  --color-inverse-primary: #b8c4ff;
+  --color-surface-container-highest: #e3e1eb;
+  --color-tertiary-container: #484c4e;
+  --color-on-error: #ffffff;
+  --color-primary-fixed-dim: #b8c4ff;
+  --color-surface-variant: #e3e1eb;
+  --color-on-secondary-fixed-variant: #38485d;
+  --color-secondary-fixed: #d3e4fe;
+  --color-on-tertiary-fixed-variant: #444749;
+  --color-on-secondary: #ffffff;
+  --color-surface-dim: #dad9e3;
+  --color-on-background: #1a1b22;
+  --color-surface: #fbf8ff;
+  --color-on-secondary-fixed: #0b1c30;
+  --color-tertiary-fixed-dim: #c4c7c9;
+  --color-surface-bright: #fbf8ff;
+  --color-on-tertiary-container: #b9bcbe;
+
+  /* Border radius — from prototype tailwind config (exact values) */
+  --radius: 0.125rem;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.5rem;
+  --radius-full: 0.75rem;
+
+  /* Spacing — named tokens from prototype config */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 40px;
+  --spacing-container-margin: 32px;
+  --spacing-gutter: 20px;
+}
+
+/* Font families — reference Next.js runtime CSS variables */
+@theme inline {
+  --font-h1: var(--font-manrope);
+  --font-h2: var(--font-manrope);
+  --font-h3: var(--font-manrope);
+  --font-body-lg: var(--font-inter);
+  --font-body-md: var(--font-inter);
+  --font-body-sm: var(--font-inter);
+  --font-label-caps: var(--font-inter);
+  --font-data-num: var(--font-inter);
+}
+
+/* Typography scale — from prototype fontSize config */
+@layer utilities {
+  .text-h1 {
+    font-size: 2rem;
+    line-height: 2.5rem;
+    letter-spacing: -0.02em;
+  }
+  .text-h2 {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    letter-spacing: -0.01em;
+  }
+  .text-h3 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    letter-spacing: 0em;
+  }
+  .text-body-lg {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+  }
+  .text-body-md {
+    font-size: 1rem;
+    line-height: 1.5rem;
+  }
+  .text-body-sm {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+  .text-label-caps {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    letter-spacing: 0.05em;
+  }
+  .text-data-num {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+}
+
+/* Base styles */
+body {
+  background-color: #f8fafc;
+  color: #1a1b22;
+  font-family: var(--font-inter, ui-sans-serif, system-ui, sans-serif);
+}
+
+/* Material Symbols icon font settings */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Tonal card — white surface with subtle border and hover accent */
+.tonal-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease-in-out;
+}
+.tonal-card:hover {
+  border-color: #3755c3;
+}
+
+/* Status ribbon — 4px left-edge color indicator on cards */
+.status-ribbon {
+  width: 4px;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+}

@@ -88,13 +88,13 @@ export default async function CandidateProfilePage({
         <div className="col-span-12 lg:col-span-4 bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex flex-col justify-between">
           <div>
             <h3 className="font-label-caps text-label-caps text-slate-400 mb-md uppercase tracking-wider">Hiring Stage</h3>
-            <div className="flex mb-2 items-center justify-between">
-              <span className="text-xs font-semibold py-1 px-2 uppercase rounded-full text-emerald-600 bg-emerald-100">
+            <div className="flex mb-sm items-center justify-between">
+              <span className="text-label-caps font-semibold py-1 px-2 uppercase rounded-full text-emerald-600 bg-emerald-100">
                 Profile Screening
               </span>
-              <span className="text-xs font-semibold text-emerald-600">{stageProgress}%</span>
+              <span className="text-label-caps font-semibold text-emerald-600">{stageProgress}%</span>
             </div>
-            <div className="overflow-hidden h-2 mb-4 rounded bg-emerald-100">
+            <div className="overflow-hidden h-1.5 mb-md rounded-full bg-emerald-100">
               <div className="h-full bg-emerald-500" style={{ width: `${stageProgress}%` }} />
             </div>
           </div>
@@ -190,7 +190,7 @@ export default async function CandidateProfilePage({
                 </div>
               </div>
             </div>
-            <button className="w-full mt-lg py-3 border-2 border-primary text-primary font-bold rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
+            <button className="w-full mt-lg py-3 border-2 border-primary text-primary font-bold rounded-lg hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2">
               <span className="material-symbols-outlined text-sm">edit_note</span>
               Customize Templates
             </button>

@@ -32,7 +32,7 @@ export default function NewJobPage() {
   return (
     <div className="p-xl max-w-2xl mx-auto space-y-lg">
       <div>
-        <h2 className="font-h2 text-h2 text-blue-900">New Requisition</h2>
+        <h2 className="font-h2 text-h2 text-primary">New Requisition</h2>
         <p className="text-body-sm text-slate-500 mt-1">
           Define the role and its requirements — the triage engine will use them to score incoming candidates.
         </p>
@@ -128,7 +128,7 @@ export default function NewJobPage() {
                 <div className={`w-9 h-9 rounded flex items-center justify-center ${opt.bg}`}>
                   <span className="material-symbols-outlined text-lg">{opt.value}</span>
                 </div>
-                <span className="text-[11px] text-slate-500 font-medium">{opt.label}</span>
+                <span className="text-label-caps text-slate-500 font-medium">{opt.label}</span>
               </label>
             ))}
           </div>

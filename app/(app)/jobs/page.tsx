@@ -4,7 +4,7 @@ export default async function JobsPage() {
   const jobs = await getJobs();
 
   return (
-    <div className="p-8 space-y-xl">
+    <div className="p-xl space-y-xl">
       <div className="flex items-center justify-between">
         <p className="text-body-sm text-slate-500">{jobs.length} active requisitions</p>
         <a
@@ -34,7 +34,7 @@ export default async function JobsPage() {
               </div>
               <div>
                 <p className="font-h3 text-body-md font-bold text-slate-900">{job.title}</p>
-                <p className="text-xs text-slate-500">{job.department} · {job.location}</p>
+                <p className="text-label-caps text-slate-500">{job.department} · {job.location}</p>
               </div>
             </div>
 
@@ -51,14 +51,14 @@ export default async function JobsPage() {
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
               </div>
-              <div className="flex justify-between mt-2">
-                <span className="text-[10px] font-bold text-slate-400">STAGE: {job.stage}</span>
-                <span className="text-[10px] font-bold text-emerald-600">{job.progress}% COMPLETE</span>
+              <div className="flex justify-between mt-sm">
+                <span className="text-label-caps font-bold text-slate-400 uppercase">STAGE: {job.stage}</span>
+                <span className="text-label-caps font-bold text-emerald-600 uppercase">{job.progress}% COMPLETE</span>
               </div>
             </div>
 
             <div className="col-span-2 text-right">
-              <button className="text-primary font-bold text-sm hover:text-blue-800 flex items-center gap-1 ml-auto">
+              <button className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
                 Open Dashboard
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </button>

@@ -123,8 +123,8 @@
 
 /* Base styles */
 body {
-  background-color: #f8fafc;
-  color: #1a1b22;
+  background-color: var(--color-background);
+  color: var(--color-on-background);
   font-family: var(--font-inter, ui-sans-serif, system-ui, sans-serif);
 }
 
@@ -141,7 +141,7 @@ body {
   transition: border-color 0.2s ease-in-out;
 }
 .tonal-card:hover {
-  border-color: #3755c3;
+  border-color: var(--color-surface-tint);
 }
 
 /* Status ribbon — 4px left-edge color indicator on cards */

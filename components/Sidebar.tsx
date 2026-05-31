@@ -19,7 +19,7 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="h-screen w-64 border-r border-slate-200 bg-slate-50 flex flex-col py-6 px-4 font-h1 antialiased sticky top-0 shrink-0">
+    <aside className="h-screen w-64 border-r border-slate-200 bg-slate-50 flex flex-col py-6 px-4 antialiased sticky top-0 shrink-0">
 
       {/* Logo */}
       <div className="flex items-center gap-3 px-2 mb-10">
@@ -27,8 +27,8 @@ export default function Sidebar() {
           <span className="material-symbols-outlined text-sm">water_drop</span>
         </div>
         <div>
-          <h1 className="text-lg font-bold tracking-tight text-blue-900">HireMind</h1>
-          <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">Decision Support</p>
+          <h1 className="font-h1 text-lg font-bold tracking-tight text-primary">HireMind</h1>
+          <p className="text-label-caps text-slate-500 font-medium tracking-widest uppercase">Decision Support</p>
         </div>
       </div>
 
@@ -43,8 +43,8 @@ export default function Sidebar() {
               className={[
                 "flex items-center gap-3 px-3 py-2.5 text-sm duration-200 ease-in-out",
                 active
-                  ? "text-blue-800 font-semibold border-r-2 border-blue-800 bg-blue-50/50"
-                  : "text-slate-500 hover:text-blue-700 hover:bg-slate-100 transition-colors",
+                  ? "text-primary font-semibold border-r-2 border-primary bg-blue-50/50"
+                  : "text-slate-500 hover:text-primary hover:bg-slate-100 transition-colors",
               ].join(" ")}
             >
               <span className="material-symbols-outlined">{icon}</span>

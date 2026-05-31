@@ -15,35 +15,31 @@ export default async function DashboardPage() {
     : 0;
 
   return (
-    <div className="p-8 space-y-xl">
+    <div className="p-xl space-y-xl">
 
-      {/* KPI Stats */}
+      {/* KPI Stats — direct structure matching prototype (flex justify-between must be on same level as children) */}
       <section className="grid grid-cols-1 md:grid-cols-4 gap-lg">
-        <Card ribbon="bg-blue-500" className="flex flex-col justify-between h-32">
-          <p className="font-label-caps text-label-caps text-secondary uppercase">Active Reqs</p>
-          <h2 className="font-h1 text-h1 text-primary">{jobs.length}</h2>
-        </Card>
-        <Card ribbon="bg-emerald-500" className="flex flex-col justify-between h-32">
-          <p className="font-label-caps text-label-caps text-secondary uppercase">Decision Clarity</p>
-          <div className="flex items-baseline gap-2">
-            <h2 className="font-h1 text-h1 text-primary">{clarity}%</h2>
-            <span className="text-emerald-600 text-xs font-bold">{strong} strong fits</span>
+        {[
+          { ribbon: "bg-blue-500",   label: "Active Reqs",     value: jobs.length,     sub: null },
+          { ribbon: "bg-emerald-500",label: "Decision Clarity", value: `${clarity}%`,  sub: `${strong} strong fits` },
+          { ribbon: "bg-amber-500",  label: "Pending Reviews",  value: pending,         sub: null },
+          { ribbon: "bg-slate-400",  label: "Avg. Days Open",   value: `${avgDays}d`,  sub: null },
+        ].map(({ ribbon, label, value, sub }) => (
+          <div key={label} className="tonal-card rounded-xl p-lg relative overflow-hidden flex flex-col justify-between h-32">
+            <div className={`status-ribbon ${ribbon}`} />
+            <p className="font-label-caps text-label-caps text-secondary uppercase">{label}</p>
+            <div className="flex items-baseline gap-2">
+              <h2 className="font-h1 text-h1 text-primary">{value}</h2>
+              {sub && <span className="text-emerald-600 text-xs font-bold">{sub}</span>}
+            </div>
           </div>
-        </Card>
-        <Card ribbon="bg-amber-500" className="flex flex-col justify-between h-32">
-          <p className="font-label-caps text-label-caps text-secondary uppercase">Pending Reviews</p>
-          <h2 className="font-h1 text-h1 text-primary">{pending}</h2>
-        </Card>
-        <Card ribbon="bg-slate-400" className="flex flex-col justify-between h-32">
-          <p className="font-label-caps text-label-caps text-secondary uppercase">Avg. Days Open</p>
-          <h2 className="font-h1 text-h1 text-primary">{avgDays}d</h2>
-        </Card>
+        ))}
       </section>
 
       {/* Priority for Review */}
       <section>
         <div className="flex items-center justify-between mb-md">
-          <h3 className="font-h3 text-h3 text-blue-900">Priority for Review</h3>
+          <h3 className="font-h3 text-h3 text-on-surface">Priority for Review</h3>
           <a className="text-sm font-semibold text-primary hover:underline" href="/triage">
             View all candidates
           </a>
@@ -58,14 +54,14 @@ export default async function DashboardPage() {
               <div className="col-span-12 lg:col-span-8 tonal-card rounded-xl p-lg flex flex-col md:flex-row gap-lg relative">
                 <div className="status-ribbon bg-primary" />
                 <div className="w-full md:w-1/3 space-y-md">
-                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-label-caps font-bold uppercase">
                     Critical Signal
                   </span>
                   <h4 className="font-h2 text-h2 leading-tight">{top.job.title}</h4>
                   <p className="text-body-sm text-secondary">
                     {top.name} matches {top.score}% of core requirements.
                   </p>
-                  <div className="pt-4">
+                  <div className="pt-md">
                     <a
                       href={`/candidates/${top.id}`}
                       className="inline-block bg-primary text-white px-6 py-2 rounded-lg font-semibold text-sm hover:bg-primary-container transition-all"
@@ -76,7 +72,7 @@ export default async function DashboardPage() {
                 </div>
                 <div className="flex-1 h-48 md:h-auto rounded-lg bg-slate-100 flex items-center justify-center">
                   <div className="bg-white/90 p-lg rounded-xl shadow-xl border border-white/50 text-center">
-                    <p className="font-label-caps text-primary text-[10px] mb-2">MATCH SCORE</p>
+                    <p className="font-label-caps text-label-caps text-primary mb-2">MATCH SCORE</p>
                     <div className="w-24 h-24 rounded-xl border-4 border-emerald-500 mx-auto flex items-center justify-center mb-md">
                       <span className="font-h2 text-h2 text-primary">{top.score}</span>
                     </div>
@@ -100,7 +96,7 @@ export default async function DashboardPage() {
                 <div className="space-y-sm">
                   <div className="flex justify-between items-start">
                     <h4 className="font-h3 text-h3 leading-tight">{stalled.title}</h4>
-                    <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">
+                    <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-label-caps font-bold uppercase">
                       {stalled.stage}
                     </span>
                   </div>
@@ -125,7 +121,7 @@ export default async function DashboardPage() {
       {/* Active Requisitions */}
       <section>
         <div className="flex items-center justify-between mb-md">
-          <h3 className="font-h3 text-h3 text-blue-900">Active Requisitions</h3>
+          <h3 className="font-h3 text-h3 text-on-surface">Active Requisitions</h3>
           <a href="/jobs" className="text-sm font-semibold text-primary hover:underline">
             View all
           </a>
@@ -148,7 +144,7 @@ export default async function DashboardPage() {
                 </div>
                 <div>
                   <p className="font-h3 text-body-md font-bold text-slate-900">{job.title}</p>
-                  <p className="text-xs text-slate-500">{job.department} · {job.location}</p>
+                  <p className="text-label-caps text-slate-500">{job.department} · {job.location}</p>
                 </div>
               </div>
               <div className="col-span-2 text-center">
@@ -161,13 +157,13 @@ export default async function DashboardPage() {
                 <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                   <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
                 </div>
-                <div className="flex justify-between mt-2">
-                  <span className="text-[10px] font-bold text-slate-400">STAGE: {job.stage}</span>
-                  <span className="text-[10px] font-bold text-emerald-600">{job.progress}% COMPLETE</span>
+                <div className="flex justify-between mt-sm">
+                  <span className="text-label-caps font-bold text-slate-400 uppercase">STAGE: {job.stage}</span>
+                  <span className="text-label-caps font-bold text-emerald-600 uppercase">{job.progress}% COMPLETE</span>
                 </div>
               </div>
               <div className="col-span-2 text-right">
-                <a href="/triage" className="text-primary font-bold text-sm hover:text-blue-800 flex items-center gap-1 ml-auto">
+                <a href="/triage" className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
                   Open Triage
                   <span className="material-symbols-outlined text-sm">arrow_forward</span>
                 </a>

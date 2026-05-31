@@ -71,7 +71,7 @@ export default function TagEditor({ candidateId, initialTags }: Props) {
         {tags.map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-bold group"
+            className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-label-caps font-bold group"
           >
             {tag}
             <button
@@ -80,13 +80,13 @@ export default function TagEditor({ candidateId, initialTags }: Props) {
               className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-error"
               aria-label={`Remove ${tag}`}
             >
-              <span className="material-symbols-outlined text-[12px]">close</span>
+              <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>close</span>
             </button>
           </span>
         ))}
         {saved && (
-          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600">
-            <span className="material-symbols-outlined text-[12px]">check</span>
+          <span className="inline-flex items-center gap-1 text-label-caps text-emerald-600">
+            <span className="material-symbols-outlined" style={{ fontSize: "12px" }}>check</span>
             Saved
           </span>
         )}
@@ -104,13 +104,13 @@ export default function TagEditor({ candidateId, initialTags }: Props) {
             onBlur={() => setTimeout(() => setOpen(false), 150)}
             onKeyDown={handleKeyDown}
             placeholder="Add tag…"
-            className="w-40 border border-outline-variant rounded px-2.5 py-1 text-[11px] font-bold text-on-surface bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary placeholder:font-normal placeholder:text-slate-400"
+            className="w-40 border border-outline-variant rounded px-2.5 py-1 text-label-caps font-bold text-on-surface bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary placeholder:font-normal placeholder:text-slate-400"
           />
           {input.trim() && (
             <button
               type="button"
               onClick={() => addTag(input)}
-              className="text-[11px] font-bold text-primary hover:underline"
+              className="text-label-caps font-bold text-primary hover:underline"
             >
               Add
             </button>
@@ -125,7 +125,7 @@ export default function TagEditor({ candidateId, initialTags }: Props) {
                 key={s}
                 type="button"
                 onMouseDown={() => addTag(s)}
-                className="w-full text-left px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-surface-container-low transition-colors"
+                className="w-full text-left px-3 py-1.5 text-label-caps font-bold text-slate-700 hover:bg-surface-container-low transition-colors"
               >
                 {s}
               </button>

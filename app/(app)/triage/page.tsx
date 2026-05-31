@@ -41,8 +41,8 @@ export default async function TriagePage() {
   }));
 
   return (
-    <div className="p-8 flex gap-8">
-      <section className="flex-1 space-y-8">
+    <div className="p-xl flex gap-xl">
+      <section className="flex-1 space-y-xl">
 
         {/* Filter chips + CTA */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -66,21 +66,21 @@ export default async function TriagePage() {
         </div>
 
         {/* Candidate groups */}
-        <div className="space-y-10">
+        <div className="space-y-xl">
           {groups.filter((g) => g.items.length > 0).map((group) => (
             <div key={group.fit} className={group.opacity}>
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-md">
                 <div className={`w-1 h-6 rounded-full ${group.bar}`} />
                 <h3 className="font-h3 text-h3">{group.label}</h3>
                 <span className="text-slate-400 font-body-sm ml-2">{group.subtitle}</span>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-md">
                 {group.items.map((candidate) => (
                   <Link
                     key={candidate.id}
                     href={`/candidates/${candidate.id}`}
-                    className={`bg-white border border-slate-200 p-6 rounded-xl flex items-center justify-between transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:border-primary`}
+                    className={`bg-white border border-slate-200 p-6 rounded-xl flex items-center justify-between transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:shadow-md`}
                   >
                     <div className="flex items-center gap-4 w-1/4">
                       <div className="w-12 h-12 rounded-full bg-slate-100 flex-shrink-0 flex items-center justify-center text-slate-500 font-bold">
@@ -122,25 +122,25 @@ export default async function TriagePage() {
       </section>
 
       {/* Sidebar */}
-      <aside className="w-80 space-y-6 sticky top-24 h-fit shrink-0">
-        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-          <h4 className="font-label-caps text-label-caps text-primary uppercase tracking-widest mb-4">
+      <aside className="w-80 space-y-lg sticky top-24 h-fit shrink-0">
+        <div className="bg-white border border-slate-200 rounded-xl p-lg shadow-sm">
+          <h4 className="font-label-caps text-label-caps text-primary uppercase tracking-widest mb-md">
             Requirement Signals
           </h4>
-          <div className="space-y-4">
+          <div className="space-y-md">
             <div className="p-3 bg-slate-50 rounded-lg">
               <p className="text-body-sm font-semibold mb-1">Mandatory Competencies</p>
               <div className="flex flex-wrap gap-2">
                 {["Design Systems", "Complex SaaS", "Stakeholder Mgmt"].map((s) => (
-                  <span key={s} className="px-2 py-1 bg-white border border-slate-200 text-slate-600 text-[11px] rounded">{s}</span>
+                  <span key={s} className="px-2 py-1 bg-white border border-slate-200 text-slate-600 text-label-caps rounded">{s}</span>
                 ))}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-blue-900 text-white rounded-xl p-6 shadow-lg">
-          <div className="flex items-center gap-2 mb-3">
+        <div className="bg-blue-900 text-white rounded-xl p-lg shadow-lg">
+          <div className="flex items-center gap-2 mb-sm">
             <span className="material-symbols-outlined text-blue-300">auto_awesome</span>
             <h4 className="font-h3 text-body-md font-bold">AI Insight</h4>
           </div>

@@ -7,7 +7,7 @@ export default async function ImportCandidatePage() {
   return (
     <div className="p-xl max-w-3xl mx-auto space-y-lg">
       <div>
-        <h2 className="font-h2 text-h2 text-blue-900">Import Candidate</h2>
+        <h2 className="font-h2 text-h2 text-primary">Import Candidate</h2>
         <p className="text-body-sm text-slate-500 mt-1">
           Fill in the profile below. Paste the CV text to auto-extract skills, or enter them manually.
         </p>

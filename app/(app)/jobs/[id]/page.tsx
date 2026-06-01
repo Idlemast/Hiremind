@@ -42,7 +42,7 @@ export default async function JobDetailPage({
   const weakCount    = candidates.filter((c) => c.fit === "weak").length;
 
   return (
-    <div className="p-xl max-w-6xl mx-auto space-y-xl">
+    <div className="p-4 lg:p-xl max-w-6xl mx-auto space-y-xl">
 
       {/* ── Header ────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-md">
@@ -104,7 +104,7 @@ export default async function JobDetailPage({
       </section>
 
       {/* ── Stats ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-md">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
         {[
           { label: "Candidats", value: candidates.length, icon: "group", color: "text-primary" },
           { label: "Strong Fit", value: strongCount, icon: "check_circle", color: "text-emerald-600" },

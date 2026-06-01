@@ -146,7 +146,7 @@ export default function ThresholdForm({
       </div>
 
       {/* ── Decision table ──────────────────────────────────── */}
-      <div className="border border-outline-variant rounded-xl overflow-hidden">
+      <div className="border border-outline-variant rounded-xl overflow-x-auto">
         <table className="w-full text-body-sm">
           <thead className="bg-slate-50 border-b border-slate-100">
             <tr>

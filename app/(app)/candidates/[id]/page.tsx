@@ -37,13 +37,13 @@ export default async function CandidateProfilePage({
   );
 
   return (
-    <div className="p-xl max-w-7xl mx-auto space-y-lg">
+    <div className="p-4 lg:p-xl max-w-7xl mx-auto space-y-lg">
 
       {/* ── Profile header ─────────────────────────────────────── */}
       <section className="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
         <div className="flex items-center gap-lg">
           <div className="relative shrink-0">
-            <div className="w-24 h-24 rounded-xl bg-primary flex items-center justify-center text-white text-3xl font-bold font-h1 border-4 border-white shadow-md">
+            <div className="w-16 h-16 lg:w-24 lg:h-24 rounded-xl bg-primary flex items-center justify-center text-white text-2xl lg:text-3xl font-bold font-h1 border-4 border-white shadow-md">
               {initials}
             </div>
             <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1 rounded-full border-2 border-white">

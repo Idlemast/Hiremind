@@ -22,7 +22,7 @@ export default async function JobsPage({
     : allJobs;
 
   return (
-    <div className="p-xl space-y-xl">
+    <div className="p-4 lg:p-xl space-y-xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <p className="text-body-sm text-slate-500">{jobs.length} active requisition{jobs.length !== 1 ? "s" : ""}</p>
@@ -38,7 +38,8 @@ export default async function JobsPage({
       </div>
 
       <div className="space-y-md">
-        <div className="grid grid-cols-12 px-lg text-slate-400">
+        {/* Table header — desktop only */}
+        <div className="hidden lg:grid grid-cols-12 px-lg text-slate-400">
           <div className="col-span-5 font-label-caps text-label-caps">ROLE &amp; DEPARTMENT</div>
           <div className="col-span-2 font-label-caps text-label-caps text-center">VOLUME</div>
           <div className="col-span-3 font-label-caps text-label-caps">HIRE PROGRESS</div>
@@ -47,48 +48,73 @@ export default async function JobsPage({
 
         {jobs.map((job) => {
           const stageName = job.stage;
-
           return (
-            <div key={job.id} className="tonal-card rounded-xl p-lg grid grid-cols-12 items-center relative overflow-hidden">
+            <div key={job.id} className="tonal-card rounded-xl p-lg relative overflow-hidden">
               <div className="status-ribbon bg-blue-500" />
 
-              <div className="col-span-5 flex items-center gap-4">
-                <div className={`w-10 h-10 rounded flex items-center justify-center ${job.iconBg}`}>
-                  <span className="material-symbols-outlined">{job.icon}</span>
-                </div>
-                <div>
-                  <p className="font-h3 text-body-md font-bold text-slate-900">{job.title}</p>
-                  <p className="text-label-caps text-slate-500">{job.department} · {job.location}</p>
-                </div>
-              </div>
-
-              <div className="col-span-2 text-center">
-                <div className="inline-flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                  <span className="material-symbols-outlined text-sm text-blue-600">group</span>
-                  <span className="text-sm font-bold text-slate-700">{job.candidates.length}</span>
-                </div>
-              </div>
-
-              <div className="col-span-3 pr-8">
-                <>
-                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-sm">
-                      <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
+              {/* Mobile card */}
+              <div className="lg:hidden space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-9 h-9 rounded flex items-center justify-center shrink-0 ${job.iconBg}`}>
+                      <span className="material-symbols-outlined text-base">{job.icon}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-label-caps font-bold text-slate-400 uppercase">{stageName}</span>
-                      <span className="text-label-caps font-bold text-emerald-600 uppercase">{job.progress}%</span>
+                    <div className="min-w-0">
+                      <p className="font-bold text-sm text-slate-900 truncate">{job.title}</p>
+                      <p className="text-label-caps text-slate-500 truncate">{job.department} · {job.location}</p>
                     </div>
-                  </>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="inline-flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
+                      <span className="material-symbols-outlined text-sm text-blue-600">group</span>
+                      <span className="text-xs font-bold text-slate-700">{job.candidates.length}</span>
+                    </div>
+                    <a href={`/jobs/${job.id}`} className="text-primary">
+                      <span className="material-symbols-outlined">arrow_forward</span>
+                    </a>
+                  </div>
+                </div>
+                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-label-caps text-slate-400 truncate max-w-[60%]">{stageName}</span>
+                  <span className="text-label-caps font-bold text-emerald-600">{job.progress}%</span>
+                </div>
               </div>
 
-              <div className="col-span-2 text-right">
-                <a
-                  href={`/jobs/${job.id}`}
-                  className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto"
-                >
-                  Ouvrir
-                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                </a>
+              {/* Desktop row */}
+              <div className="hidden lg:grid grid-cols-12 items-center">
+                <div className="col-span-5 flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded flex items-center justify-center ${job.iconBg}`}>
+                    <span className="material-symbols-outlined">{job.icon}</span>
+                  </div>
+                  <div>
+                    <p className="font-h3 text-body-md font-bold text-slate-900">{job.title}</p>
+                    <p className="text-label-caps text-slate-500">{job.department} · {job.location}</p>
+                  </div>
+                </div>
+                <div className="col-span-2 text-center">
+                  <div className="inline-flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                    <span className="material-symbols-outlined text-sm text-blue-600">group</span>
+                    <span className="text-sm font-bold text-slate-700">{job.candidates.length}</span>
+                  </div>
+                </div>
+                <div className="col-span-3 pr-8">
+                  <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-sm">
+                    <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-label-caps font-bold text-slate-400 truncate max-w-[60%]">{stageName}</span>
+                    <span className="text-label-caps font-bold text-emerald-600">{job.progress}%</span>
+                  </div>
+                </div>
+                <div className="col-span-2 text-right">
+                  <a href={`/jobs/${job.id}`} className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
+                    Ouvrir
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </a>
+                </div>
               </div>
             </div>
           );

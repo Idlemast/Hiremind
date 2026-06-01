@@ -15,11 +15,22 @@ const navDisabled = [
   { label: "Analytics", icon: "analytics" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="h-screen w-64 border-r border-slate-200 bg-slate-50 flex flex-col py-6 px-4 antialiased sticky top-0 shrink-0">
+    <aside className="h-screen w-64 border-r border-slate-200 bg-slate-50 flex flex-col py-6 px-4 antialiased shrink-0 relative">
+
+      {/* Mobile close button */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className="lg:hidden absolute top-4 right-4 p-1.5 rounded-full hover:bg-slate-200 transition-colors"
+          aria-label="Fermer le menu"
+        >
+          <span className="material-symbols-outlined text-slate-500 text-xl">close</span>
+        </button>
+      )}
 
       {/* Logo */}
       <div className="flex items-center gap-3 px-2 mb-10">

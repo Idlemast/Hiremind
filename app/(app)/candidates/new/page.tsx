@@ -5,7 +5,7 @@ export default async function ImportCandidatePage() {
   const jobs = await getJobs();
 
   return (
-    <div className="p-xl max-w-3xl mx-auto space-y-lg">
+    <div className="p-4 lg:p-xl max-w-3xl mx-auto space-y-lg">
       <div>
         <h2 className="font-h2 text-h2 text-primary">Import Candidate</h2>
         <p className="text-body-sm text-slate-500 mt-1">
@@ -42,7 +42,7 @@ export default async function ImportCandidatePage() {
         <div className="tonal-card rounded-xl p-lg space-y-md">
           <h3 className="font-h3 text-h3 text-on-surface">Profile</h3>
 
-          <div className="grid grid-cols-2 gap-md">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
             <Field label="Full Name *" name="name" placeholder="Marcus Holloway" required />
             <Field label="Email" name="email" placeholder="marcus@company.com" type="email" />
             <Field label="Current Role *" name="role" placeholder="Senior Product Designer" required />

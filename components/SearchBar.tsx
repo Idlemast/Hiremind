@@ -32,7 +32,7 @@ export default function SearchBar({
         defaultValue={defaultValue}
         onChange={handleChange}
         placeholder={placeholder}
-        className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white w-64"
+        className="pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-white w-full sm:w-64"
       />
     </div>
   );

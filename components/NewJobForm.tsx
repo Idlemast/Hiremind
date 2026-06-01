@@ -189,7 +189,7 @@ export default function NewJobForm({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-md">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-md">
             <div className="space-y-xs">
               <label className="font-label-caps text-label-caps text-slate-500 uppercase block">Department *</label>
               <input
@@ -220,7 +220,7 @@ export default function NewJobForm({
         {/* ── Icon ───────────────────────────────────────────── */}
         <div className="tonal-card rounded-xl p-lg space-y-md">
           <h3 className="font-h3 text-h3 text-on-surface">Icon</h3>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {ICON_OPTIONS.map((opt) => (
               <label
                 key={opt.value}

@@ -5,7 +5,7 @@ export default async function SettingsPage() {
   const thresholds = await getThresholds();
 
   return (
-    <div className="p-xl max-w-3xl space-y-xl">
+    <div className="p-4 lg:p-xl max-w-3xl space-y-xl">
       <div>
         <h2 className="font-h1 text-h1 text-on-surface">Paramètres</h2>
         <p className="text-body-sm text-slate-500 mt-1">

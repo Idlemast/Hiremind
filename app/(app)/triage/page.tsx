@@ -71,7 +71,7 @@ export default async function TriagePage({
   const requirements = (selectedJob?.requirements as string[] | null) ?? [];
 
   return (
-    <div className="p-xl flex gap-xl">
+    <div className="p-4 lg:p-xl flex flex-col lg:flex-row gap-xl">
       <section className="flex-1 space-y-xl min-w-0">
 
         {/* ── Job filter chips ───────────────────────────── */}
@@ -152,10 +152,11 @@ export default async function TriagePage({
                   <Link
                     key={candidate.id}
                     href={`/candidates/${candidate.id}`}
-                    className={`bg-white border border-slate-200 p-6 rounded-xl flex items-center justify-between transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:shadow-md`}
+                    className={`bg-white border border-slate-200 p-4 lg:p-6 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:shadow-md`}
                   >
-                    <div className="flex items-center gap-4 w-1/4 min-w-0">
-                      <div className="w-12 h-12 rounded-full bg-slate-100 flex-shrink-0 flex items-center justify-center text-slate-500 font-bold">
+                    {/* Name + role */}
+                    <div className="flex items-center gap-3 min-w-0 sm:w-1/3">
+                      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-slate-100 flex-shrink-0 flex items-center justify-center text-slate-500 font-bold text-sm">
                         {candidate.name.split(" ").map((n) => n[0]).join("")}
                       </div>
                       <div className="min-w-0">
@@ -169,25 +170,27 @@ export default async function TriagePage({
                       </div>
                     </div>
 
-                    <div className="flex-1 px-8 flex gap-2 flex-wrap">
+                    {/* Skills */}
+                    <div className="flex gap-2 flex-wrap sm:flex-1 sm:px-4">
                       {(candidate.skills as string[]).length > 0 ? (
                         (candidate.skills as string[]).slice(0, 3).map((skill) => (
-                          <span key={skill} className={`px-3 py-1 font-label-caps text-label-caps rounded-full ${group.chip}`}>
+                          <span key={skill} className={`px-2 py-0.5 font-label-caps text-label-caps rounded-full ${group.chip}`}>
                             {skill}
                           </span>
                         ))
                       ) : (
-                        <span className="text-body-sm text-slate-400">Limited experience detected.</span>
+                        <span className="text-body-sm text-slate-400">Limited experience.</span>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-12">
-                      <div className={`flex items-center gap-2 px-3 py-1 rounded-lg ${group.score}`}>
+                    {/* Score */}
+                    <div className="flex items-center gap-3 sm:gap-6 justify-between sm:justify-end">
+                      <div className={`flex items-center gap-1.5 px-3 py-1 rounded-lg ${group.score}`}>
                         <span className="material-symbols-outlined text-sm">bolt</span>
-                        <span className="font-label-caps text-label-caps">{candidate.score}% Clarity</span>
+                        <span className="font-label-caps text-label-caps">{candidate.score}%</span>
                       </div>
                       <span className="material-symbols-outlined text-slate-400">
-                        {candidate.fit === "weak" ? "visibility_off" : "more_vert"}
+                        {candidate.fit === "weak" ? "visibility_off" : "chevron_right"}
                       </span>
                     </div>
                   </Link>
@@ -199,7 +202,7 @@ export default async function TriagePage({
       </section>
 
       {/* ── Sidebar ────────────────────────────────────────── */}
-      <aside className="w-80 space-y-lg sticky top-24 h-fit shrink-0">
+      <aside className="w-full lg:w-80 space-y-lg lg:sticky lg:top-24 lg:h-fit shrink-0">
 
         {/* Job requirements */}
         <div className="bg-white border border-slate-200 rounded-xl p-lg shadow-sm">

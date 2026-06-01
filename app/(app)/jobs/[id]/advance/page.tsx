@@ -69,7 +69,7 @@ export default async function AdvanceStagePage({
   });
 
   return (
-    <div className="p-xl max-w-4xl mx-auto space-y-xl">
+    <div className="p-4 lg:p-xl max-w-4xl mx-auto space-y-xl">
 
       {/* ── Header ────────────────────────────────────────── */}
       <div className="flex items-center justify-between">

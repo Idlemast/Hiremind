@@ -214,6 +214,15 @@ export default function NewJobForm({
                 className="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-body-sm text-on-surface bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
+            <div className="space-y-xs sm:col-span-2">
+              <label className="font-label-caps text-label-caps text-slate-500 uppercase block">Budget salarial</label>
+              <input
+                type="text"
+                name="budget"
+                placeholder="ex. 55k€ – 70k€"
+                className="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-body-sm text-on-surface bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+            </div>
           </div>
         </div>
 

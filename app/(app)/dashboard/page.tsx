@@ -36,7 +36,25 @@ export default async function DashboardPage() {
         ))}
       </section>
 
+      {/* Empty state */}
+      {jobs.length === 0 && (
+        <div className="text-center py-xl bg-white border border-dashed border-slate-200 rounded-xl space-y-3 text-slate-400">
+          <span className="material-symbols-outlined text-5xl block">rocket_launch</span>
+          <p className="font-semibold text-on-surface text-body-lg">Bienvenue sur HireMind</p>
+          <p className="text-body-sm max-w-sm mx-auto">
+            Créez votre premier poste, puis importez des candidats pour commencer le triage automatique.
+          </p>
+          <div className="flex justify-center gap-3 pt-sm">
+            <a href="/jobs/new" className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary-container transition-colors shadow-sm">
+              <span className="material-symbols-outlined text-sm">add</span>
+              Créer un poste
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* Priority for Review */}
+      {jobs.length > 0 && (<>
       <section>
         <div className="flex items-center justify-between mb-md">
           <h3 className="font-h3 text-h3 text-on-surface">Priority for Review</h3>
@@ -117,8 +135,6 @@ export default async function DashboardPage() {
           })()}
         </div>
       </section>
-
-      {/* Active Requisitions */}
       <section>
         <div className="flex items-center justify-between mb-md">
           <h3 className="font-h3 text-h3 text-on-surface">Active Requisitions</h3>
@@ -200,6 +216,7 @@ export default async function DashboardPage() {
           ))}
         </div>
       </section>
+      </>)}
     </div>
   );
 }

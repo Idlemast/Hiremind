@@ -1,8 +1,12 @@
 import { getCandidateById, getThresholds } from "@/lib/db";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import TagEditor from "@/components/TagEditor";
 import CandidateNotes from "@/components/CandidateNotes";
-import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates, type Fit } from "@/lib/thresholds";
+import CandidateStageControl from "@/components/CandidateStageControl";
+import DeleteCandidateButton from "@/components/DeleteCandidateButton";
+import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates } from "@/lib/thresholds";
+import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
 
 export default async function CandidateProfilePage({
   params,
@@ -20,23 +24,27 @@ export default async function CandidateProfilePage({
   const gaps   = candidate.gaps   as string[];
   const tags   = candidate.tags   as string[];
 
-  const initials = candidate.name.split(" ").map((n) => n[0]).join("");
+  const initials   = candidate.name.split(" ").map((n) => n[0]).join("");
   const matchScore = candidate.score;
-  const stageProgress = 33;
-
-  // fitOverride takes precedence over the calculated fit
-  const validFits: Fit[] = ["strong", "medium", "weak"];
-  const rawOverride = candidate.fitOverride as string | null | undefined;
-  const fitOverride = rawOverride && validFits.includes(rawOverride as Fit)
-    ? rawOverride as Fit
-    : null;
-  const fit = fitOverride ?? scoreToFit(matchScore, thresholds);
-  const decision = fitToDecision(fit);
+  const fit        = scoreToFit(matchScore, thresholds);
+  const decision   = fitToDecision(fit);
   const decisionMeta = DECISION_META[decision];
+
+  // Stage tracking — per-candidate
+  const rawJobStages  = candidate.job.stages as string[] | null | undefined;
+  const jobStages     = rawJobStages?.length ? rawJobStages : DEFAULT_STAGES;
+  const stageIdx      = candidate.stageIndex ?? 0;
+  const currentStage  = jobStages[stageIdx] ?? jobStages[0];
+  const stageProgress = deriveProgress(stageIdx, jobStages.length);
+
+  // Salary vs budget
+  const jobBudget      = (candidate.job as any).budget as string | null | undefined;
+  const candidateSalary = candidate.salary;
+
   const templates = getCommTemplates(
     {
-      firstName: candidate.name.split(" ")[0],
-      jobTitle: candidate.job.title,
+      firstName:    candidate.name.split(" ")[0],
+      jobTitle:     candidate.job.title,
       gaps,
       matchedSkills: skills,
     },
@@ -44,7 +52,7 @@ export default async function CandidateProfilePage({
   );
 
   return (
-    <div className="p-4 lg:p-xl max-w-7xl mx-auto space-y-lg">
+    <div className="p-4 lg:p-xl max-w-7xl mx-auto space-y-lg animate-fade-in">
 
       {/* ── Profile header ─────────────────────────────────────── */}
       <section className="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
@@ -71,46 +79,44 @@ export default async function CandidateProfilePage({
                 </span>
                 {decisionMeta.label}
               </span>
-              {fitOverride && (
-                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-label-caps font-label-caps border border-slate-200">
-                  <span className="material-symbols-outlined text-sm leading-none">edit</span>
-                  Manuel
-                </span>
-              )}
             </div>
             <p className="font-body-lg text-body-lg text-on-surface-variant">
               {candidate.role} • {candidate.location}
             </p>
-            <div className="flex gap-md mt-sm">
+            <div className="flex gap-md mt-sm flex-wrap">
               <div className="flex items-center gap-xs text-slate-500">
                 <span className="material-symbols-outlined text-sm">work</span>
                 <span className="text-body-sm">{candidate.company}</span>
               </div>
-              {candidate.salary && (
+              {candidateSalary && (
                 <div className="flex items-center gap-xs text-slate-500">
-                  <span className="material-symbols-outlined text-sm">currency_exchange</span>
-                  <span className="text-body-sm">{candidate.salary}</span>
+                  <span className="material-symbols-outlined text-sm">payments</span>
+                  <span className="text-body-sm">{candidateSalary}</span>
+                  {jobBudget && (
+                    <span className="text-label-caps text-slate-400">
+                      / budget : {jobBudget}
+                    </span>
+                  )}
+                </div>
+              )}
+              {!candidateSalary && jobBudget && (
+                <div className="flex items-center gap-xs text-slate-400">
+                  <span className="material-symbols-outlined text-sm">payments</span>
+                  <span className="text-body-sm">Budget : {jobBudget}</span>
                 </div>
               )}
             </div>
           </div>
         </div>
-        <div className="flex gap-sm shrink-0">
-          <button className="px-6 py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors">
-            Archive
-          </button>
-          {decision !== "reject" && (
-            <button className="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary-container transition-colors shadow-md flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm">event</span>
-              Planifier l'entretien
-            </button>
-          )}
-          {decision === "reject" && (
-            <button className="px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors shadow-md flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm">cancel</span>
-              Envoyer le refus
-            </button>
-          )}
+        <div className="flex gap-sm shrink-0 flex-wrap">
+          <Link
+            href={`/candidates/${candidate.id}/edit`}
+            className="px-4 py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"
+          >
+            <span className="material-symbols-outlined text-sm">edit</span>
+            Modifier
+          </Link>
+          <DeleteCandidateButton candidateId={candidate.id} candidateName={candidate.name} />
         </div>
       </section>
 
@@ -130,23 +136,40 @@ export default async function CandidateProfilePage({
         </div>
 
         {/* Hiring Stage */}
-        <div className="col-span-12 lg:col-span-4 bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex flex-col justify-between">
+        <div className="col-span-12 lg:col-span-4 bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex flex-col justify-between gap-md">
           <div>
             <h3 className="font-label-caps text-label-caps text-slate-400 mb-md uppercase tracking-wider">Hiring Stage</h3>
             <div className="flex mb-sm items-center justify-between">
               <span className="text-label-caps font-semibold py-1 px-2 uppercase rounded-full text-emerald-600 bg-emerald-100">
-                Profile Screening
+                {currentStage}
               </span>
               <span className="text-label-caps font-semibold text-emerald-600">{stageProgress}%</span>
             </div>
             <div className="overflow-hidden h-1.5 mb-md rounded-full bg-emerald-100">
-              <div className="h-full bg-emerald-500" style={{ width: `${stageProgress}%` }} />
+              <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${stageProgress}%` }} />
             </div>
+            <CandidateStageControl
+              candidateId={candidate.id}
+              stageIndex={stageIdx}
+              stages={jobStages}
+            />
           </div>
           <div>
-            <h3 className="font-label-caps text-label-caps text-slate-400 uppercase tracking-wider mb-2">Job</h3>
-            <p className="text-body-sm font-semibold text-on-surface">{candidate.job.title}</p>
-            <p className="text-body-sm text-slate-500">{candidate.job.department}</p>
+            <h3 className="font-label-caps text-label-caps text-slate-400 uppercase tracking-wider mb-2">Poste</h3>
+            <Link href={`/jobs/${candidate.job.id}`} className="group">
+              <p className="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">{candidate.job.title}</p>
+              <p className="text-body-sm text-slate-500">{candidate.job.department}</p>
+            </Link>
+            {candidateSalary && jobBudget && (
+              <div className="mt-sm pt-sm border-t border-slate-100">
+                <p className="text-label-caps text-slate-400 uppercase tracking-wider mb-1">Prétentions vs Budget</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-body-sm font-semibold text-on-surface">{candidateSalary}</span>
+                  <span className="text-slate-300">→</span>
+                  <span className="text-body-sm text-slate-500">{jobBudget}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -158,13 +181,17 @@ export default async function CandidateProfilePage({
               <span className="material-symbols-outlined text-primary">verified</span>
               Top Match Skills
             </h3>
-            <div className="flex flex-wrap gap-sm">
-              {skills.map((skill) => (
-                <span key={skill} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-body-sm font-bold border border-blue-100">
-                  {skill}
-                </span>
-              ))}
-            </div>
+            {skills.length > 0 ? (
+              <div className="flex flex-wrap gap-sm">
+                {skills.map((skill) => (
+                  <span key={skill} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-body-sm font-bold border border-blue-100">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-body-sm text-slate-400">Aucune compétence extraite.</p>
+            )}
           </div>
 
           <div className="bg-white p-lg rounded-xl border border-outline-variant shadow-sm relative overflow-hidden">
@@ -183,7 +210,7 @@ export default async function CandidateProfilePage({
                 ))}
               </ul>
             ) : (
-              <p className="text-body-sm text-slate-400">No gaps identified.</p>
+              <p className="text-body-sm text-slate-400">Aucun gap identifié.</p>
             )}
           </div>
 
@@ -208,7 +235,7 @@ export default async function CandidateProfilePage({
           </div>
         </div>
 
-        {/* Comm Assistant + Tags */}
+        {/* Comm Assistant + Tags + Notes */}
         <aside className="col-span-12 lg:col-span-4 space-y-lg">
           <div className="bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
             <h3 className="font-h3 text-h3 mb-md flex items-center gap-sm">
@@ -216,7 +243,6 @@ export default async function CandidateProfilePage({
               Comm Assistant
             </h3>
 
-            {/* Decision banner */}
             <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border mb-lg ${decisionMeta.badge}`}>
               <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
                 {decisionMeta.icon}
@@ -227,7 +253,6 @@ export default async function CandidateProfilePage({
             </div>
 
             <div className="space-y-lg">
-              {/* Advance template */}
               {templates.advance && (
                 <div className="space-y-sm">
                   <div className="flex justify-between items-center">
@@ -241,8 +266,6 @@ export default async function CandidateProfilePage({
                   </pre>
                 </div>
               )}
-
-              {/* Reject template */}
               {templates.reject && (
                 <div className="space-y-sm">
                   <div className="flex justify-between items-center">
@@ -252,9 +275,7 @@ export default async function CandidateProfilePage({
                     <button className="text-xs text-primary font-bold hover:underline">Copier</button>
                   </div>
                   <pre className={`p-md rounded-lg border text-body-sm text-on-surface-variant whitespace-pre-wrap font-sans leading-relaxed ${
-                    decision === "reject"
-                      ? "bg-red-50 border-red-100"
-                      : "bg-surface-container border-outline-variant"
+                    decision === "reject" ? "bg-red-50 border-red-100" : "bg-surface-container border-outline-variant"
                   }`}>
                     {templates.reject}
                   </pre>
@@ -263,7 +284,7 @@ export default async function CandidateProfilePage({
             </div>
           </div>
 
-          {/* Notes & fit override */}
+          {/* Notes */}
           <div className="bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
             <h3 className="font-h3 text-h3 mb-md flex items-center gap-sm">
               <span className="material-symbols-outlined text-primary">edit_note</span>

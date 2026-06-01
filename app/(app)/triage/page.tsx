@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { getCandidates, getThresholds, getJobs } from "@/lib/db";
 import SearchBar from "@/components/SearchBar";
-import { scoreToFit, type Fit } from "@/lib/thresholds";
+import { scoreToFit } from "@/lib/thresholds";
 
-const VALID_FITS: Fit[] = ["strong", "medium", "weak"];
 
 const fitConfig = {
   strong: {
@@ -38,10 +37,12 @@ const fitConfig = {
 export default async function TriagePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; jobId?: string }>;
+  searchParams: Promise<{ q?: string; jobId?: string; page?: string }>;
 }) {
-  const { q = "", jobId } = await searchParams;
-  const selectedJobId     = jobId ? Number(jobId) : undefined;
+  const { q = "", jobId, page } = await searchParams;
+  const selectedJobId = jobId ? Number(jobId) : undefined;
+  const currentPage   = Math.max(1, Number(page) || 1);
+  const PAGE_SIZE     = 20;
 
   const [allCandidates, thresholds, jobs] = await Promise.all([
     getCandidates(selectedJobId),
@@ -57,16 +58,16 @@ export default async function TriagePage({
         return c.name.toLowerCase().includes(term) || c.role.toLowerCase().includes(term);
       })
     : allCandidates
-  ).map((c) => {
-    const raw = c.fitOverride as string | null | undefined;
-    const override = raw && VALID_FITS.includes(raw as Fit) ? raw as Fit : null;
-    return { ...c, fit: override ?? scoreToFit(c.score, thresholds) };
-  });
+  ).map((c) => ({ ...c, fit: scoreToFit(c.score, thresholds) }));
+
+  const totalCount = candidates.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const paginated  = candidates.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const groups = (["strong", "medium", "weak"] as const).map((fit) => ({
     fit,
     ...fitConfig[fit],
-    items: candidates.filter((c) => c.fit === fit),
+    items: paginated.filter((c) => c.fit === fit),
   }));
 
   // Build keep-params for SearchBar (preserve jobId when typing in search)
@@ -205,6 +206,33 @@ export default async function TriagePage({
             </div>
           ))}
         </div>
+
+        {/* ── Pagination ────────────────────────────────────── */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-md border-t border-slate-100">
+            <span className="text-label-caps text-slate-400">
+              Page {currentPage} / {totalPages} · {totalCount} candidat{totalCount > 1 ? "s" : ""}
+            </span>
+            <div className="flex gap-2">
+              {currentPage > 1 && (
+                <a
+                  href={`/triage?${new URLSearchParams({ ...(q && { q }), ...(jobId && { jobId }), page: String(currentPage - 1) })}`}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:border-primary hover:text-primary transition-colors"
+                >
+                  ← Précédent
+                </a>
+              )}
+              {currentPage < totalPages && (
+                <a
+                  href={`/triage?${new URLSearchParams({ ...(q && { q }), ...(jobId && { jobId }), page: String(currentPage + 1) })}`}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:border-primary hover:text-primary transition-colors"
+                >
+                  Suivant →
+                </a>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── Sidebar ────────────────────────────────────────── */}

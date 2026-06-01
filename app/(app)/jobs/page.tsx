@@ -46,6 +46,21 @@ export default async function JobsPage({
           <div className="col-span-2 font-label-caps text-label-caps text-right">ACTION</div>
         </div>
 
+        {jobs.length === 0 && (
+          <div className="text-center py-xl bg-white border border-dashed border-slate-200 rounded-xl text-slate-400 space-y-3">
+            <span className="material-symbols-outlined text-5xl block">work_outline</span>
+            <p className="font-semibold text-on-surface">Aucun poste pour le moment</p>
+            <p className="text-body-sm">Créez votre premier poste pour commencer à trier des candidats.</p>
+            <a
+              href="/jobs/new"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary-container transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-sm">add</span>
+              Créer un poste
+            </a>
+          </div>
+        )}
+
         {jobs.map((job) => {
           const stageName = job.stage;
           return (

@@ -53,7 +53,7 @@ export const SettingSchema = new EntitySchema({
 // ── Classes ──────────────────────────────────────────────────────────────────
 
 export class Job {
-  [OptionalProps]?: "progress" | "openedAt" | "candidates" | "requirements" | "stages" | "currentStageIndex";
+  [OptionalProps]?: "progress" | "openedAt" | "candidates" | "requirements" | "stages" | "currentStageIndex" | "budget" | "status";
   id!: number;
   title!: string;
   department!: string;
@@ -66,11 +66,13 @@ export class Job {
   requirements: string[] = [];
   stages: string[] = [];
   currentStageIndex: number = 0;
+  budget?: string;
+  status: string = "open";
   candidates = new Collection<Candidate>(this);
 }
 
 export class Candidate {
-  [OptionalProps]?: "skills" | "gaps" | "tags" | "appliedAt";
+  [OptionalProps]?: "skills" | "gaps" | "tags" | "appliedAt" | "stageIndex";
   id!: number;
   name!: string;
   role!: string;
@@ -87,6 +89,7 @@ export class Candidate {
   tags: string[] = [];
   source!: string;
   salary?: string;
+  stageIndex: number = 0;
   appliedAt: Date = new Date();
   job!: Job;
 }
@@ -108,6 +111,8 @@ export const JobSchema = new EntitySchema({
     requirements:      { type: JsonType, nullable: true },
     stages:            { type: JsonType, nullable: true },
     currentStageIndex: { type: "integer", default: 0, fieldName: "current_stage_index" },
+    budget:            { type: "string", nullable: true },
+    status:            { type: "string", default: "open" },
     candidates:        { kind: "1:m", entity: () => Candidate, mappedBy: "job" },
   },
 });
@@ -129,9 +134,10 @@ export const CandidateSchema = new EntitySchema({
     gaps:      { type: JsonType, nullable: true },
     why:       { type: "text", nullable: true },
     tags:      { type: JsonType, nullable: true },
-    source:    { type: "string" },
-    salary:    { type: "string", nullable: true },
-    appliedAt: { type: "Date", defaultRaw: "CURRENT_TIMESTAMP" },
-    job:       { kind: "m:1", entity: () => Job },
+    source:     { type: "string" },
+    salary:     { type: "string", nullable: true },
+    stageIndex: { type: "integer", default: 0, fieldName: "stage_index" },
+    appliedAt:  { type: "Date", defaultRaw: "CURRENT_TIMESTAMP" },
+    job:        { kind: "m:1", entity: () => Job },
   },
 });

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import StagePipeline from "@/components/StagePipeline";
 import SaveAsTemplateButton from "@/components/SaveAsTemplateButton";
+import DeleteJobButton from "@/components/DeleteJobButton";
+import ArchiveJobButton from "@/components/ArchiveJobButton";
 import { scoreToFit, DECISION_META, fitToDecision } from "@/lib/thresholds";
 import { DEFAULT_STAGES } from "@/lib/stages";
 
@@ -57,8 +59,17 @@ export default async function JobDetailPage({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+          <Link
+            href={`/jobs/${jobId}/edit`}
+            className="px-3 py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"
+          >
+            <span className="material-symbols-outlined text-sm">edit</span>
+            Modifier
+          </Link>
+          <ArchiveJobButton jobId={jobId} status={(job as any).status ?? "open"} />
           <SaveAsTemplateButton jobId={jobId} />
+          <DeleteJobButton jobId={jobId} jobTitle={job.title} />
           <Link
             href="/jobs"
             className="text-sm text-slate-400 hover:text-primary flex items-center gap-1 transition-colors"

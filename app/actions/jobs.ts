@@ -3,9 +3,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getEm, getJobById } from "@/lib/db";
-import { Job } from "@/entities/index";
+import { Job, Candidate } from "@/entities/index";
 import { parseManualSkills } from "@/lib/extract-skills";
 import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
+import { scoreCandidate, buildWhy } from "@/lib/triage";
+import { scoreToFit } from "@/lib/thresholds";
 
 export async function createJob(formData: FormData) {
   const title      = String(formData.get("title") ?? "").trim();
@@ -14,6 +16,7 @@ export async function createJob(formData: FormData) {
   const icon       = String(formData.get("icon") ?? "work");
   const iconBg     = String(formData.get("iconBg") ?? "bg-slate-50 text-slate-600");
   const rawReqs    = String(formData.get("requirements") ?? "");
+  const budget     = String(formData.get("budget") ?? "").trim() || undefined;
 
   if (!title || !department || !location) throw new Error("Champs obligatoires manquants");
 
@@ -34,9 +37,48 @@ export async function createJob(formData: FormData) {
     currentStageIndex: 0,
     stage: stages[0],
     progress: 0,
+    budget,
+    status: "open",
   }));
   await em.flush();
   redirect(`/jobs`);
+}
+
+export async function updateJob(id: number, formData: FormData) {
+  const title      = String(formData.get("title") ?? "").trim();
+  const department = String(formData.get("department") ?? "").trim();
+  const location   = String(formData.get("location") ?? "").trim();
+  const rawReqs    = String(formData.get("requirements") ?? "");
+  const budget     = String(formData.get("budget") ?? "").trim() || undefined;
+  const rescore    = formData.get("rescore") === "true";
+
+  if (!title || !department || !location) throw new Error("Champs obligatoires manquants");
+
+  const requirements = parseManualSkills(rawReqs);
+
+  const em  = await getEm();
+  const job = await getJobById(id);
+  if (!job) throw new Error("Poste introuvable");
+
+  em.assign(em.getReference(Job, id), { title, department, location, requirements, budget });
+  await em.flush();
+
+  if (rescore) {
+    const candidates = await em.find(Candidate, { job: { id } });
+    for (const c of candidates) {
+      const skills = (c.skills as string[] | null) ?? [];
+      const result = scoreCandidate({ candidateSkills: skills, jobRequirements: requirements });
+      const fit    = scoreToFit(result.score);
+      const why    = buildWhy(result.score, fit, result.matchedSkills, result.missingSkills, skills);
+      em.assign(c, { score: result.score, fit, gaps: result.missingSkills, why });
+    }
+    await em.flush();
+  }
+
+  revalidatePath(`/jobs/${id}`);
+  revalidatePath("/jobs");
+  revalidatePath("/triage");
+  redirect(`/jobs/${id}`);
 }
 
 export async function setJobStage(jobId: number, stageIndex: number) {
@@ -46,7 +88,7 @@ export async function setJobStage(jobId: number, stageIndex: number) {
 
   const rawStages = job.stages as string[] | null | undefined;
   const stages    = rawStages?.length ? rawStages : DEFAULT_STAGES;
-  const idx    = Math.max(0, Math.min(stages.length - 1, stageIndex));
+  const idx       = Math.max(0, Math.min(stages.length - 1, stageIndex));
 
   em.assign(em.getReference(Job, jobId), {
     currentStageIndex: idx,
@@ -73,4 +115,39 @@ export async function updateJobStages(jobId: number, stages: string[], currentSt
 
   revalidatePath("/jobs");
   revalidatePath(`/jobs/${jobId}`);
+}
+
+export async function archiveJob(id: number) {
+  const em = await getEm();
+  em.assign(em.getReference(Job, id), { status: "closed" });
+  await em.flush();
+  revalidatePath(`/jobs/${id}`);
+  revalidatePath("/jobs");
+  revalidatePath("/dashboard");
+}
+
+export async function unarchiveJob(id: number) {
+  const em = await getEm();
+  em.assign(em.getReference(Job, id), { status: "open" });
+  await em.flush();
+  revalidatePath(`/jobs/${id}`);
+  revalidatePath("/jobs");
+  revalidatePath("/dashboard");
+}
+
+export async function deleteJob(id: number) {
+  const em = await getEm();
+  const job = await em.findOne(Job, { id }, { populate: ["candidates"] });
+  if (!job) throw new Error("Poste introuvable");
+
+  // Cascade delete candidates
+  const candidates = await em.find(Candidate, { job: { id } });
+  for (const c of candidates) em.remove(c);
+  em.remove(job);
+  await em.flush();
+
+  revalidatePath("/jobs");
+  revalidatePath("/triage");
+  revalidatePath("/dashboard");
+  redirect("/jobs");
 }

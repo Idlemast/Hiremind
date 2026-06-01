@@ -132,7 +132,19 @@ export default async function JobDetailPage({
 
       {/* ── Candidate list ────────────────────────────────── */}
       <section className="space-y-md">
-        <h3 className="font-h3 text-h3">Candidats</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-h3 text-h3">Candidats</h3>
+          {candidates.length > 0 && (
+            <a
+              href={`/api/candidates/export?jobId=${jobId}`}
+              download
+              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">download</span>
+              Export CSV
+            </a>
+          )}
+        </div>
 
         {candidates.length === 0 && (
           <div className="bg-white border border-outline-variant rounded-xl p-xl text-center text-slate-400">

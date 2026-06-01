@@ -128,13 +128,25 @@ export default async function TriagePage({
               {selectedJob ? ` · ${selectedJob.title}` : ""}
             </span>
           </div>
-          <a
-            href="/candidates/new"
-            className="shrink-0 flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-label-caps text-label-caps hover:bg-primary-container transition-colors shadow-sm"
-          >
-            <span className="material-symbols-outlined text-sm">person_add</span>
-            Import Candidate
-          </a>
+          <div className="flex items-center gap-2 shrink-0">
+            {candidates.length > 0 && (
+              <a
+                href={`/api/candidates/export${selectedJobId ? `?jobId=${selectedJobId}` : ""}`}
+                download
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant text-on-surface-variant rounded-lg font-label-caps text-label-caps hover:bg-slate-50 transition-colors"
+              >
+                <span className="material-symbols-outlined text-sm">download</span>
+                CSV
+              </a>
+            )}
+            <a
+              href="/candidates/new"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-label-caps text-label-caps hover:bg-primary-container transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined text-sm">person_add</span>
+              Import Candidate
+            </a>
+          </div>
         </div>
 
         {/* ── Candidate groups ───────────────────────────── */}

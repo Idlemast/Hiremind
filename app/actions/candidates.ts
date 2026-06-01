@@ -12,6 +12,7 @@ export async function importCandidate(formData: FormData) {
   const role     = String(formData.get("role") ?? "").trim();
   const company  = String(formData.get("company") ?? "").trim();
   const location = String(formData.get("location") ?? "").trim();
+  const email    = String(formData.get("email") ?? "").trim() || undefined;
   const salary   = String(formData.get("salary") ?? "").trim() || undefined;
   const source   = String(formData.get("source") ?? "Manual").trim();
   const cvText   = String(formData.get("cvText") ?? "");
@@ -33,7 +34,7 @@ export async function importCandidate(formData: FormData) {
 
   const em = await getEm();
   const candidate = em.create(Candidate, {
-    name, role, company, location, salary, source,
+    name, role, company, location, email, salary, source,
     skills,
     fit:  result.fit,
     score: result.score,

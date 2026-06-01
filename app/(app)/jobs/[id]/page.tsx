@@ -81,9 +81,20 @@ export default async function JobDetailPage({
               Étape actuelle : <strong>{currentStage}</strong> · {job.progress}% complété
             </p>
           </div>
-          <span className="text-label-caps font-label-caps text-slate-400">
-            {stageIndex + 1} / {stages.length}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-label-caps font-label-caps text-slate-400">
+              {stageIndex + 1} / {stages.length}
+            </span>
+            {stageIndex < stages.length - 1 && (
+              <Link
+                href={`/jobs/${jobId}/advance`}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-container transition-colors shadow-sm"
+              >
+                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                Étape suivante
+              </Link>
+            )}
+          </div>
         </div>
         <StagePipeline
           jobId={jobId}

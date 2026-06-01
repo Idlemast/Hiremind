@@ -44,6 +44,7 @@ export default async function ImportCandidatePage() {
 
           <div className="grid grid-cols-2 gap-md">
             <Field label="Full Name *" name="name" placeholder="Marcus Holloway" required />
+            <Field label="Email" name="email" placeholder="marcus@company.com" type="email" />
             <Field label="Current Role *" name="role" placeholder="Senior Product Designer" required />
             <Field label="Company *" name="company" placeholder="GlobalFin" required />
             <Field label="Location *" name="location" placeholder="San Francisco, CA" required />
@@ -118,12 +119,13 @@ export default async function ImportCandidatePage() {
 }
 
 function Field({
-  label, name, placeholder, required,
+  label, name, placeholder, required, type = "text",
 }: {
   label: string;
   name: string;
   placeholder: string;
   required?: boolean;
+  type?: string;
 }) {
   return (
     <div className="space-y-xs">
@@ -131,7 +133,7 @@ function Field({
         {label}
       </label>
       <input
-        type="text"
+        type={type}
         name={name}
         placeholder={placeholder}
         required={required}

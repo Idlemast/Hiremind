@@ -76,6 +76,7 @@ export class Candidate {
   role!: string;
   company!: string;
   location!: string;
+  email?: string;
   fit!: string;
   score!: number;
   skills: string[] = [];
@@ -117,6 +118,7 @@ export const CandidateSchema = new EntitySchema({
     role:      { type: "string" },
     company:   { type: "string" },
     location:  { type: "string" },
+    email:     { type: "string", nullable: true },
     fit:       { type: "string" },
     score:     { type: "integer" },
     skills:    { type: JsonType, nullable: true },

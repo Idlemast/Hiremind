@@ -32,6 +32,7 @@ db.exec(`
     role       TEXT    NOT NULL,
     company    TEXT    NOT NULL,
     location   TEXT    NOT NULL,
+    email      TEXT    NULL,
     fit        TEXT    NOT NULL,
     score      INTEGER NOT NULL,
     skills     TEXT    NULL,

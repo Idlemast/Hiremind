@@ -5,16 +5,21 @@ import { useRouter, usePathname } from "next/navigation";
 export default function SearchBar({
   placeholder,
   defaultValue = "",
+  keepParams = {},
 }: {
   placeholder: string;
   defaultValue?: string;
+  keepParams?: Record<string, string>;
 }) {
-  const router = useRouter();
+  const router   = useRouter();
   const pathname = usePathname();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const q = e.target.value.trim();
-    router.replace(q ? `${pathname}?q=${encodeURIComponent(q)}` : pathname);
+    const q      = e.target.value.trim();
+    const params = new URLSearchParams(keepParams);
+    if (q) params.set("q", q);
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname);
   };
 
   return (

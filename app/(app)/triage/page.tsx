@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCandidates } from "@/lib/db";
+import SearchBar from "@/components/SearchBar";
 
 const fitConfig = {
   strong: {
@@ -31,8 +32,23 @@ const fitConfig = {
   },
 } as const;
 
-export default async function TriagePage() {
-  const candidates = await getCandidates();
+export default async function TriagePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q = "" } = await searchParams;
+  const allCandidates = await getCandidates();
+
+  const candidates = q
+    ? allCandidates.filter((c) => {
+        const term = q.toLowerCase();
+        return (
+          c.name.toLowerCase().includes(term) ||
+          c.role.toLowerCase().includes(term)
+        );
+      })
+    : allCandidates;
 
   const groups = (["strong", "medium", "weak"] as const).map((fit) => ({
     fit,
@@ -46,9 +62,10 @@ export default async function TriagePage() {
 
         {/* Filter chips + CTA */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
+            <SearchBar placeholder="Rechercher un candidat…" defaultValue={q} />
             <button className="px-4 py-2 bg-primary text-white rounded-full font-label-caps text-label-caps">
-              All Candidates ({candidates.length})
+              Tous ({candidates.length})
             </button>
             {groups.map((g) => (
               <button key={g.fit} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-full font-label-caps text-label-caps hover:bg-slate-50">

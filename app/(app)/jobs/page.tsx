@@ -1,12 +1,32 @@
 import { getJobs } from "@/lib/db";
+import SearchBar from "@/components/SearchBar";
 
-export default async function JobsPage() {
-  const jobs = await getJobs();
+export default async function JobsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q = "" } = await searchParams;
+  const allJobs = await getJobs();
+
+  const jobs = q
+    ? allJobs.filter((job) => {
+        const term = q.toLowerCase();
+        return (
+          job.title.toLowerCase().includes(term) ||
+          job.department.toLowerCase().includes(term) ||
+          job.location.toLowerCase().includes(term)
+        );
+      })
+    : allJobs;
 
   return (
     <div className="p-xl space-y-xl">
       <div className="flex items-center justify-between">
-        <p className="text-body-sm text-slate-500">{jobs.length} active requisitions</p>
+        <div className="flex items-center gap-4">
+          <p className="text-body-sm text-slate-500">{jobs.length} active requisition{jobs.length !== 1 ? "s" : ""}</p>
+          <SearchBar placeholder="Search by role, department…" defaultValue={q} />
+        </div>
         <a
           href="/jobs/new"
           className="bg-primary text-white px-5 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 hover:bg-primary-container transition-colors shadow-sm"

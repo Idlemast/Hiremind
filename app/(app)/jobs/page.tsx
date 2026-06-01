@@ -1,5 +1,6 @@
-import { getJobs } from "@/lib/db";
+import { getJobs, getTemplates } from "@/lib/db";
 import SearchBar from "@/components/SearchBar";
+import TemplateManager from "@/components/TemplateManager";
 
 export default async function JobsPage({
   searchParams,
@@ -7,7 +8,7 @@ export default async function JobsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
-  const allJobs = await getJobs();
+  const [allJobs, templates] = await Promise.all([getJobs(), getTemplates()]);
 
   const jobs = q
     ? allJobs.filter((job) => {
@@ -44,48 +45,77 @@ export default async function JobsPage({
           <div className="col-span-2 font-label-caps text-label-caps text-right">ACTION</div>
         </div>
 
-        {jobs.map((job) => (
-          <div key={job.id} className="tonal-card rounded-xl p-lg grid grid-cols-12 items-center relative overflow-hidden">
-            <div className="status-ribbon bg-blue-500" />
+        {jobs.map((job) => {
+          const stageName = job.stage;
 
-            <div className="col-span-5 flex items-center gap-4">
-              <div className={`w-10 h-10 rounded flex items-center justify-center ${job.iconBg}`}>
-                <span className="material-symbols-outlined">{job.icon}</span>
+          return (
+            <div key={job.id} className="tonal-card rounded-xl p-lg grid grid-cols-12 items-center relative overflow-hidden">
+              <div className="status-ribbon bg-blue-500" />
+
+              <div className="col-span-5 flex items-center gap-4">
+                <div className={`w-10 h-10 rounded flex items-center justify-center ${job.iconBg}`}>
+                  <span className="material-symbols-outlined">{job.icon}</span>
+                </div>
+                <div>
+                  <p className="font-h3 text-body-md font-bold text-slate-900">{job.title}</p>
+                  <p className="text-label-caps text-slate-500">{job.department} · {job.location}</p>
+                </div>
               </div>
-              <div>
-                <p className="font-h3 text-body-md font-bold text-slate-900">{job.title}</p>
-                <p className="text-label-caps text-slate-500">{job.department} · {job.location}</p>
+
+              <div className="col-span-2 text-center">
+                <div className="inline-flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
+                  <span className="material-symbols-outlined text-sm text-blue-600">group</span>
+                  <span className="text-sm font-bold text-slate-700">{job.candidates.length}</span>
+                </div>
+              </div>
+
+              <div className="col-span-3 pr-8">
+                <>
+                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-sm">
+                      <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-label-caps font-bold text-slate-400 uppercase">{stageName}</span>
+                      <span className="text-label-caps font-bold text-emerald-600 uppercase">{job.progress}%</span>
+                    </div>
+                  </>
+              </div>
+
+              <div className="col-span-2 text-right">
+                <a
+                  href={`/jobs/${job.id}`}
+                  className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto"
+                >
+                  Ouvrir
+                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
               </div>
             </div>
-
-            <div className="col-span-2 text-center">
-              <div className="inline-flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                <span className="material-symbols-outlined text-sm text-blue-600">group</span>
-                <span className="text-sm font-bold text-slate-700">
-                  {job.candidates.length}
-                </span>
-              </div>
-            </div>
-
-            <div className="col-span-3 pr-8">
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
-              </div>
-              <div className="flex justify-between mt-sm">
-                <span className="text-label-caps font-bold text-slate-400 uppercase">STAGE: {job.stage}</span>
-                <span className="text-label-caps font-bold text-emerald-600 uppercase">{job.progress}% COMPLETE</span>
-              </div>
-            </div>
-
-            <div className="col-span-2 text-right">
-              <button className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
-                Open Dashboard
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* ── Templates ─────────────────────────────────────── */}
+      <section className="space-y-md">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <h3 className="font-h3 text-h3 text-on-surface">Templates de postes</h3>
+            {templates.length > 0 && (
+              <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-label-caps font-label-caps rounded-full">
+                {templates.length}
+              </span>
+            )}
+          </div>
+          <a
+            href="/jobs/new"
+            className="text-sm text-slate-400 hover:text-primary flex items-center gap-1 transition-colors"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            Nouveau template
+          </a>
+        </div>
+        <TemplateManager initialTemplates={templates} />
+      </section>
     </div>
   );
 }

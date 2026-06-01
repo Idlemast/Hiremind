@@ -1,6 +1,39 @@
 import { EntitySchema, Collection } from "@mikro-orm/sqlite";
 import { JsonType, OptionalProps } from "@mikro-orm/core";
 
+// ── JobTemplate ──────────────────────────────────────────────────────────────
+
+export class JobTemplate {
+  [OptionalProps]?: "createdAt" | "requirements" | "stages";
+  id!: number;
+  name!: string;
+  title!: string;
+  department!: string;
+  location!: string;
+  icon!: string;
+  iconBg!: string;
+  requirements: string[] = [];
+  stages: string[] = [];
+  createdAt: Date = new Date();
+}
+
+export const JobTemplateSchema = new EntitySchema({
+  class: JobTemplate,
+  tableName: "job_template",
+  properties: {
+    id:           { primary: true, autoincrement: true, type: "integer" },
+    name:         { type: "string" },
+    title:        { type: "string" },
+    department:   { type: "string" },
+    location:     { type: "string" },
+    icon:         { type: "string" },
+    iconBg:       { type: "string", fieldName: "icon_bg", length: 200 },
+    requirements: { type: JsonType, nullable: true },
+    stages:       { type: JsonType, nullable: true },
+    createdAt:    { type: "Date", fieldName: "created_at", defaultRaw: "CURRENT_TIMESTAMP" },
+  },
+});
+
 // ── Setting ───────────────────────────────────────────────────────────────────
 
 export class Setting {
@@ -20,7 +53,7 @@ export const SettingSchema = new EntitySchema({
 // ── Classes ──────────────────────────────────────────────────────────────────
 
 export class Job {
-  [OptionalProps]?: "progress" | "openedAt" | "candidates" | "requirements";
+  [OptionalProps]?: "progress" | "openedAt" | "candidates" | "requirements" | "stages" | "currentStageIndex";
   id!: number;
   title!: string;
   department!: string;
@@ -31,6 +64,8 @@ export class Job {
   progress: number = 0;
   openedAt: Date = new Date();
   requirements: string[] = [];
+  stages: string[] = [];
+  currentStageIndex: number = 0;
   candidates = new Collection<Candidate>(this);
 }
 
@@ -65,10 +100,12 @@ export const JobSchema = new EntitySchema({
     stage:      { type: "string" },
     icon:       { type: "string" },
     iconBg:     { type: "string", length: 200 },
-    progress:   { type: "integer", default: 0 },
-    openedAt:     { type: "Date", defaultRaw: "CURRENT_TIMESTAMP" },
-    requirements: { type: JsonType, nullable: true },
-    candidates:   { kind: "1:m", entity: () => Candidate, mappedBy: "job" },
+    progress:          { type: "integer", default: 0 },
+    openedAt:          { type: "Date", defaultRaw: "CURRENT_TIMESTAMP" },
+    requirements:      { type: JsonType, nullable: true },
+    stages:            { type: JsonType, nullable: true },
+    currentStageIndex: { type: "integer", default: 0, fieldName: "current_stage_index" },
+    candidates:        { kind: "1:m", entity: () => Candidate, mappedBy: "job" },
   },
 });
 

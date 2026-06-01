@@ -19,9 +19,11 @@ db.exec(`
     stage        TEXT    NOT NULL,
     icon         TEXT    NOT NULL,
     icon_bg      TEXT    NOT NULL,
-    progress     INTEGER NOT NULL DEFAULT 0,
-    opened_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    requirements TEXT    NULL
+    progress            INTEGER NOT NULL DEFAULT 0,
+    opened_at           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    requirements        TEXT    NULL,
+    stages              TEXT    NULL,
+    current_stage_index INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE TABLE candidate (
@@ -45,6 +47,19 @@ db.exec(`
   );
 
   CREATE INDEX candidate_job_id_index ON candidate (job_id);
+
+  CREATE TABLE job_template (
+    id           INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name         TEXT     NOT NULL,
+    title        TEXT     NOT NULL,
+    department   TEXT     NOT NULL,
+    location     TEXT     NOT NULL,
+    icon         TEXT     NOT NULL,
+    icon_bg      TEXT     NOT NULL,
+    requirements TEXT     NULL,
+    stages       TEXT     NULL,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
 
   CREATE TABLE setting (
     key   TEXT NOT NULL PRIMARY KEY,

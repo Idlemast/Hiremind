@@ -1,25 +1,28 @@
 import { MikroORM, type EntityManager } from "@mikro-orm/sqlite";
+import { cache } from "react";
 import config from "../mikro-orm.config";
-import { Job, Candidate, Setting } from "../entities/index";
+import { Job, Candidate, Setting, JobTemplate } from "../entities/index";
 import { DEFAULT_THRESHOLDS, type Thresholds } from "./thresholds";
 
-declare const globalThis: { orm?: MikroORM } & typeof global;
-
-async function getOrm(): Promise<MikroORM> {
-  if (!globalThis.orm) {
-    globalThis.orm = await MikroORM.init(config);
-    // Create setting table for existing DBs that pre-date the feature
-    const conn = globalThis.orm.em.getConnection();
-    await conn.execute(
-      `CREATE TABLE IF NOT EXISTS setting (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)`
-    );
-  }
-  return globalThis.orm;
-}
+// Per-request cache via React — avoids stale globalThis between config changes.
+const getOrm = cache(async (): Promise<MikroORM> => {
+  const orm  = await MikroORM.init(config);
+  const conn = orm.em.getConnection();
+  await conn.execute(`CREATE TABLE IF NOT EXISTS setting (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)`);
+  try { await conn.execute(`ALTER TABLE job ADD COLUMN stages TEXT NULL`); } catch {}
+  try { await conn.execute(`ALTER TABLE job ADD COLUMN current_stage_index INTEGER NOT NULL DEFAULT 0`); } catch {}
+  await conn.execute(`CREATE TABLE IF NOT EXISTS job_template (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL, title TEXT NOT NULL, department TEXT NOT NULL,
+    location TEXT NOT NULL, icon TEXT NOT NULL, icon_bg TEXT NOT NULL,
+    requirements TEXT NULL, stages TEXT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
+  return orm;
+});
 
 export async function getEm(): Promise<EntityManager> {
-  const orm = await getOrm();
-  return orm.em.fork();
+  return (await getOrm()).em.fork();
 }
 
 // ── Query helpers ────────────────────────────────────────────────────────────
@@ -71,6 +74,23 @@ export async function getThresholds(): Promise<Thresholds> {
     strong: map["threshold_strong"] ?? DEFAULT_THRESHOLDS.strong,
     medium: map["threshold_medium"] ?? DEFAULT_THRESHOLDS.medium,
   };
+}
+
+export async function getTemplates() {
+  const em  = await getEm();
+  const rows = await em.find(JobTemplate, {}, { orderBy: { createdAt: "DESC" } });
+  // Return plain objects — MikroORM entities cannot be passed to Client Components
+  return rows.map((t) => ({
+    id:           t.id,
+    name:         t.name,
+    title:        t.title,
+    department:   t.department,
+    location:     t.location,
+    icon:         t.icon,
+    iconBg:       t.iconBg,
+    requirements: (t.requirements as string[] | null) ?? [],
+    stages:       (t.stages       as string[] | null) ?? [],
+  }));
 }
 
 export async function saveThresholds(strong: number, medium: number): Promise<void> {

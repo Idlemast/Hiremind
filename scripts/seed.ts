@@ -33,11 +33,18 @@ async function seed() {
 
   // ── Jobs ──────────────────────────────────────────────────────────────────
 
+  const PIPELINE_DESIGN = ["Sourcing", "CV Review", "Phone Screen", "Test Design", "Entretien Final", "Offre"];
+  const PIPELINE_ENG    = ["Sourcing", "CV Review", "Phone Screen", "Test Technique", "Entretien Final", "Offre"];
+  const PIPELINE_PM     = ["Sourcing", "CV Review", "Entretien RH", "Case Study", "Entretien Final", "Offre"];
+
+  // progress = index / (stages - 1) * 100 → 5 steps, so index 3 = 60%, index 4 = 80%, index 1 = 20%
   const designer = em.create(Job, {
     title: "Senior Product Designer",
     department: "Design",
     location: "Remote",
-    stage: "SCREENING",
+    stages: PIPELINE_DESIGN,
+    currentStageIndex: 3,           // "Test Design"
+    stage: PIPELINE_DESIGN[3],
     icon: "palette",
     iconBg: "bg-purple-50 text-purple-600",
     progress: 60,
@@ -48,7 +55,9 @@ async function seed() {
     title: "Lead Frontend Engineer",
     department: "Engineering",
     location: "London, UK",
-    stage: "TECHNICAL",
+    stages: PIPELINE_ENG,
+    currentStageIndex: 4,           // "Entretien Final"
+    stage: PIPELINE_ENG[4],
     icon: "code",
     iconBg: "bg-blue-50 text-primary",
     progress: 80,
@@ -59,7 +68,9 @@ async function seed() {
     title: "Product Manager",
     department: "Product",
     location: "New York, NY",
-    stage: "SOURCING",
+    stages: PIPELINE_PM,
+    currentStageIndex: 1,           // "CV Review"
+    stage: PIPELINE_PM[1],
     icon: "campaign",
     iconBg: "bg-orange-50 text-orange-600",
     progress: 20,

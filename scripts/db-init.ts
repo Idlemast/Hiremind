@@ -45,6 +45,15 @@ db.exec(`
   );
 
   CREATE INDEX candidate_job_id_index ON candidate (job_id);
+
+  CREATE TABLE setting (
+    key   TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+
+  INSERT INTO setting (key, value) VALUES
+    ('threshold_strong', '80'),
+    ('threshold_medium', '55');
 `);
 
 db.close();

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { getCandidates } from "@/lib/db";
+import { getCandidates, getThresholds } from "@/lib/db";
 import SearchBar from "@/components/SearchBar";
+import { scoreToFit } from "@/lib/thresholds";
 
 const fitConfig = {
   strong: {
@@ -38,17 +39,15 @@ export default async function TriagePage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
-  const allCandidates = await getCandidates();
+  const [allCandidates, thresholds] = await Promise.all([getCandidates(), getThresholds()]);
 
-  const candidates = q
+  const candidates = (q
     ? allCandidates.filter((c) => {
         const term = q.toLowerCase();
-        return (
-          c.name.toLowerCase().includes(term) ||
-          c.role.toLowerCase().includes(term)
-        );
+        return c.name.toLowerCase().includes(term) || c.role.toLowerCase().includes(term);
       })
-    : allCandidates;
+    : allCandidates
+  ).map((c) => ({ ...c, fit: scoreToFit(c.score, thresholds) }));
 
   const groups = (["strong", "medium", "weak"] as const).map((fit) => ({
     fit,

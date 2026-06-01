@@ -1,3 +1,5 @@
+import { scoreToFit, fitToDecision, type Fit, type Decision } from "./thresholds";
+
 export interface TriageInput {
   candidateSkills: string[];
   jobRequirements: string[];
@@ -5,8 +7,9 @@ export interface TriageInput {
 }
 
 export interface TriageResult {
-  score: number;         // 0–100
-  fit: "strong" | "medium" | "weak";
+  score: number;
+  fit: Fit;
+  decision: Decision;
   matchedSkills: string[];
   missingSkills: string[];
   why: string;
@@ -34,7 +37,7 @@ export function scoreCandidate(input: TriageInput): TriageResult {
   const { candidateSkills, jobRequirements, bonusKeywords = [] } = input;
 
   if (jobRequirements.length === 0) {
-    return { score: 50, fit: "medium", matchedSkills: [], missingSkills: [], why: "No requirements defined for this role." };
+    return { score: 50, fit: "medium", decision: "review", matchedSkills: [], missingSkills: [], why: "No requirements defined for this role." };
   }
 
   const matchedSkills: string[] = [];
@@ -60,14 +63,12 @@ export function scoreCandidate(input: TriageInput): TriageResult {
 
   const score = Math.min(baseScore + bonus + depthBonus, 100);
 
-  const fit: TriageResult["fit"] =
-    score >= 80 ? "strong" :
-    score >= 55 ? "medium" :
-    "weak";
+  const fit = scoreToFit(score);
+  const decision = fitToDecision(fit);
 
   const why = buildWhy(score, fit, matchedSkills, missingSkills, candidateSkills);
 
-  return { score, fit, matchedSkills, missingSkills, why };
+  return { score, fit, decision, matchedSkills, missingSkills, why };
 }
 
 function buildWhy(

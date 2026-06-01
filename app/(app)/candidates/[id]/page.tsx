@@ -1,6 +1,7 @@
-import { getCandidateById } from "@/lib/db";
+import { getCandidateById, getThresholds } from "@/lib/db";
 import { notFound } from "next/navigation";
 import TagEditor from "@/components/TagEditor";
+import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates } from "@/lib/thresholds";
 
 export default async function CandidateProfilePage({
   params,
@@ -8,7 +9,10 @@ export default async function CandidateProfilePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const candidate = await getCandidateById(Number(id));
+  const [candidate, thresholds] = await Promise.all([
+    getCandidateById(Number(id)),
+    getThresholds(),
+  ]);
   if (!candidate) notFound();
 
   const skills = candidate.skills as string[];
@@ -18,6 +22,19 @@ export default async function CandidateProfilePage({
   const initials = candidate.name.split(" ").map((n) => n[0]).join("");
   const matchScore = candidate.score;
   const stageProgress = 33;
+
+  const fit = scoreToFit(matchScore, thresholds);
+  const decision = fitToDecision(fit);
+  const decisionMeta = DECISION_META[decision];
+  const templates = getCommTemplates(
+    {
+      firstName: candidate.name.split(" ")[0],
+      jobTitle: candidate.job.title,
+      gaps,
+      matchedSkills: skills,
+    },
+    decision
+  );
 
   return (
     <div className="p-xl max-w-7xl mx-auto space-y-lg">
@@ -36,10 +53,16 @@ export default async function CandidateProfilePage({
             </div>
           </div>
           <div>
-            <div className="flex items-center gap-sm">
+            <div className="flex items-center gap-sm flex-wrap">
               <h2 className="font-h1 text-h1 text-on-surface">{candidate.name}</h2>
               <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-label-caps font-label-caps">
                 {matchScore}% Match
+              </span>
+              <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-label-caps font-label-caps border ${decisionMeta.badge}`}>
+                <span className="material-symbols-outlined text-sm leading-none" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  {decisionMeta.icon}
+                </span>
+                {decisionMeta.label}
               </span>
             </div>
             <p className="font-body-lg text-body-lg text-on-surface-variant">
@@ -63,9 +86,18 @@ export default async function CandidateProfilePage({
           <button className="px-6 py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors">
             Archive
           </button>
-          <button className="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary-container transition-colors shadow-md">
-            Schedule Interview
-          </button>
+          {decision !== "reject" && (
+            <button className="px-6 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary-container transition-colors shadow-md flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">event</span>
+              Planifier l'entretien
+            </button>
+          )}
+          {decision === "reject" && (
+            <button className="px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors shadow-md flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">cancel</span>
+              Envoyer le refus
+            </button>
+          )}
         </div>
       </section>
 
@@ -170,30 +202,52 @@ export default async function CandidateProfilePage({
               <span className="material-symbols-outlined text-primary">forum</span>
               Comm Assistant
             </h3>
-            <div className="space-y-lg">
-              <div className="space-y-sm">
-                <div className="flex justify-between items-center">
-                  <p className="font-label-caps text-label-caps text-slate-500 uppercase">Draft: Next Step</p>
-                  <button className="text-xs text-primary font-bold hover:underline">Copy</button>
-                </div>
-                <div className="bg-surface-container p-md rounded-lg border border-outline-variant text-body-sm text-on-surface-variant italic">
-                  "Hi {candidate.name.split(" ")[0]}, the team was impressed with your background. We'd love to invite you to a technical walkthrough…"
-                </div>
-              </div>
-              <div className="space-y-sm">
-                <div className="flex justify-between items-center">
-                  <p className="font-label-caps text-label-caps text-slate-500 uppercase">Draft: Soft Pass</p>
-                  <button className="text-xs text-primary font-bold hover:underline">Copy</button>
-                </div>
-                <div className="bg-surface-container p-md rounded-lg border border-outline-variant text-body-sm text-on-surface-variant italic">
-                  "Hi {candidate.name.split(" ")[0]}, thank you for your application. While your profile is strong, we are currently prioritizing candidates with a slightly different background…"
-                </div>
-              </div>
+
+            {/* Decision banner */}
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border mb-lg ${decisionMeta.badge}`}>
+              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                {decisionMeta.icon}
+              </span>
+              <span className="font-label-caps text-label-caps">
+                Recommandation : <strong>{decisionMeta.label}</strong>
+              </span>
             </div>
-            <button className="w-full mt-lg py-3 border-2 border-primary text-primary font-bold rounded-lg hover:bg-primary-fixed transition-colors flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-sm">edit_note</span>
-              Customize Templates
-            </button>
+
+            <div className="space-y-lg">
+              {/* Advance template */}
+              {templates.advance && (
+                <div className="space-y-sm">
+                  <div className="flex justify-between items-center">
+                    <p className="font-label-caps text-label-caps text-slate-500 uppercase">
+                      {decision === "review" ? "Option A · Avancer" : "Draft · Étape suivante"}
+                    </p>
+                    <button className="text-xs text-primary font-bold hover:underline">Copier</button>
+                  </div>
+                  <pre className="bg-emerald-50 border border-emerald-100 p-md rounded-lg text-body-sm text-on-surface-variant whitespace-pre-wrap font-sans leading-relaxed">
+                    {templates.advance}
+                  </pre>
+                </div>
+              )}
+
+              {/* Reject template */}
+              {templates.reject && (
+                <div className="space-y-sm">
+                  <div className="flex justify-between items-center">
+                    <p className="font-label-caps text-label-caps text-slate-500 uppercase">
+                      {decision === "review" ? "Option B · Décliner" : "Draft · Refus"}
+                    </p>
+                    <button className="text-xs text-primary font-bold hover:underline">Copier</button>
+                  </div>
+                  <pre className={`p-md rounded-lg border text-body-sm text-on-surface-variant whitespace-pre-wrap font-sans leading-relaxed ${
+                    decision === "reject"
+                      ? "bg-red-50 border-red-100"
+                      : "bg-surface-container border-outline-variant"
+                  }`}>
+                    {templates.reject}
+                  </pre>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="bg-white p-lg rounded-xl border border-outline-variant shadow-sm space-y-md">

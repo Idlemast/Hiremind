@@ -1,6 +1,22 @@
 import { EntitySchema, Collection } from "@mikro-orm/sqlite";
 import { JsonType, OptionalProps } from "@mikro-orm/core";
 
+// ── Setting ───────────────────────────────────────────────────────────────────
+
+export class Setting {
+  key!: string;
+  value!: string;
+}
+
+export const SettingSchema = new EntitySchema({
+  class: Setting,
+  tableName: "setting",
+  properties: {
+    key:   { primary: true, type: "string" },
+    value: { type: "text" },
+  },
+});
+
 // ── Classes ──────────────────────────────────────────────────────────────────
 
 export class Job {

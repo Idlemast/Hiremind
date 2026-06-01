@@ -1,12 +1,18 @@
 import { MikroORM, type EntityManager } from "@mikro-orm/sqlite";
 import config from "../mikro-orm.config";
-import { Job, Candidate } from "../entities/index";
+import { Job, Candidate, Setting } from "../entities/index";
+import { DEFAULT_THRESHOLDS, type Thresholds } from "./thresholds";
 
 declare const globalThis: { orm?: MikroORM } & typeof global;
 
 async function getOrm(): Promise<MikroORM> {
   if (!globalThis.orm) {
     globalThis.orm = await MikroORM.init(config);
+    // Create setting table for existing DBs that pre-date the feature
+    const conn = globalThis.orm.em.getConnection();
+    await conn.execute(
+      `CREATE TABLE IF NOT EXISTS setting (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)`
+    );
   }
   return globalThis.orm;
 }
@@ -54,4 +60,28 @@ export async function getStats() {
     em.count(Candidate),
   ]);
   return { jobCount, candidateCount };
+}
+
+export async function getThresholds(): Promise<Thresholds> {
+  const em = await getEm();
+  const rows = await em.find(Setting, { key: { $in: ["threshold_strong", "threshold_medium"] } });
+  const map: Record<string, number> = {};
+  for (const r of rows) map[r.key] = Number(r.value);
+  return {
+    strong: map["threshold_strong"] ?? DEFAULT_THRESHOLDS.strong,
+    medium: map["threshold_medium"] ?? DEFAULT_THRESHOLDS.medium,
+  };
+}
+
+export async function saveThresholds(strong: number, medium: number): Promise<void> {
+  const em = await getEm();
+  for (const [key, value] of [["threshold_strong", strong], ["threshold_medium", medium]] as [string, number][]) {
+    const existing = await em.findOne(Setting, { key });
+    if (existing) {
+      existing.value = String(value);
+    } else {
+      em.create(Setting, { key, value: String(value) });
+    }
+  }
+  await em.flush();
 }

@@ -4,15 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const nav = [
-  { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
-  { href: "/triage",    label: "Candidates",   icon: "group" },
-  { href: "/jobs",      label: "Jobs",          icon: "work" },
+  { href: "/dashboard", label: "Dashboard",  icon: "dashboard" },
+  { href: "/triage",    label: "Candidates", icon: "group" },
+  { href: "/jobs",      label: "Jobs",       icon: "work" },
+  { href: "/settings",  label: "Settings",   icon: "settings" },
 ];
 
 const navDisabled = [
   { label: "Messages",  icon: "mail" },
   { label: "Analytics", icon: "analytics" },
-  { label: "Settings",  icon: "settings" },
 ];
 
 export default function Sidebar() {

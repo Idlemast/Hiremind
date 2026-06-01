@@ -18,17 +18,18 @@ export default function DeleteJobButton({
       <button
         type="button"
         onClick={() => setConfirm(true)}
-        className="px-4 py-2 bg-white border border-red-200 text-red-600 font-bold rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1.5 text-sm"
+        className="p-2 sm:px-4 sm:py-2 bg-white border border-red-200 text-red-600 font-bold rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1.5 text-sm"
+        title="Supprimer"
       >
         <span className="material-symbols-outlined text-sm">delete</span>
-        Supprimer
+        <span className="hidden sm:inline">Supprimer</span>
       </button>
     );
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg flex-wrap">
-      <span className="text-sm text-red-700 font-semibold">Supprimer «{jobTitle}» et ses candidats ?</span>
+    <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+      <span className="text-sm text-red-700 font-semibold truncate max-w-[200px] sm:max-w-none">Supprimer «{jobTitle}» ?</span>
       <button
         type="button"
         onClick={() => startTransition(() => deleteJob(jobId))}

@@ -27,8 +27,8 @@ export default function DeleteCandidateButton({
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
-      <span className="text-sm text-red-700 font-semibold">Supprimer {candidateName} ?</span>
+    <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+      <span className="text-sm text-red-700 font-semibold truncate max-w-[180px] sm:max-w-none">Supprimer {candidateName} ?</span>
       <button
         type="button"
         onClick={() => startTransition(() => deleteCandidate(candidateId))}

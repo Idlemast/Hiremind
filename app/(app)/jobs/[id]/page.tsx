@@ -47,25 +47,26 @@ export default async function JobDetailPage({
     <div className="p-4 lg:p-xl max-w-6xl mx-auto space-y-xl">
 
       {/* ── Header ────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-md">
-        <div className="flex items-center gap-lg">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-md">
+        <div className="flex items-center gap-lg min-w-0">
           <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${job.iconBg} shrink-0`}>
             <span className="material-symbols-outlined text-2xl">{job.icon}</span>
           </div>
-          <div>
-            <h2 className="font-h1 text-h1 text-on-surface">{job.title}</h2>
-            <p className="text-body-sm text-slate-500 mt-0.5">
+          <div className="min-w-0">
+            <h2 className="font-h1 text-h1 text-on-surface truncate">{job.title}</h2>
+            <p className="text-body-sm text-slate-500 mt-0.5 truncate">
               {job.department} · {job.location}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
           <Link
             href={`/jobs/${jobId}/edit`}
-            className="px-3 py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"
+            className="p-2 sm:px-3 sm:py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"
+            title="Modifier"
           >
             <span className="material-symbols-outlined text-sm">edit</span>
-            Modifier
+            <span className="hidden sm:inline">Modifier</span>
           </Link>
           <ArchiveJobButton jobId={jobId} status={(job as any).status ?? "open"} />
           <SaveAsTemplateButton jobId={jobId} />
@@ -75,7 +76,7 @@ export default async function JobDetailPage({
             className="text-sm text-slate-400 hover:text-primary flex items-center gap-1 transition-colors"
           >
             <span className="material-symbols-outlined text-sm">arrow_back</span>
-            Tous les postes
+            <span className="hidden sm:inline">Tous les postes</span>
           </Link>
         </div>
       </div>

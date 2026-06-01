@@ -107,14 +107,14 @@ export default async function StatsPage() {
           <div className="space-y-sm">
             {gaps.map((g) => (
               <div key={g.skill} className="flex items-center gap-3">
-                <span className="text-body-sm text-on-surface w-40 truncate shrink-0">{g.skill}</span>
+                <span className="text-body-sm text-on-surface w-24 sm:w-40 truncate shrink-0">{g.skill}</span>
                 <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-red-400 rounded-full transition-all"
                     style={{ width: `${g.pct}%` }}
                   />
                 </div>
-                <span className="text-label-caps text-slate-400 w-20 text-right shrink-0">
+                <span className="text-label-caps text-slate-400 w-16 sm:w-20 text-right shrink-0">
                   {g.count} × ({g.pct}%)
                 </span>
               </div>

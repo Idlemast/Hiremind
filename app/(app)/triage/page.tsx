@@ -82,7 +82,7 @@ export default async function TriagePage({
       <section className="flex-1 space-y-xl min-w-0">
 
         {/* ── Job filter chips ───────────────────────────── */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar">
           <a
             href={q ? `/triage?q=${encodeURIComponent(q)}` : "/triage"}
             className={[
@@ -116,14 +116,14 @@ export default async function TriagePage({
         </div>
 
         {/* ── Search + fit chips + CTA ───────────────────── */}
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3 flex-wrap min-w-0">
             <SearchBar
               placeholder="Rechercher un candidat…"
               defaultValue={q}
               keepParams={keepParams}
             />
-            <span className="font-label-caps text-label-caps text-slate-400">
+            <span className="font-label-caps text-label-caps text-slate-400 whitespace-nowrap">
               {candidates.length} candidat{candidates.length > 1 ? "s" : ""}
               {selectedJob ? ` · ${selectedJob.title}` : ""}
             </span>

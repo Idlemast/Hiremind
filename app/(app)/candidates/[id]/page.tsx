@@ -111,10 +111,11 @@ export default async function CandidateProfilePage({
         <div className="flex gap-sm shrink-0 flex-wrap">
           <Link
             href={`/candidates/${candidate.id}/edit`}
-            className="px-4 py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"
+            className="p-2 sm:px-4 sm:py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"
+            title="Modifier"
           >
             <span className="material-symbols-outlined text-sm">edit</span>
-            Modifier
+            <span className="hidden sm:inline">Modifier</span>
           </Link>
           <DeleteCandidateButton candidateId={candidate.id} candidateName={candidate.name} />
         </div>
@@ -261,7 +262,7 @@ export default async function CandidateProfilePage({
                     </p>
                     <button className="text-xs text-primary font-bold hover:underline">Copier</button>
                   </div>
-                  <pre className="bg-emerald-50 border border-emerald-100 p-md rounded-lg text-body-sm text-on-surface-variant whitespace-pre-wrap font-sans leading-relaxed">
+                  <pre className="bg-emerald-50 border border-emerald-100 p-md rounded-lg text-body-sm text-on-surface-variant whitespace-pre-wrap font-sans leading-relaxed overflow-x-auto">
                     {templates.advance}
                   </pre>
                 </div>
@@ -274,7 +275,7 @@ export default async function CandidateProfilePage({
                     </p>
                     <button className="text-xs text-primary font-bold hover:underline">Copier</button>
                   </div>
-                  <pre className={`p-md rounded-lg border text-body-sm text-on-surface-variant whitespace-pre-wrap font-sans leading-relaxed ${
+                  <pre className={`p-md rounded-lg border text-body-sm text-on-surface-variant whitespace-pre-wrap font-sans leading-relaxed overflow-x-auto ${
                     decision === "reject" ? "bg-red-50 border-red-100" : "bg-surface-container border-outline-variant"
                   }`}>
                     {templates.reject}

@@ -10,6 +10,8 @@ const getOrm = cache(async (): Promise<MikroORM> => {
   const conn = orm.em.getConnection();
   await conn.execute(`CREATE TABLE IF NOT EXISTS setting (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)`);
   try { await conn.execute(`ALTER TABLE candidate ADD COLUMN email TEXT NULL`); } catch {}
+  try { await conn.execute(`ALTER TABLE candidate ADD COLUMN notes TEXT NULL`); } catch {}
+  try { await conn.execute(`ALTER TABLE candidate ADD COLUMN fit_override TEXT NULL`); } catch {}
   try { await conn.execute(`ALTER TABLE job ADD COLUMN stages TEXT NULL`); } catch {}
   try { await conn.execute(`ALTER TABLE job ADD COLUMN current_stage_index INTEGER NOT NULL DEFAULT 0`); } catch {}
   await conn.execute(`CREATE TABLE IF NOT EXISTS job_template (

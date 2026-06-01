@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { getCandidates, getThresholds, getJobs } from "@/lib/db";
 import SearchBar from "@/components/SearchBar";
-import { scoreToFit } from "@/lib/thresholds";
+import { scoreToFit, type Fit } from "@/lib/thresholds";
+
+const VALID_FITS: Fit[] = ["strong", "medium", "weak"];
 
 const fitConfig = {
   strong: {
@@ -55,7 +57,11 @@ export default async function TriagePage({
         return c.name.toLowerCase().includes(term) || c.role.toLowerCase().includes(term);
       })
     : allCandidates
-  ).map((c) => ({ ...c, fit: scoreToFit(c.score, thresholds) }));
+  ).map((c) => {
+    const raw = c.fitOverride as string | null | undefined;
+    const override = raw && VALID_FITS.includes(raw as Fit) ? raw as Fit : null;
+    return { ...c, fit: override ?? scoreToFit(c.score, thresholds) };
+  });
 
   const groups = (["strong", "medium", "weak"] as const).map((fit) => ({
     fit,

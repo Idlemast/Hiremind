@@ -1,8 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { getEm, getJobById, getCandidateById } from "@/lib/db";
-import { scoreCandidate } from "@/lib/triage";
+import { scoreCandidate, buildWhy } from "@/lib/triage";
+import { scoreToFit } from "@/lib/thresholds";
+import { analyzeInterviewNotes, notesScoreDelta } from "@/lib/interview-signals";
 import { extractSkillsFromText, parseManualSkills, mergeSkills } from "@/lib/extract-skills";
 import { Candidate } from "@/entities/index";
 
@@ -48,6 +51,35 @@ export async function importCandidate(formData: FormData) {
   await em.flush();
 
   redirect(`/candidates/${candidate.id}`);
+}
+
+export async function updateCandidateNotes(id: number, notes: string) {
+  const em        = await getEm();
+  const candidate = await em.findOne(Candidate, { id }, { populate: ["job"] });
+  if (!candidate) throw new Error("Candidat introuvable");
+
+  const skills       = (candidate.skills as string[] | null) ?? [];
+  const requirements = (candidate.job.requirements as string[] | null) ?? [];
+
+  const base     = scoreCandidate({ candidateSkills: skills, jobRequirements: requirements });
+  const trimmed  = notes.trim() || undefined;
+  const analysis = trimmed ? analyzeInterviewNotes(trimmed) : null;
+  const delta    = notesScoreDelta(analysis);
+
+  const adjustedScore = Math.max(0, Math.min(100, base.score + delta));
+  const fit           = scoreToFit(adjustedScore);
+
+  let why = buildWhy(adjustedScore, fit, base.matchedSkills, base.missingSkills, skills);
+  if (delta !== 0 && analysis) {
+    const sign  = delta > 0 ? `+${delta}` : `${delta}`;
+    const label = analysis.tendency === "positive" ? "positifs" : "négatifs";
+    why += ` Entretien : signaux ${label} (${sign} pts).`;
+  }
+
+  em.assign(candidate, { notes: trimmed, score: adjustedScore, fit, why });
+  await em.flush();
+  revalidatePath(`/candidates/${id}`);
+  revalidatePath("/triage");
 }
 
 export async function updateCandidateTags(id: number, tags: string[]) {

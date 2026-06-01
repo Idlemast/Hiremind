@@ -1,7 +1,8 @@
 import { getCandidateById, getThresholds } from "@/lib/db";
 import { notFound } from "next/navigation";
 import TagEditor from "@/components/TagEditor";
-import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates } from "@/lib/thresholds";
+import CandidateNotes from "@/components/CandidateNotes";
+import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates, type Fit } from "@/lib/thresholds";
 
 export default async function CandidateProfilePage({
   params,
@@ -23,7 +24,13 @@ export default async function CandidateProfilePage({
   const matchScore = candidate.score;
   const stageProgress = 33;
 
-  const fit = scoreToFit(matchScore, thresholds);
+  // fitOverride takes precedence over the calculated fit
+  const validFits: Fit[] = ["strong", "medium", "weak"];
+  const rawOverride = candidate.fitOverride as string | null | undefined;
+  const fitOverride = rawOverride && validFits.includes(rawOverride as Fit)
+    ? rawOverride as Fit
+    : null;
+  const fit = fitOverride ?? scoreToFit(matchScore, thresholds);
   const decision = fitToDecision(fit);
   const decisionMeta = DECISION_META[decision];
   const templates = getCommTemplates(
@@ -64,6 +71,12 @@ export default async function CandidateProfilePage({
                 </span>
                 {decisionMeta.label}
               </span>
+              {fitOverride && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-label-caps font-label-caps border border-slate-200">
+                  <span className="material-symbols-outlined text-sm leading-none">edit</span>
+                  Manuel
+                </span>
+              )}
             </div>
             <p className="font-body-lg text-body-lg text-on-surface-variant">
               {candidate.role} • {candidate.location}
@@ -248,6 +261,18 @@ export default async function CandidateProfilePage({
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Notes & fit override */}
+          <div className="bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
+            <h3 className="font-h3 text-h3 mb-md flex items-center gap-sm">
+              <span className="material-symbols-outlined text-primary">edit_note</span>
+              Notes recruteur
+            </h3>
+            <CandidateNotes
+              candidateId={candidate.id}
+              initialNotes={candidate.notes ?? ""}
+            />
           </div>
 
           <div className="bg-white p-lg rounded-xl border border-outline-variant shadow-sm space-y-md">

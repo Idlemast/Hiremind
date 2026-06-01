@@ -71,7 +71,7 @@ export function scoreCandidate(input: TriageInput): TriageResult {
   return { score, fit, decision, matchedSkills, missingSkills, why };
 }
 
-function buildWhy(
+export function buildWhy(
   score: number,
   fit: TriageResult["fit"],
   matched: string[],

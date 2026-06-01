@@ -77,6 +77,8 @@ export class Candidate {
   company!: string;
   location!: string;
   email?: string;
+  notes?: string;
+  fitOverride?: string;
   fit!: string;
   score!: number;
   skills: string[] = [];
@@ -118,8 +120,10 @@ export const CandidateSchema = new EntitySchema({
     role:      { type: "string" },
     company:   { type: "string" },
     location:  { type: "string" },
-    email:     { type: "string", nullable: true },
-    fit:       { type: "string" },
+    email:       { type: "string", nullable: true },
+    notes:       { type: "text",   nullable: true },
+    fitOverride: { type: "string", nullable: true, fieldName: "fit_override" },
+    fit:         { type: "string" },
     score:     { type: "integer" },
     skills:    { type: JsonType, nullable: true },
     gaps:      { type: JsonType, nullable: true },

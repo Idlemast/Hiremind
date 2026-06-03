@@ -77,7 +77,7 @@ export async function updateJob(id: number, formData: FormData) {
 
   revalidatePath(`/jobs/${id}`);
   revalidatePath("/jobs");
-  revalidatePath("/triage");
+
   redirect(`/jobs/${id}`);
 }
 
@@ -135,6 +135,35 @@ export async function unarchiveJob(id: number) {
   revalidatePath("/dashboard");
 }
 
+export async function duplicateJob(id: number) {
+  const em  = await getEm();
+  const job = await getJobById(id);
+  if (!job) throw new Error("Poste introuvable");
+
+  const rawStages = job.stages as string[] | null | undefined;
+  const stages    = rawStages?.length ? rawStages : DEFAULT_STAGES;
+
+  const copy = em.create(Job, {
+    title:             `${job.title} (copie)`,
+    department:        job.department,
+    location:          job.location,
+    icon:              job.icon,
+    iconBg:            job.iconBg,
+    requirements:      job.requirements,
+    stages,
+    currentStageIndex: 0,
+    stage:             stages[0],
+    progress:          0,
+    budget:            (job as any).budget ?? undefined,
+    status:            "open",
+  });
+  em.persist(copy);
+  await em.flush();
+
+  revalidatePath("/jobs");
+  redirect(`/jobs/${copy.id}/edit`);
+}
+
 export async function deleteJob(id: number) {
   const em  = await getEm();
   const job = await em.findOne(Job, { id });
@@ -145,7 +174,7 @@ export async function deleteJob(id: number) {
   await em.flush();
 
   revalidatePath("/jobs");
-  revalidatePath("/triage");
+
   revalidatePath("/dashboard");
   redirect("/jobs");
 }

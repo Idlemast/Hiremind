@@ -81,18 +81,7 @@ export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) 
         )}
       </div>
 
-      {/* Right actions — search hidden on mobile */}
       <div className="flex items-center gap-3 shrink-0">
-        <div className="relative hidden md:block w-56 lg:w-72">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
-            search
-          </span>
-          <input
-            className="w-full pl-10 pr-4 py-1.5 bg-slate-100 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/20 outline-none"
-            placeholder="Search…"
-            type="text"
-          />
-        </div>
         <button className="hidden sm:block hover:text-primary transition-colors text-slate-500">
           <span className="material-symbols-outlined">notifications</span>
         </button>

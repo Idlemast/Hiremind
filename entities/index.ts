@@ -88,7 +88,7 @@ export class Candidate {
 }
 
 export class Application {
-  [OptionalProps]?: "gaps" | "why" | "notes" | "stageIndex" | "appliedAt";
+  [OptionalProps]?: "gaps" | "why" | "notes" | "stageIndex" | "appliedAt" | "movedAt";
   id!: number;
   candidate!: Candidate;
   job!: Job;
@@ -99,6 +99,7 @@ export class Application {
   notes?: string;
   stageIndex: number = 0;
   appliedAt: Date = new Date();
+  movedAt?: Date;
 }
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
@@ -154,7 +155,8 @@ export const ApplicationSchema = new EntitySchema({
     gaps:       { type: JsonType, nullable: true },
     why:        { type: "text", nullable: true },
     notes:      { type: "text", nullable: true },
-    stageIndex: { type: "integer", default: 0, fieldName: "stage_index" },
-    appliedAt:  { type: "Date", fieldName: "applied_at", defaultRaw: "CURRENT_TIMESTAMP" },
+    stageIndex:       { type: "integer", default: 0, fieldName: "stage_index" },
+    appliedAt:        { type: "Date",    fieldName: "applied_at",        defaultRaw: "CURRENT_TIMESTAMP" },
+    movedAt:          { type: "Date",    fieldName: "moved_at",  nullable: true },
   },
 });

@@ -5,7 +5,9 @@ import StagePipeline from "@/components/StagePipeline";
 import SaveAsTemplateButton from "@/components/SaveAsTemplateButton";
 import DeleteJobButton from "@/components/DeleteJobButton";
 import ArchiveJobButton from "@/components/ArchiveJobButton";
+import DuplicateJobButton from "@/components/DuplicateJobButton";
 import SearchBar from "@/components/SearchBar";
+import SortSelect from "@/components/SortSelect";
 import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates } from "@/lib/thresholds";
 import { DEFAULT_STAGES } from "@/lib/stages";
 
@@ -40,10 +42,10 @@ export default async function JobDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ q?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; sort?: string }>;
 }) {
-  const { id }        = await params;
-  const { q = "", page } = await searchParams;
+  const { id }                    = await params;
+  const { q = "", page, sort = "score" } = await searchParams;
   const jobId         = Number(id);
   const currentPage   = Math.max(1, Number(page) || 1);
 
@@ -60,7 +62,7 @@ export default async function JobDetailPage({
   const currentStage = stages[stageIndex] ?? job.stage;
   const requirements = (job.requirements as string[] | null) ?? [];
 
-  const applications = (q
+  const filtered = (q
     ? allApplications.filter((a) => {
         const term = q.toLowerCase();
         return a.candidate.name.toLowerCase().includes(term)
@@ -68,6 +70,12 @@ export default async function JobDetailPage({
       })
     : allApplications
   ).map((a) => ({ ...a, fit: scoreToFit(a.score, thresholds) }));
+
+  const applications = [...filtered].sort((a, b) => {
+    if (sort === "name")   return a.candidate.name.localeCompare(b.candidate.name);
+    if (sort === "recent") return new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime();
+    return b.score - a.score; // default: score
+  });
 
   const totalCount  = applications.length;
   const totalPages  = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -107,6 +115,7 @@ export default async function JobDetailPage({
             <span className="hidden sm:inline">Modifier</span>
           </Link>
           <ArchiveJobButton jobId={jobId} status={(job as any).status ?? "open"} />
+          <DuplicateJobButton jobId={jobId} />
           <SaveAsTemplateButton jobId={jobId} />
           <DeleteJobButton jobId={jobId} jobTitle={job.title} />
           <Link href="/jobs"
@@ -167,8 +176,16 @@ export default async function JobDetailPage({
 
           {/* Search + export */}
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3">
-              <SearchBar placeholder="Rechercher un candidat…" defaultValue={q} />
+            <div className="flex items-center gap-3 flex-wrap">
+              <SearchBar placeholder="Rechercher un candidat…" defaultValue={q} keepParams={sort !== "score" ? { sort } : {}} />
+              <SortSelect
+                options={[
+                  { value: "score",  label: "Meilleur score" },
+                  { value: "name",   label: "Nom A→Z" },
+                  { value: "recent", label: "Plus récents" },
+                ]}
+                defaultValue={sort}
+              />
               <span className="text-label-caps text-slate-400 whitespace-nowrap">
                 {totalCount} candidat{totalCount !== 1 ? "s" : ""}
                 {q ? ` · "${q}"` : ""}

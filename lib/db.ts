@@ -55,6 +55,9 @@ const getOrm = cache(async (): Promise<MikroORM> => {
     await conn.execute(`DROP TABLE _candidate_old`);
   }
 
+  // New application columns (fail silently if already present)
+  try { await conn.execute(`ALTER TABLE application ADD COLUMN moved_at DATETIME NULL`); } catch {}
+
   // Legacy job column additions (fail silently if already present)
   try { await conn.execute(`ALTER TABLE job ADD COLUMN stages TEXT NULL`); } catch {}
   try { await conn.execute(`ALTER TABLE job ADD COLUMN current_stage_index INTEGER NOT NULL DEFAULT 0`); } catch {}

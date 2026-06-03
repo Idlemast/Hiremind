@@ -28,7 +28,7 @@ export default function DeleteApplicationButton({
 
   return (
     <div className="flex flex-wrap items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
-      <span className="text-sm text-red-700 font-semibold truncate max-w-[200px] sm:max-w-none">
+      <span className="text-sm text-red-700 font-semibold truncate max-w-50 sm:max-w-none">
         Retirer de «{jobTitle}» ?
       </span>
       <button

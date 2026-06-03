@@ -58,6 +58,7 @@ db.exec(`
     notes        TEXT     NULL,
     stage_index  INTEGER  NOT NULL DEFAULT 0,
     applied_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    moved_at     DATETIME NULL,
     UNIQUE(candidate_id, job_id)
   );
 

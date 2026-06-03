@@ -68,6 +68,8 @@ export default async function JobsPage({
         {jobs.map((job) => {
           const stageName  = job.stage;
           const appCount   = appCounts[job.id] ?? 0;
+          const daysOpen   = Math.round((Date.now() - new Date(job.openedAt).getTime()) / 86_400_000);
+          const openedLabel = daysOpen === 0 ? "aujourd'hui" : daysOpen === 1 ? "hier" : `il y a ${daysOpen}j`;
           return (
             <div key={job.id} className="tonal-card rounded-xl p-lg relative overflow-hidden">
               <div className="status-ribbon bg-blue-500" />
@@ -81,7 +83,7 @@ export default async function JobsPage({
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-sm text-slate-900 truncate">{job.title}</p>
-                      <p className="text-label-caps text-slate-500 truncate">{job.department} · {job.location}</p>
+                      <p className="text-label-caps text-slate-500 truncate">{job.department} · {job.location} · <span className="text-slate-400">Ouvert {openedLabel}</span></p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -111,7 +113,7 @@ export default async function JobsPage({
                   </div>
                   <div>
                     <p className="font-h3 text-body-md font-bold text-slate-900">{job.title}</p>
-                    <p className="text-label-caps text-slate-500">{job.department} · {job.location}</p>
+                    <p className="text-label-caps text-slate-500">{job.department} · {job.location} · <span className="text-slate-400">Ouvert {openedLabel}</span></p>
                   </div>
                 </div>
                 <div className="col-span-2 text-center">

@@ -33,15 +33,24 @@ export default function CandidateApplicationSelector({
   };
 
   if (applications.length === 1) {
+    const single = applications[0];
     return (
-      <button
-        type="button"
-        onClick={open}
-        className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-on-surface rounded-lg text-sm font-semibold hover:border-primary hover:text-primary transition-colors"
-      >
-        <span className="material-symbols-outlined text-sm">open_in_new</span>
-        Voir
-      </button>
+      <div className="flex items-center gap-2">
+        <span className="text-body-sm text-slate-500 font-medium hidden sm:block truncate max-w-[160px]">
+          {single.jobTitle}
+        </span>
+        <span className={`px-2 py-0.5 rounded-full text-label-caps font-label-caps ${FIT_CHIP[single.fit] ?? FIT_CHIP.weak}`}>
+          {single.fit}
+        </span>
+        <button
+          type="button"
+          onClick={open}
+          className="flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-on-surface rounded-lg text-sm font-semibold hover:border-primary hover:text-primary transition-colors"
+        >
+          <span className="material-symbols-outlined text-sm">open_in_new</span>
+          Voir
+        </button>
+      </div>
     );
   }
 

@@ -102,7 +102,7 @@ export async function updateCandidate(id: number, formData: FormData) {
 
   await em.flush();
   revalidatePath(`/candidates/${id}`);
-  revalidatePath("/triage");
+
   redirect(`/candidates/${id}`);
 }
 
@@ -132,7 +132,7 @@ export async function updateApplicationNotes(applicationId: number, notes: strin
   em.assign(app, { notes: trimmed, score: adjusted, fit, why });
   await em.flush();
   revalidatePath(`/candidates/${app.candidate.id}`);
-  revalidatePath("/triage");
+
 }
 
 export async function updateApplicationStage(applicationId: number, stageIndex: number) {
@@ -144,10 +144,11 @@ export async function updateApplicationStage(applicationId: number, stageIndex: 
   const stages    = rawStages?.length ? rawStages : [];
   const idx       = Math.max(0, Math.min(stages.length - 1, stageIndex));
 
-  em.assign(app, { stageIndex: idx });
+  em.assign(app, { stageIndex: idx, movedAt: new Date() });
   await em.flush();
   revalidatePath(`/candidates/${app.candidate.id}`);
 }
+
 
 export async function deleteCandidate(id: number) {
   const em        = await getEm();
@@ -157,9 +158,36 @@ export async function deleteCandidate(id: number) {
   await em.nativeDelete(Application, { candidate: { id } });
   em.remove(candidate);
   await em.flush();
-  revalidatePath("/triage");
+
   revalidatePath("/jobs");
-  redirect("/triage");
+  redirect("/candidates");
+}
+
+export async function addApplicationToJob(candidateId: number, jobId: number) {
+  const em = await getEm();
+  const [candidate, job] = await Promise.all([
+    em.findOne(Candidate, { id: candidateId }),
+    em.findOne(Job, { id: jobId }),
+  ]);
+  if (!candidate) throw new Error("Candidat introuvable");
+  if (!job) throw new Error("Poste introuvable");
+
+  const skills = (candidate.skills as string[] | null) ?? [];
+  const reqs   = (job.requirements  as string[] | null) ?? [];
+  const result = scoreCandidate({ candidateSkills: skills, jobRequirements: reqs });
+
+  const application = em.create(Application, {
+    candidate, job,
+    score: result.score,
+    fit:   result.fit,
+    gaps:  result.missingSkills,
+    why:   result.why,
+  });
+  em.persist(application);
+  await em.flush();
+
+  revalidatePath(`/candidates/${candidateId}`);
+  redirect(`/candidates/${candidateId}?appId=${application.id}`);
 }
 
 export async function deleteApplication(applicationId: number) {
@@ -171,7 +199,7 @@ export async function deleteApplication(applicationId: number) {
   em.remove(app);
   await em.flush();
   revalidatePath(`/candidates/${candidateId}`);
-  revalidatePath("/triage");
+
   redirect(`/candidates/${candidateId}`);
 }
 

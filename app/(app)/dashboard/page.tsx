@@ -134,10 +134,10 @@ export default async function DashboardPage() {
                 </div>
                 <div className="mt-lg">
                   <a
-                    href="/jobs"
+                    href={`/jobs/${stalled.id}`}
                     className="block w-full text-center border border-outline text-on-surface py-2 rounded-lg font-semibold text-sm hover:bg-slate-50 transition-colors"
                   >
-                    View Triage
+                    Voir le poste
                   </a>
                 </div>
               </div>
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
                       <p className="text-label-caps text-slate-500 truncate">{job.department}</p>
                     </div>
                   </div>
-                  <a href="/jobs" className="text-primary shrink-0">
+                  <a href={`/jobs/${job.id}`} className="text-primary shrink-0">
                     <span className="material-symbols-outlined">arrow_forward</span>
                   </a>
                 </div>
@@ -218,8 +218,8 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                   <div className="col-span-2 text-right">
-                    <a href="/jobs" className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
-                      Open Triage
+                    <a href={`/jobs/${job.id}`} className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
+                      Ouvrir
                       <span className="material-symbols-outlined text-sm">arrow_forward</span>
                     </a>
                   </div>

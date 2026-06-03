@@ -1,4 +1,4 @@
-import { getCandidateById, getApplications, getThresholds } from "@/lib/db";
+import { getCandidateById, getApplications, getThresholds, getJobs } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import TagEditor from "@/components/TagEditor";
@@ -6,6 +6,10 @@ import CandidateNotes from "@/components/CandidateNotes";
 import CandidateStageControl from "@/components/CandidateStageControl";
 import DeleteCandidateButton from "@/components/DeleteCandidateButton";
 import DeleteApplicationButton from "@/components/DeleteApplicationButton";
+import CopyButton from "@/components/CopyButton";
+import LinkCandidateToJobButton from "@/components/LinkCandidateToJobButton";
+
+import type { JobOption } from "@/components/LinkCandidateToJobButton";
 import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates } from "@/lib/thresholds";
 import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
 
@@ -20,10 +24,11 @@ export default async function CandidateProfilePage({
   const { appId } = await searchParams;
   const candidateId = Number(id);
 
-  const [candidate, applications, thresholds] = await Promise.all([
+  const [candidate, applications, thresholds, allJobs] = await Promise.all([
     getCandidateById(candidateId),
     getApplications(undefined, candidateId),
     getThresholds(),
+    getJobs(),
   ]);
   if (!candidate) notFound();
 
@@ -33,6 +38,12 @@ export default async function CandidateProfilePage({
     ?? null;
 
   const tags = (candidate.tags as string[] | null) ?? [];
+
+  // Jobs the candidate is NOT yet applied to
+  const appliedJobIds = new Set(applications.map((a) => a.job.id));
+  const availableJobs: JobOption[] = allJobs
+    .filter((j) => !appliedJobIds.has(j.id) && (j as any).status !== "closed")
+    .map((j) => ({ id: j.id, title: j.title, department: j.department }));
 
   if (!app) {
     // Candidate exists but has no application yet
@@ -156,26 +167,29 @@ export default async function CandidateProfilePage({
 
       {/* ── Application switcher (multiple jobs) ───────────── */}
       {applications.length > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-label-caps text-slate-400 shrink-0">Candidature pour :</span>
-          {applications.map((a) => (
-            <div key={a.id} className="flex items-center gap-1">
-              <Link
-                href={`/candidates/${candidate.id}?appId=${a.id}`}
-                className={[
-                  "px-3 py-1.5 rounded-full text-label-caps font-label-caps border whitespace-nowrap transition-colors",
-                  a.id === app.id
-                    ? "bg-primary text-white border-primary"
-                    : "bg-white border-slate-200 text-slate-600 hover:border-primary/40 hover:text-primary",
-                ].join(" ")}
-              >
-                {a.job.title}
-              </Link>
-              {applications.length > 1 && (
-                <DeleteApplicationButton applicationId={a.id} jobTitle={a.job.title} />
-              )}
-            </div>
-          ))}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-label-caps text-slate-400 shrink-0">Candidature pour :</span>
+            {applications.map((a) => (
+              <div key={a.id} className="flex items-center gap-1">
+                <Link
+                  href={`/candidates/${candidate.id}?appId=${a.id}`}
+                  className={[
+                    "px-3 py-1.5 rounded-full text-label-caps font-label-caps border whitespace-nowrap transition-colors",
+                    a.id === app.id
+                      ? "bg-primary text-white border-primary"
+                      : "bg-white border-slate-200 text-slate-600 hover:border-primary/40 hover:text-primary",
+                  ].join(" ")}
+                >
+                  {a.job.title}
+                </Link>
+                {applications.length > 1 && (
+                  <DeleteApplicationButton applicationId={a.id} jobTitle={a.job.title} />
+                )}
+              </div>
+            ))}
+          </div>
+          <LinkCandidateToJobButton candidateId={candidate.id} availableJobs={availableJobs} />
         </div>
       )}
 
@@ -318,7 +332,7 @@ export default async function CandidateProfilePage({
                     <p className="font-label-caps text-label-caps text-slate-500 uppercase">
                       {decision === "review" ? "Option A · Avancer" : "Draft · Étape suivante"}
                     </p>
-                    <button className="text-xs text-primary font-bold hover:underline">Copier</button>
+                    <CopyButton text={templates.advance} />
                   </div>
                   <pre className="bg-emerald-50 border border-emerald-100 p-md rounded-lg text-body-sm text-on-surface-variant whitespace-pre-wrap font-sans leading-relaxed overflow-x-auto">
                     {templates.advance}
@@ -331,7 +345,7 @@ export default async function CandidateProfilePage({
                     <p className="font-label-caps text-label-caps text-slate-500 uppercase">
                       {decision === "review" ? "Option B · Décliner" : "Draft · Refus"}
                     </p>
-                    <button className="text-xs text-primary font-bold hover:underline">Copier</button>
+                    <CopyButton text={templates.reject} />
                   </div>
                   <pre className={`p-md rounded-lg border text-body-sm text-on-surface-variant whitespace-pre-wrap font-sans leading-relaxed overflow-x-auto ${
                     decision === "reject" ? "bg-red-50 border-red-100" : "bg-surface-container border-outline-variant"

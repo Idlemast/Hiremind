@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const nav = [
-  { href: "/dashboard", label: "Dashboard",    icon: "dashboard" },
-  { href: "/triage",    label: "Candidats",    icon: "group" },
-  { href: "/jobs",      label: "Postes",       icon: "work" },
-  { href: "/stats",     label: "Statistiques", icon: "bar_chart" },
-  { href: "/settings",  label: "Paramètres",   icon: "settings" },
+  { href: "/dashboard",  label: "Dashboard",    icon: "dashboard" },
+  { href: "/candidates", label: "Candidats",    icon: "group" },
+  { href: "/jobs",       label: "Postes",       icon: "work" },
+  { href: "/stats",      label: "Statistiques", icon: "bar_chart" },
+  { href: "/settings",   label: "Paramètres",   icon: "settings" },
 ];
 
 const navDisabled: { label: string; icon: string }[] = [];

@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getEm, getJobById } from "@/lib/db";
-import { Job, Candidate } from "@/entities/index";
+import { Job, Application } from "@/entities/index";
 import { parseManualSkills } from "@/lib/extract-skills";
 import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
 import { scoreCandidate, buildWhy } from "@/lib/triage";
@@ -64,13 +64,13 @@ export async function updateJob(id: number, formData: FormData) {
   await em.flush();
 
   if (rescore) {
-    const candidates = await em.find(Candidate, { job: { id } });
-    for (const c of candidates) {
-      const skills = (c.skills as string[] | null) ?? [];
+    const apps = await em.find(Application, { job: { id } }, { populate: ["candidate"] });
+    for (const app of apps) {
+      const skills = (app.candidate.skills as string[] | null) ?? [];
       const result = scoreCandidate({ candidateSkills: skills, jobRequirements: requirements });
       const fit    = scoreToFit(result.score);
       const why    = buildWhy(result.score, fit, result.matchedSkills, result.missingSkills, skills);
-      em.assign(c, { score: result.score, fit, gaps: result.missingSkills, why });
+      em.assign(app, { score: result.score, fit, gaps: result.missingSkills, why });
     }
     await em.flush();
   }
@@ -136,13 +136,11 @@ export async function unarchiveJob(id: number) {
 }
 
 export async function deleteJob(id: number) {
-  const em = await getEm();
-  const job = await em.findOne(Job, { id }, { populate: ["candidates"] });
+  const em  = await getEm();
+  const job = await em.findOne(Job, { id });
   if (!job) throw new Error("Poste introuvable");
 
-  // Cascade delete candidates
-  const candidates = await em.find(Candidate, { job: { id } });
-  for (const c of candidates) em.remove(c);
+  await em.nativeDelete(Application, { job: { id } });
   em.remove(job);
   await em.flush();
 

@@ -100,7 +100,7 @@ export default async function ImportCandidatePage() {
         {/* Submit */}
         <div className="flex items-center justify-between">
           <a
-            href="/triage"
+            href="/candidates"
             className="text-sm font-semibold text-slate-500 hover:text-on-surface transition-colors"
           >
             ← Cancel

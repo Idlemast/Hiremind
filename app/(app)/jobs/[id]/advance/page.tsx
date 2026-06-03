@@ -1,4 +1,4 @@
-import { getJobById, getCandidates, getThresholds } from "@/lib/db";
+import { getJobById, getApplications, getThresholds } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { scoreToFit, fitToDecision, getCommTemplates } from "@/lib/thresholds";
@@ -14,9 +14,9 @@ export default async function AdvanceStagePage({
   const { id }  = await params;
   const jobId   = Number(id);
 
-  const [job, allCandidates, thresholds] = await Promise.all([
+  const [job, allApplications, thresholds] = await Promise.all([
     getJobById(jobId),
-    getCandidates(jobId),
+    getApplications(jobId),
     getThresholds(),
   ]);
   if (!job) notFound();
@@ -41,15 +41,14 @@ export default async function AdvanceStagePage({
   const currentStage = stages[stageIndex];
   const nextStage    = stages[stageIndex + 1];
 
-  // Build plain candidate data with pre-generated emails — safe for Client Component
-  const candidateData: CandidateEmailData[] = allCandidates.map((c) => {
-    const fit      = scoreToFit(c.score, thresholds);
+  const candidateData: CandidateEmailData[] = allApplications.map((app) => {
+    const fit      = scoreToFit(app.score, thresholds);
     const decision = fitToDecision(fit);
-    const skills   = (c.skills as string[]) ?? [];
-    const gaps     = (c.gaps   as string[]) ?? [];
+    const skills   = (app.candidate.skills as string[]) ?? [];
+    const gaps     = (app.gaps             as string[]) ?? [];
     const { advance, reject } = getCommTemplates(
       {
-        firstName:    c.name.split(" ")[0],
+        firstName:    app.candidate.name.split(" ")[0],
         jobTitle:     job.title,
         gaps,
         matchedSkills: skills,
@@ -57,12 +56,12 @@ export default async function AdvanceStagePage({
       decision
     );
     return {
-      id:           c.id,
-      name:         c.name,
-      email:        c.email ?? null,
+      id:           app.id,
+      name:         app.candidate.name,
+      email:        app.candidate.email ?? null,
       fit,
       decision,
-      score:        c.score,
+      score:        app.score,
       advanceEmail: advance,
       rejectEmail:  reject,
     };
@@ -71,7 +70,6 @@ export default async function AdvanceStagePage({
   return (
     <div className="p-4 lg:p-xl max-w-4xl mx-auto space-y-xl">
 
-      {/* ── Header ────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
         <div>
           <Link

@@ -6,8 +6,7 @@ import { usePathname } from "next/navigation";
 const pageTitles: Record<string, string> = {
   "/dashboard":  "Dashboard",
   "/jobs":       "Jobs",
-  "/triage":     "Candidates",
-  "/candidates": "Import Candidate",
+  "/candidates": "Candidats",
   "/settings":   "Settings",
 };
 
@@ -47,21 +46,21 @@ export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) 
           </>
         ) : isCandidateImport ? (
           <>
-            <Link href="/triage" className="p-1 hover:bg-slate-100 rounded-full transition-colors shrink-0">
+            <Link href="/candidates" className="p-1 hover:bg-slate-100 rounded-full transition-colors shrink-0">
               <span className="material-symbols-outlined text-slate-500 text-xl">arrow_back</span>
             </Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
-            <Link href="/triage" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Candidates</Link>
+            <Link href="/candidates" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Candidates</Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
             <span className="font-bold text-primary truncate">Import</span>
           </>
         ) : isCandidateProfile ? (
           <>
-            <Link href="/triage" className="p-1 hover:bg-slate-100 rounded-full transition-colors shrink-0">
+            <Link href="/candidates" className="p-1 hover:bg-slate-100 rounded-full transition-colors shrink-0">
               <span className="material-symbols-outlined text-slate-500 text-xl">arrow_back</span>
             </Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
-            <Link href="/triage" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Candidates</Link>
+            <Link href="/candidates" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Candidates</Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
             <span className="font-bold text-primary truncate">Profil</span>
           </>

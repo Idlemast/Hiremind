@@ -1,26 +1,26 @@
-import { getCandidates, getJobs, getThresholds } from "@/lib/db";
+import { getApplications, getJobs, getThresholds } from "@/lib/db";
 import { computeGapFrequency, computeFitDistribution } from "@/lib/stats";
 import { scoreToFit } from "@/lib/thresholds";
 
 export default async function StatsPage() {
-  const [allCandidates, jobs, thresholds] = await Promise.all([
-    getCandidates(),
+  const [allApplications, jobs, thresholds] = await Promise.all([
+    getApplications(),
     getJobs(),
     getThresholds(),
   ]);
 
-  const gaps         = computeGapFrequency(allCandidates);
+  const gaps         = computeGapFrequency(allApplications);
   const distribution = computeFitDistribution(
-    allCandidates,
+    allApplications,
     jobs,
     (score) => scoreToFit(score, thresholds)
   );
 
-  const total       = allCandidates.length;
-  const strongCount = allCandidates.filter((c) => scoreToFit(c.score, thresholds) === "strong").length;
-  const mediumCount = allCandidates.filter((c) => scoreToFit(c.score, thresholds) === "medium").length;
-  const weakCount   = allCandidates.filter((c) => scoreToFit(c.score, thresholds) === "weak").length;
-  const avgScore    = total > 0 ? Math.round(allCandidates.reduce((s, c) => s + c.score, 0) / total) : 0;
+  const total       = allApplications.length;
+  const strongCount = allApplications.filter((a) => scoreToFit(a.score, thresholds) === "strong").length;
+  const mediumCount = allApplications.filter((a) => scoreToFit(a.score, thresholds) === "medium").length;
+  const weakCount   = allApplications.filter((a) => scoreToFit(a.score, thresholds) === "weak").length;
+  const avgScore    = total > 0 ? Math.round(allApplications.reduce((s, a) => s + a.score, 0) / total) : 0;
 
   return (
     <div className="p-4 lg:p-xl max-w-6xl mx-auto space-y-xl">

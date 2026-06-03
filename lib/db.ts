@@ -1,29 +1,79 @@
 import { MikroORM, type EntityManager } from "@mikro-orm/sqlite";
 import { cache } from "react";
 import config from "../mikro-orm.config";
-import { Job, Candidate, Setting, JobTemplate } from "../entities/index";
+import { Job, Candidate, Application, Setting, JobTemplate } from "../entities/index";
 import { DEFAULT_THRESHOLDS, type Thresholds } from "./thresholds";
 
-// Per-request cache via React — avoids stale globalThis between config changes.
 const getOrm = cache(async (): Promise<MikroORM> => {
   const orm  = await MikroORM.init(config);
   const conn = orm.em.getConnection();
+
   await conn.execute(`CREATE TABLE IF NOT EXISTS setting (key TEXT NOT NULL PRIMARY KEY, value TEXT NOT NULL)`);
-  try { await conn.execute(`ALTER TABLE candidate ADD COLUMN email TEXT NULL`); } catch {}
-  try { await conn.execute(`ALTER TABLE candidate ADD COLUMN notes TEXT NULL`); } catch {}
-  try { await conn.execute(`ALTER TABLE candidate ADD COLUMN fit_override TEXT NULL`); } catch {}
-  try { await conn.execute(`ALTER TABLE candidate ADD COLUMN stage_index INTEGER NOT NULL DEFAULT 0`); } catch {}
+
+  // Create application table (m:n schema)
+  await conn.execute(`CREATE TABLE IF NOT EXISTS application (
+    id           INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,
+    candidate_id INTEGER  NOT NULL REFERENCES candidate(id) ON DELETE CASCADE,
+    job_id       INTEGER  NOT NULL REFERENCES job(id)       ON DELETE CASCADE,
+    score        INTEGER  NOT NULL DEFAULT 0,
+    fit          TEXT     NOT NULL DEFAULT 'weak',
+    gaps         TEXT     NULL,
+    why          TEXT     NULL,
+    notes        TEXT     NULL,
+    stage_index  INTEGER  NOT NULL DEFAULT 0,
+    applied_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(candidate_id, job_id)
+  )`);
+
+  // Migrate from m:1 schema if candidate.job_id still exists
+  const colInfo = await conn.execute(`PRAGMA table_info(candidate)`) as { name: string }[];
+  const hasJobId = colInfo.some((c) => c.name === "job_id");
+  if (hasJobId) {
+    await conn.execute(`INSERT OR IGNORE INTO application
+      (candidate_id, job_id, score, fit, gaps, why, notes, stage_index, applied_at)
+      SELECT id, job_id, COALESCE(score, 0), COALESCE(fit, 'weak'),
+             gaps, why, notes, COALESCE(stage_index, 0), applied_at
+      FROM candidate WHERE job_id IS NOT NULL`);
+    await conn.execute(`ALTER TABLE candidate RENAME TO _candidate_old`);
+    await conn.execute(`CREATE TABLE candidate (
+      id         INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,
+      name       TEXT     NOT NULL,
+      role       TEXT     NOT NULL,
+      company    TEXT     NOT NULL,
+      location   TEXT     NOT NULL,
+      email      TEXT     NULL,
+      source     TEXT     NOT NULL DEFAULT 'Manual',
+      salary     TEXT     NULL,
+      skills     TEXT     NULL,
+      tags       TEXT     NULL,
+      applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`);
+    await conn.execute(`INSERT INTO candidate (id, name, role, company, location, email, source, salary, skills, tags, applied_at)
+      SELECT id, name, role, company, location, email,
+             COALESCE(source, 'Manual'), salary, skills, tags, applied_at
+      FROM _candidate_old`);
+    await conn.execute(`DROP TABLE _candidate_old`);
+  }
+
+  // Legacy job column additions (fail silently if already present)
   try { await conn.execute(`ALTER TABLE job ADD COLUMN stages TEXT NULL`); } catch {}
   try { await conn.execute(`ALTER TABLE job ADD COLUMN current_stage_index INTEGER NOT NULL DEFAULT 0`); } catch {}
   try { await conn.execute(`ALTER TABLE job ADD COLUMN budget TEXT NULL`); } catch {}
   try { await conn.execute(`ALTER TABLE job ADD COLUMN status TEXT NOT NULL DEFAULT 'open'`); } catch {}
+
   await conn.execute(`CREATE TABLE IF NOT EXISTS job_template (
-    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL, title TEXT NOT NULL, department TEXT NOT NULL,
-    location TEXT NOT NULL, icon TEXT NOT NULL, icon_bg TEXT NOT NULL,
-    requirements TEXT NULL, stages TEXT NULL,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id           INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name         TEXT     NOT NULL,
+    title        TEXT     NOT NULL,
+    department   TEXT     NOT NULL,
+    location     TEXT     NOT NULL,
+    icon         TEXT     NOT NULL,
+    icon_bg      TEXT     NOT NULL,
+    requirements TEXT     NULL,
+    stages       TEXT     NULL,
+    created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
+
   return orm;
 });
 
@@ -31,31 +81,52 @@ export async function getEm(): Promise<EntityManager> {
   return (await getOrm()).em.fork();
 }
 
-// ── Query helpers ────────────────────────────────────────────────────────────
+// ── Query helpers ─────────────────────────────────────────────────────────────
 
 export async function getJobs() {
   const em = await getEm();
-  return em.find(Job, {}, { populate: ["candidates"], orderBy: { openedAt: "DESC" } });
+  return em.find(Job, {}, { orderBy: { openedAt: "DESC" } });
 }
 
 export async function getJobById(id: number) {
   const em = await getEm();
-  return em.findOne(Job, { id }, { populate: ["candidates"] });
+  return em.findOne(Job, { id });
 }
 
-export async function getCandidates(jobId?: number) {
+export async function getApplications(jobId?: number, candidateId?: number) {
+  const em    = await getEm();
+  const where: Record<string, unknown> = {};
+  if (jobId)       where.job       = { id: jobId };
+  if (candidateId) where.candidate = { id: candidateId };
+  return em.find(Application, where, {
+    populate:  ["candidate", "job"],
+    orderBy:   { score: "DESC" },
+  });
+}
+
+export async function getApplicationById(id: number) {
   const em = await getEm();
-  const where = jobId ? { job: { id: jobId } } : {};
-  return em.find(Candidate, where, { populate: ["job"], orderBy: { score: "DESC" } });
+  return em.findOne(Application, { id }, { populate: ["candidate", "job"] });
 }
 
 export async function getCandidateById(id: number) {
   const em = await getEm();
-  return em.findOne(Candidate, { id }, { populate: ["job"] });
+  return em.findOne(Candidate, { id });
+}
+
+export async function getApplicationCountsByJob(): Promise<Record<number, number>> {
+  const em   = await getEm();
+  const conn = em.getConnection();
+  const rows = await conn.execute(
+    "SELECT job_id, COUNT(*) as cnt FROM application GROUP BY job_id"
+  ) as { job_id: number; cnt: number }[];
+  const counts: Record<number, number> = {};
+  for (const row of rows) counts[row.job_id] = row.cnt;
+  return counts;
 }
 
 export async function getJobMeta() {
-  const em = await getEm();
+  const em   = await getEm();
   const jobs = await em.find(Job, {}, { fields: ["department", "location"] });
   const departments = [...new Set(jobs.map((j) => j.department))].sort();
   const locations   = [...new Set(jobs.map((j) => j.location))].sort();
@@ -64,15 +135,16 @@ export async function getJobMeta() {
 
 export async function getStats() {
   const em = await getEm();
-  const [jobCount, candidateCount] = await Promise.all([
+  const [jobCount, candidateCount, applicationCount] = await Promise.all([
     em.count(Job),
     em.count(Candidate),
+    em.count(Application),
   ]);
-  return { jobCount, candidateCount };
+  return { jobCount, candidateCount, applicationCount };
 }
 
 export async function getThresholds(): Promise<Thresholds> {
-  const em = await getEm();
+  const em   = await getEm();
   const rows = await em.find(Setting, { key: { $in: ["threshold_strong", "threshold_medium"] } });
   const map: Record<string, number> = {};
   for (const r of rows) map[r.key] = Number(r.value);
@@ -83,9 +155,8 @@ export async function getThresholds(): Promise<Thresholds> {
 }
 
 export async function getTemplates() {
-  const em  = await getEm();
+  const em   = await getEm();
   const rows = await em.find(JobTemplate, {}, { orderBy: { createdAt: "DESC" } });
-  // Return plain objects — MikroORM entities cannot be passed to Client Components
   return rows.map((t) => ({
     id:           t.id,
     name:         t.name,

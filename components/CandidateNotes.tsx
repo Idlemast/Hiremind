@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useTransition, useMemo } from "react";
-import { updateCandidateNotes } from "@/app/actions/candidates";
+import { updateApplicationNotes } from "@/app/actions/candidates";
 import { analyzeInterviewNotes } from "@/lib/interview-signals";
 
 export default function CandidateNotes({
-  candidateId,
+  applicationId,
   initialNotes,
 }: {
-  candidateId: number;
+  applicationId: number;
   initialNotes: string;
 }) {
   const [notes, setNotes]          = useState(initialNotes);
@@ -26,7 +26,7 @@ export default function CandidateNotes({
 
   const handleSave = () => {
     startTransition(async () => {
-      await updateCandidateNotes(candidateId, notes);
+      await updateApplicationNotes(applicationId, notes);
       setDirty(false);
       setSaved(true);
     });
@@ -34,7 +34,6 @@ export default function CandidateNotes({
 
   return (
     <div className="space-y-md">
-
       <div>
         <p className="font-label-caps text-label-caps text-slate-400 uppercase tracking-widest mb-sm">
           Notes recruteur

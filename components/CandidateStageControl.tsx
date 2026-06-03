@@ -1,21 +1,21 @@
 "use client";
 
 import { useTransition } from "react";
-import { updateCandidateStage } from "@/app/actions/candidates";
+import { updateApplicationStage } from "@/app/actions/candidates";
 
 export default function CandidateStageControl({
-  candidateId,
+  applicationId,
   stageIndex,
   stages,
 }: {
-  candidateId: number;
+  applicationId: number;
   stageIndex: number;
   stages: string[];
 }) {
   const [pending, startTransition] = useTransition();
 
   const move = (newIndex: number) => {
-    startTransition(() => updateCandidateStage(candidateId, newIndex));
+    startTransition(() => updateApplicationStage(applicationId, newIndex));
   };
 
   return (

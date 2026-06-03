@@ -1,4 +1,4 @@
-import { getJobs, getTemplates } from "@/lib/db";
+import { getJobs, getTemplates, getApplicationCountsByJob } from "@/lib/db";
 import SearchBar from "@/components/SearchBar";
 import TemplateManager from "@/components/TemplateManager";
 
@@ -8,7 +8,11 @@ export default async function JobsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
-  const [allJobs, templates] = await Promise.all([getJobs(), getTemplates()]);
+  const [allJobs, templates, appCounts] = await Promise.all([
+    getJobs(),
+    getTemplates(),
+    getApplicationCountsByJob(),
+  ]);
 
   const jobs = q
     ? allJobs.filter((job) => {
@@ -62,7 +66,8 @@ export default async function JobsPage({
         )}
 
         {jobs.map((job) => {
-          const stageName = job.stage;
+          const stageName  = job.stage;
+          const appCount   = appCounts[job.id] ?? 0;
           return (
             <div key={job.id} className="tonal-card rounded-xl p-lg relative overflow-hidden">
               <div className="status-ribbon bg-blue-500" />
@@ -82,7 +87,7 @@ export default async function JobsPage({
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="inline-flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-full border border-slate-100">
                       <span className="material-symbols-outlined text-sm text-blue-600">group</span>
-                      <span className="text-xs font-bold text-slate-700">{job.candidates.length}</span>
+                      <span className="text-xs font-bold text-slate-700">{appCount}</span>
                     </div>
                     <a href={`/jobs/${job.id}`} className="text-primary">
                       <span className="material-symbols-outlined">arrow_forward</span>
@@ -112,7 +117,7 @@ export default async function JobsPage({
                 <div className="col-span-2 text-center">
                   <div className="inline-flex items-center gap-1.5 bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
                     <span className="material-symbols-outlined text-sm text-blue-600">group</span>
-                    <span className="text-sm font-bold text-slate-700">{job.candidates.length}</span>
+                    <span className="text-sm font-bold text-slate-700">{appCount}</span>
                   </div>
                 </div>
                 <div className="col-span-3 pr-8">

@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:init": "tsx scripts/db-init.ts",
-    "db:seed": "tsx scripts/seed.ts",
-    "db:reset": "tsx scripts/db-init.ts && tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/db-init.ts && tsx scripts/seed.ts",
+    "db:seed:only": "tsx scripts/seed.ts"
   },
   "mikro-orm": {
     "useTsNode": true,

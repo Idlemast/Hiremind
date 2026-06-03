@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getCandidates, getThresholds } from "@/lib/db";
+import { getApplications, getThresholds } from "@/lib/db";
 import { scoreToFit } from "@/lib/thresholds";
 import { DEFAULT_STAGES } from "@/lib/stages";
 
@@ -13,9 +13,9 @@ function escape(val: string | null | undefined): string {
 }
 
 export async function GET(req: NextRequest) {
-  const jobId    = req.nextUrl.searchParams.get("jobId");
-  const [candidates, thresholds] = await Promise.all([
-    getCandidates(jobId ? Number(jobId) : undefined),
+  const jobId = req.nextUrl.searchParams.get("jobId");
+  const [applications, thresholds] = await Promise.all([
+    getApplications(jobId ? Number(jobId) : undefined),
     getThresholds(),
   ]);
 
@@ -25,32 +25,32 @@ export async function GET(req: NextRequest) {
     "Étape pipeline", "Source", "Tags", "Notes",
   ];
 
-  const rows = candidates.map((c) => {
-    const fit    = scoreToFit(c.score, thresholds);
-    const skills = (c.skills as string[] | null) ?? [];
-    const gaps   = (c.gaps   as string[] | null) ?? [];
-    const tags   = (c.tags   as string[] | null) ?? [];
+  const rows = applications.map((app) => {
+    const fit    = scoreToFit(app.score, thresholds);
+    const skills = (app.candidate.skills as string[] | null) ?? [];
+    const gaps   = (app.gaps             as string[] | null) ?? [];
+    const tags   = (app.candidate.tags   as string[] | null) ?? [];
 
-    const rawStages    = (c.job as any).stages as string[] | null | undefined;
+    const rawStages    = app.job.stages as string[] | null | undefined;
     const jobStages    = rawStages?.length ? rawStages : DEFAULT_STAGES;
-    const stageIdx     = c.stageIndex ?? 0;
+    const stageIdx     = app.stageIndex ?? 0;
     const currentStage = jobStages[stageIdx] ?? jobStages[0] ?? "";
 
     return [
-      c.name,
-      c.email ?? "",
-      c.role,
-      c.company,
-      c.location,
-      c.salary ?? "",
-      String(c.score),
+      app.candidate.name,
+      app.candidate.email ?? "",
+      app.candidate.role,
+      app.candidate.company,
+      app.candidate.location,
+      app.candidate.salary ?? "",
+      String(app.score),
       fit,
       skills.join("; "),
       gaps.join("; "),
       currentStage,
-      c.source,
+      app.candidate.source,
       tags.join("; "),
-      c.notes ?? "",
+      app.notes ?? "",
     ].map(escape).join(",");
   });
 

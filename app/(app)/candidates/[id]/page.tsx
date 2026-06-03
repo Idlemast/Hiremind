@@ -1,50 +1,85 @@
-import { getCandidateById, getThresholds } from "@/lib/db";
+import { getCandidateById, getApplications, getThresholds } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import TagEditor from "@/components/TagEditor";
 import CandidateNotes from "@/components/CandidateNotes";
 import CandidateStageControl from "@/components/CandidateStageControl";
 import DeleteCandidateButton from "@/components/DeleteCandidateButton";
+import DeleteApplicationButton from "@/components/DeleteApplicationButton";
 import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates } from "@/lib/thresholds";
 import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
 
 export default async function CandidateProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ appId?: string }>;
 }) {
-  const { id } = await params;
-  const [candidate, thresholds] = await Promise.all([
-    getCandidateById(Number(id)),
+  const { id }    = await params;
+  const { appId } = await searchParams;
+  const candidateId = Number(id);
+
+  const [candidate, applications, thresholds] = await Promise.all([
+    getCandidateById(candidateId),
+    getApplications(undefined, candidateId),
     getThresholds(),
   ]);
   if (!candidate) notFound();
 
-  const skills = candidate.skills as string[];
-  const gaps   = candidate.gaps   as string[];
-  const tags   = candidate.tags   as string[];
+  // Select active application: appId from URL, or most recent
+  const app = (appId ? applications.find((a) => a.id === Number(appId)) : null)
+    ?? applications[0]
+    ?? null;
 
-  const initials   = candidate.name.split(" ").map((n) => n[0]).join("");
-  const matchScore = candidate.score;
-  const fit        = scoreToFit(matchScore, thresholds);
-  const decision   = fitToDecision(fit);
+  const tags = (candidate.tags as string[] | null) ?? [];
+
+  if (!app) {
+    // Candidate exists but has no application yet
+    return (
+      <div className="p-4 lg:p-xl max-w-3xl mx-auto space-y-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-16 h-16 rounded-xl bg-primary flex items-center justify-center text-white text-2xl font-bold font-h1">
+            {candidate.name.split(" ").map((n) => n[0]).join("")}
+          </div>
+          <div>
+            <h2 className="font-h1 text-h1 text-on-surface">{candidate.name}</h2>
+            <p className="text-body-sm text-slate-500">{candidate.role} · {candidate.company}</p>
+          </div>
+        </div>
+        <div className="bg-white border border-dashed border-slate-200 rounded-xl p-xl text-center text-slate-400 space-y-3">
+          <span className="material-symbols-outlined text-4xl block">work_off</span>
+          <p>Ce candidat n'est lié à aucun poste.</p>
+          <Link href="/candidates/new" className="text-primary font-bold text-sm hover:underline">
+            Importer sur un poste →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const skills = (candidate.skills   as string[]) ?? [];
+  const gaps   = (app.gaps           as string[]) ?? [];
+
+  const initials    = candidate.name.split(" ").map((n) => n[0]).join("");
+  const matchScore  = app.score;
+  const fit         = scoreToFit(matchScore, thresholds);
+  const decision    = fitToDecision(fit);
   const decisionMeta = DECISION_META[decision];
 
-  // Stage tracking — per-candidate
-  const rawJobStages  = candidate.job.stages as string[] | null | undefined;
+  const rawJobStages  = app.job.stages as string[] | null | undefined;
   const jobStages     = rawJobStages?.length ? rawJobStages : DEFAULT_STAGES;
-  const stageIdx      = candidate.stageIndex ?? 0;
+  const stageIdx      = app.stageIndex ?? 0;
   const currentStage  = jobStages[stageIdx] ?? jobStages[0];
   const stageProgress = deriveProgress(stageIdx, jobStages.length);
 
-  // Salary vs budget
-  const jobBudget      = (candidate.job as any).budget as string | null | undefined;
+  const jobBudget       = (app.job as any).budget as string | null | undefined;
   const candidateSalary = candidate.salary;
 
   const templates = getCommTemplates(
     {
       firstName:    candidate.name.split(" ")[0],
-      jobTitle:     candidate.job.title,
+      jobTitle:     app.job.title,
       gaps,
       matchedSkills: skills,
     },
@@ -54,7 +89,7 @@ export default async function CandidateProfilePage({
   return (
     <div className="p-4 lg:p-xl max-w-7xl mx-auto space-y-lg animate-fade-in">
 
-      {/* ── Profile header ─────────────────────────────────────── */}
+      {/* ── Profile header ─────────────────────────────────── */}
       <section className="flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
         <div className="flex items-center gap-lg">
           <div className="relative shrink-0">
@@ -81,7 +116,7 @@ export default async function CandidateProfilePage({
               </span>
             </div>
             <p className="font-body-lg text-body-lg text-on-surface-variant">
-              {candidate.role} • {candidate.location}
+              {candidate.role} · {candidate.location}
             </p>
             <div className="flex gap-md mt-sm flex-wrap">
               <div className="flex items-center gap-xs text-slate-500">
@@ -93,9 +128,7 @@ export default async function CandidateProfilePage({
                   <span className="material-symbols-outlined text-sm">payments</span>
                   <span className="text-body-sm">{candidateSalary}</span>
                   {jobBudget && (
-                    <span className="text-label-caps text-slate-400">
-                      / budget : {jobBudget}
-                    </span>
+                    <span className="text-label-caps text-slate-400">/ budget : {jobBudget}</span>
                   )}
                 </div>
               )}
@@ -121,7 +154,32 @@ export default async function CandidateProfilePage({
         </div>
       </section>
 
-      {/* ── Bento grid ─────────────────────────────────────────── */}
+      {/* ── Application switcher (multiple jobs) ───────────── */}
+      {applications.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-label-caps text-slate-400 shrink-0">Candidature pour :</span>
+          {applications.map((a) => (
+            <div key={a.id} className="flex items-center gap-1">
+              <Link
+                href={`/candidates/${candidate.id}?appId=${a.id}`}
+                className={[
+                  "px-3 py-1.5 rounded-full text-label-caps font-label-caps border whitespace-nowrap transition-colors",
+                  a.id === app.id
+                    ? "bg-primary text-white border-primary"
+                    : "bg-white border-slate-200 text-slate-600 hover:border-primary/40 hover:text-primary",
+                ].join(" ")}
+              >
+                {a.job.title}
+              </Link>
+              {applications.length > 1 && (
+                <DeleteApplicationButton applicationId={a.id} jobTitle={a.job.title} />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Bento grid ─────────────────────────────────────── */}
       <div className="grid grid-cols-12 gap-lg">
 
         {/* The Why */}
@@ -132,7 +190,7 @@ export default async function CandidateProfilePage({
             <h3 className="font-h3 text-h3">The Why</h3>
           </div>
           <p className="font-body-md text-body-md text-on-surface-variant leading-relaxed">
-            {candidate.why ?? "No analysis available yet."}
+            {app.why ?? "No analysis available yet."}
           </p>
         </div>
 
@@ -150,16 +208,16 @@ export default async function CandidateProfilePage({
               <div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${stageProgress}%` }} />
             </div>
             <CandidateStageControl
-              candidateId={candidate.id}
+              applicationId={app.id}
               stageIndex={stageIdx}
               stages={jobStages}
             />
           </div>
           <div>
             <h3 className="font-label-caps text-label-caps text-slate-400 uppercase tracking-wider mb-2">Poste</h3>
-            <Link href={`/jobs/${candidate.job.id}`} className="group">
-              <p className="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">{candidate.job.title}</p>
-              <p className="text-body-sm text-slate-500">{candidate.job.department}</p>
+            <Link href={`/jobs/${app.job.id}`} className="group">
+              <p className="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">{app.job.title}</p>
+              <p className="text-body-sm text-slate-500">{app.job.department}</p>
             </Link>
             {candidateSalary && jobBudget && (
               <div className="mt-sm pt-sm border-t border-slate-100">
@@ -292,8 +350,8 @@ export default async function CandidateProfilePage({
               Notes recruteur
             </h3>
             <CandidateNotes
-              candidateId={candidate.id}
-              initialNotes={candidate.notes ?? ""}
+              applicationId={app.id}
+              initialNotes={app.notes ?? ""}
             />
           </div>
 

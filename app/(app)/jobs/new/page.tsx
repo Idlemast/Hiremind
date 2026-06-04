@@ -1,5 +1,5 @@
 import { getTemplates } from "@/lib/db";
-import NewJobForm from "@/components/NewJobForm";
+import NewJobForm from "@/components/jobs/NewJobForm";
 
 export default async function NewJobPage({
   searchParams,

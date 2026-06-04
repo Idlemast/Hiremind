@@ -2,13 +2,13 @@ import { getJobBySalt, getApplications, getApplicationStatsByScore, getThreshold
 import { jobUrl, candidateUrl } from "@/lib/slugify";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import StagePipeline from "@/components/StagePipeline";
-import SaveAsTemplateButton from "@/components/SaveAsTemplateButton";
-import DeleteJobButton from "@/components/DeleteJobButton";
-import ArchiveJobButton from "@/components/ArchiveJobButton";
-import DuplicateJobButton from "@/components/DuplicateJobButton";
-import JobCandidatesView from "@/components/JobCandidatesView";
-import type { PlainApp } from "@/components/JobCandidatesView";
+import StagePipeline from "@/components/jobs/StagePipeline";
+import SaveAsTemplateButton from "@/components/jobs/SaveAsTemplateButton";
+import DeleteJobButton from "@/components/jobs/DeleteJobButton";
+import ArchiveJobButton from "@/components/jobs/ArchiveJobButton";
+import DuplicateJobButton from "@/components/jobs/DuplicateJobButton";
+import JobCandidatesView from "@/components/jobs/JobCandidatesView";
+import type { PlainApp } from "@/components/jobs/JobCandidatesView";
 import { scoreToFit } from "@/lib/thresholds";
 import { DEFAULT_STAGES } from "@/lib/stages";
 

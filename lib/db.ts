@@ -116,9 +116,16 @@ export async function getEm(): Promise<EntityManager> {
 
 // ── Query helpers ─────────────────────────────────────────────────────────────
 
-export async function getJobs() {
+export async function getJobs(q?: string) {
   const em = await getEm();
-  return em.find(Job, {}, { orderBy: { openedAt: "DESC" } });
+  const where = q
+    ? { $or: [
+        { title:      { $like: `%${q}%` } },
+        { department: { $like: `%${q}%` } },
+        { location:   { $like: `%${q}%` } },
+      ] }
+    : {};
+  return em.find(Job, where, { orderBy: { openedAt: "DESC" } });
 }
 
 export async function getJobById(id: number) {

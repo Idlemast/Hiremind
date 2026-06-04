@@ -4,8 +4,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { scoreToFit, fitToDecision, getCommTemplates } from "@/lib/thresholds";
 import { DEFAULT_STAGES } from "@/lib/stages";
-import AdvanceStagePanel from "@/components/AdvanceStagePanel";
-import type { CandidateEmailData } from "@/components/AdvanceStagePanel";
+import AdvanceStagePanel from "@/components/jobs/AdvanceStagePanel";
+import type { CandidateEmailData } from "@/components/jobs/AdvanceStagePanel";
 
 export default async function AdvanceStagePage({
   params,

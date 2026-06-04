@@ -1,9 +1,9 @@
 import { getApplications, getThresholds } from "@/lib/db";
 import { scoreToFit } from "@/lib/thresholds";
-import SearchBar from "@/components/SearchBar";
-import CandidateApplicationSelector from "@/components/CandidateApplicationSelector";
-import type { AppOption } from "@/components/CandidateApplicationSelector";
-import SortSelect from "@/components/SortSelect";
+import SearchBar from "@/components/ui/SearchBar";
+import CandidateApplicationSelector from "@/components/candidates/CandidateApplicationSelector";
+import type { AppOption } from "@/components/candidates/CandidateApplicationSelector";
+import SortSelect from "@/components/ui/SortSelect";
 import Link from "next/link";
 
 const SORT_OPTIONS = [

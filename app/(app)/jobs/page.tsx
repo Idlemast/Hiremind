@@ -1,7 +1,7 @@
 import { getJobs, getTemplates, getApplicationCountsByJob } from "@/lib/db";
 import { jobUrl } from "@/lib/slugify";
-import SearchBar from "@/components/SearchBar";
-import TemplateManager from "@/components/TemplateManager";
+import SearchBar from "@/components/ui/SearchBar";
+import TemplateManager from "@/components/jobs/TemplateManager";
 
 export default async function JobsPage({
   searchParams,
@@ -9,22 +9,11 @@ export default async function JobsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
-  const [allJobs, templates, appCounts] = await Promise.all([
-    getJobs(),
+  const [jobs, templates, appCounts] = await Promise.all([
+    getJobs(q || undefined),
     getTemplates(),
     getApplicationCountsByJob(),
   ]);
-
-  const jobs = q
-    ? allJobs.filter((job) => {
-        const term = q.toLowerCase();
-        return (
-          job.title.toLowerCase().includes(term) ||
-          job.department.toLowerCase().includes(term) ||
-          job.location.toLowerCase().includes(term)
-        );
-      })
-    : allJobs;
 
   return (
     <div className="p-4 lg:p-xl space-y-xl">

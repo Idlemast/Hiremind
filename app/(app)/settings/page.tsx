@@ -1,5 +1,5 @@
 import { getThresholds } from "@/lib/db";
-import ThresholdForm from "@/components/ThresholdForm";
+import ThresholdForm from "@/components/settings/ThresholdForm";
 
 export default async function SettingsPage() {
   const thresholds = await getThresholds();

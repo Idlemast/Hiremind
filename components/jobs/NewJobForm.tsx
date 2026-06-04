@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import { createJob } from "@/app/actions/jobs";
 import { deleteTemplate } from "@/app/actions/templates";
-import JobUrlImporter from "@/components/JobUrlImporter";
+import JobUrlImporter from "@/components/jobs/JobUrlImporter";
 import type { JobPreview } from "@/app/api/jobs/preview/route";
 import { DEFAULT_STAGES, type PlainTemplate } from "@/lib/stages";
-import PipelineEditor from "@/components/PipelineEditor";
+import PipelineEditor from "@/components/jobs/PipelineEditor";
 
 const ICON_OPTIONS = [
   { value: "code",            label: "Code",      bg: "bg-blue-50 text-blue-600" },

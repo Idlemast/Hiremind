@@ -1,8 +1,8 @@
 import { getCandidateBySalt, getApplications, getJobs } from "@/lib/db";
 import { candidateUrl } from "@/lib/slugify";
 import { notFound, redirect } from "next/navigation";
-import LinkCandidateToJobButton from "@/components/LinkCandidateToJobButton";
-import type { JobOption } from "@/components/LinkCandidateToJobButton";
+import LinkCandidateToJobButton from "@/components/candidates/LinkCandidateToJobButton";
+import type { JobOption } from "@/components/candidates/LinkCandidateToJobButton";
 
 export default async function CandidateBasePage({
   params,

@@ -4,8 +4,8 @@ import Link from "next/link";
 import { jobUrl } from "@/lib/slugify";
 import { scoreToFit } from "@/lib/thresholds";
 import { DEFAULT_STAGES } from "@/lib/stages";
-import CompareColumn from "@/components/CompareColumn";
-import type { CompareApp } from "@/components/CompareColumn";
+import CompareColumn from "@/components/jobs/CompareColumn";
+import type { CompareApp } from "@/components/jobs/CompareColumn";
 
 export default async function ComparePage({
   params,

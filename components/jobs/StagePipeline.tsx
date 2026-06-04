@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { setJobStage, updateJobStages } from "@/app/actions/jobs";
 import { DEFAULT_STAGES } from "@/lib/stages";
-import PipelineEditor from "@/components/PipelineEditor";
+import PipelineEditor from "@/components/jobs/PipelineEditor";
 
 export default function StagePipeline({
   jobId,

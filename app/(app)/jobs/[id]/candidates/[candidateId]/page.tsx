@@ -2,15 +2,15 @@ import { getJobBySalt, getCandidateBySalt, getApplications, getThresholds, getJo
 import { jobUrl, candidateUrl } from "@/lib/slugify";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import TagEditor from "@/components/TagEditor";
-import CandidateNotes from "@/components/CandidateNotes";
-import CandidateStageControl from "@/components/CandidateStageControl";
-import DeleteCandidateButton from "@/components/DeleteCandidateButton";
-import DeleteApplicationButton from "@/components/DeleteApplicationButton";
-import CopyButton from "@/components/CopyButton";
-import LinkCandidateToJobButton from "@/components/LinkCandidateToJobButton";
+import TagEditor from "@/components/ui/TagEditor";
+import CandidateNotes from "@/components/candidates/CandidateNotes";
+import CandidateStageControl from "@/components/candidates/CandidateStageControl";
+import DeleteCandidateButton from "@/components/candidates/DeleteCandidateButton";
+import DeleteApplicationButton from "@/components/candidates/DeleteApplicationButton";
+import CopyButton from "@/components/ui/CopyButton";
+import LinkCandidateToJobButton from "@/components/candidates/LinkCandidateToJobButton";
 
-import type { JobOption } from "@/components/LinkCandidateToJobButton";
+import type { JobOption } from "@/components/candidates/LinkCandidateToJobButton";
 import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates } from "@/lib/thresholds";
 import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
 

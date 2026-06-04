@@ -2,8 +2,8 @@ import { getApplicationById, getThresholds } from "@/lib/db";
 import { jobUrl, candidateUrl } from "@/lib/slugify";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import CandidateNotes from "@/components/CandidateNotes";
-import CandidateStageControl from "@/components/CandidateStageControl";
+import CandidateNotes from "@/components/candidates/CandidateNotes";
+import CandidateStageControl from "@/components/candidates/CandidateStageControl";
 import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates } from "@/lib/thresholds";
 import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
 

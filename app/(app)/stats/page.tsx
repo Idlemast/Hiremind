@@ -1,6 +1,6 @@
 import { getApplicationsLean, getJobs, getThresholds } from "@/lib/db";
-import StatsClient from "@/components/StatsClient";
-import type { PlainApp, PlainJob } from "@/components/StatsClient";
+import StatsClient from "@/components/stats/StatsClient";
+import type { PlainApp, PlainJob } from "@/components/stats/StatsClient";
 
 export default async function StatsPage() {
   const [leanApps, jobs, thresholds] = await Promise.all([

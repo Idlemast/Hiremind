@@ -195,7 +195,7 @@ export default async function CandidatesPage({
                   </div>
                 </div>
                 <div className="shrink-0">
-                  <CandidateApplicationSelector candidateId={g.candidateId} applications={g.apps} />
+                  <CandidateApplicationSelector candidateId={g.candidateId} candidateName={g.name} applications={g.apps} />
                 </div>
               </div>
             );

@@ -9,14 +9,14 @@ export default async function EditCandidatePage({
   params: Promise<{ id: string }>;
 }) {
   const { id }    = await params;
-  const candidate = await getCandidateById(Number(id));
+  const candidate = await getCandidateById(parseInt(id, 10));
   if (!candidate) notFound();
 
   const skills = (candidate.skills as string[] | null) ?? [];
 
   async function action(formData: FormData) {
     "use server";
-    await updateCandidate(Number(id), formData);
+    await updateCandidate(parseInt(id, 10), formData);
   }
 
   return (

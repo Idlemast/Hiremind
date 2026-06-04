@@ -1,4 +1,5 @@
 import { getCandidateById, getApplications, getThresholds, getJobs } from "@/lib/db";
+import { jobUrl, candidateUrl } from "@/lib/slugify";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import TagEditor from "@/components/TagEditor";
@@ -22,7 +23,7 @@ export default async function CandidateProfilePage({
 }) {
   const { id }    = await params;
   const { appId } = await searchParams;
-  const candidateId = Number(id);
+  const candidateId = parseInt(id, 10);
 
   const [candidate, applications, thresholds, allJobs] = await Promise.all([
     getCandidateById(candidateId),
@@ -33,7 +34,7 @@ export default async function CandidateProfilePage({
   if (!candidate) notFound();
 
   // Select active application: appId from URL, or most recent
-  const app = (appId ? applications.find((a) => a.id === Number(appId)) : null)
+  const app = (appId ? applications.find((a) => a.id === parseInt(appId, 10)) : null)
     ?? applications[0]
     ?? null;
 
@@ -154,7 +155,7 @@ export default async function CandidateProfilePage({
         </div>
         <div className="flex gap-sm shrink-0 flex-wrap">
           <Link
-            href={`/candidates/${candidate.id}/edit`}
+            href={`${candidateUrl(candidate.id, candidate.name)}/edit`}
             className="p-2 sm:px-4 sm:py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"
             title="Modifier"
           >
@@ -173,7 +174,7 @@ export default async function CandidateProfilePage({
             {applications.map((a) => (
               <div key={a.id} className="flex items-center gap-1">
                 <Link
-                  href={`/candidates/${candidate.id}?appId=${a.id}`}
+                  href={candidateUrl(candidate.id, candidate.name, a.id, a.job.title)}
                   className={[
                     "px-3 py-1.5 rounded-full text-label-caps font-label-caps border whitespace-nowrap transition-colors",
                     a.id === app.id
@@ -229,7 +230,7 @@ export default async function CandidateProfilePage({
           </div>
           <div>
             <h3 className="font-label-caps text-label-caps text-slate-400 uppercase tracking-wider mb-2">Poste</h3>
-            <Link href={`/jobs/${app.job.id}`} className="group">
+            <Link href={jobUrl(app.job.id, app.job.title)} className="group">
               <p className="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">{app.job.title}</p>
               <p className="text-body-sm text-slate-500">{app.job.department}</p>
             </Link>

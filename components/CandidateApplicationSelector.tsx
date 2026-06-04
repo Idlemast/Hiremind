@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { candidateUrl } from "@/lib/slugify";
 
 export type AppOption = {
   id: number;
@@ -9,6 +10,8 @@ export type AppOption = {
   score: number;
   fit: string;
 };
+
+// jobTitle already on AppOption — used for slug generation in candidateUrl
 
 const FIT_CHIP: Record<string, string> = {
   strong: "bg-emerald-100 text-emerald-700",
@@ -18,9 +21,11 @@ const FIT_CHIP: Record<string, string> = {
 
 export default function CandidateApplicationSelector({
   candidateId,
+  candidateName,
   applications,
 }: {
   candidateId: number;
+  candidateName: string;
   applications: AppOption[];
 }) {
   const router = useRouter();
@@ -29,7 +34,7 @@ export default function CandidateApplicationSelector({
   const selected = applications.find((a) => a.id === selectedId) ?? applications[0];
 
   const open = () => {
-    if (selected) router.push(`/candidates/${candidateId}?appId=${selected.id}`);
+    if (selected) router.push(candidateUrl(candidateId, candidateName, selected.id, selected.jobTitle));
   };
 
   if (applications.length === 1) {

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { updateApplicationStage } from "@/app/actions/candidates";
+import { candidateUrl } from "@/lib/slugify";
 
 type Fit = "strong" | "medium" | "weak";
 
@@ -13,6 +14,7 @@ export type KanbanCard = {
   score: number;
   fit: Fit;
   stageIndex: number;
+  jobTitle?: string;
 };
 
 const FIT_DOT: Record<Fit, string> = {
@@ -105,7 +107,7 @@ export default function KanbanBoard({
                         {card.name}
                       </span>
                       <Link
-                        href={`/candidates/${card.candidateId}?appId=${card.appId}`}
+                        href={candidateUrl(card.candidateId, card.name, card.appId, card.jobTitle)}
                         className="text-slate-200 group-hover:text-slate-400 hover:!text-primary transition-colors shrink-0"
                         draggable={false}
                         onClick={(e) => e.stopPropagation()}

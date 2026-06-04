@@ -9,7 +9,7 @@ export default async function EditJobPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const jobId  = Number(id);
+  const jobId  = parseInt(id, 10);
   const job    = await getJobById(jobId);
   if (!job) notFound();
 

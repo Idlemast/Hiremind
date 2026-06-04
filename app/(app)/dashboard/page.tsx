@@ -1,4 +1,5 @@
 import { getJobs, getApplications, getThresholds } from "@/lib/db";
+import { jobUrl, candidateUrl } from "@/lib/slugify";
 import { scoreToFit } from "@/lib/thresholds";
 
 export default async function DashboardPage() {
@@ -92,7 +93,7 @@ export default async function DashboardPage() {
                   </p>
                   <div className="pt-md">
                     <a
-                      href={`/candidates/${top.candidate.id}?appId=${top.id}`}
+                      href={candidateUrl(top.candidate.id, top.candidate.name, top.id, top.job.title)}
                       className="inline-block bg-primary text-white px-6 py-2 rounded-lg font-semibold text-sm hover:bg-primary-container transition-all"
                     >
                       Review Candidate
@@ -134,7 +135,7 @@ export default async function DashboardPage() {
                 </div>
                 <div className="mt-lg">
                   <a
-                    href={`/jobs/${stalled.id}`}
+                    href={jobUrl(stalled.id, stalled.title)}
                     className="block w-full text-center border border-outline text-on-surface py-2 rounded-lg font-semibold text-sm hover:bg-slate-50 transition-colors"
                   >
                     Voir le poste
@@ -178,7 +179,7 @@ export default async function DashboardPage() {
                       <p className="text-label-caps text-slate-500 truncate">{job.department}</p>
                     </div>
                   </div>
-                  <a href={`/jobs/${job.id}`} className="text-primary shrink-0">
+                  <a href={jobUrl(job.id, job.title)} className="text-primary shrink-0">
                     <span className="material-symbols-outlined">arrow_forward</span>
                   </a>
                 </div>
@@ -218,7 +219,7 @@ export default async function DashboardPage() {
                     </div>
                   </div>
                   <div className="col-span-2 text-right">
-                    <a href={`/jobs/${job.id}`} className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
+                    <a href={jobUrl(job.id, job.title)} className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
                       Ouvrir
                       <span className="material-symbols-outlined text-sm">arrow_forward</span>
                     </a>

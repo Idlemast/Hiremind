@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import KanbanBoard from "./KanbanBoard";
 import type { KanbanCard } from "./KanbanBoard";
+import { candidateUrl } from "@/lib/slugify";
 
 type Fit = "strong" | "medium" | "weak";
 
@@ -53,6 +54,7 @@ export default function JobCandidatesView({
   stages,
   requirements,
   jobId,
+  jobTitle,
   strongCount,
   totalApplications,
 }: {
@@ -60,6 +62,7 @@ export default function JobCandidatesView({
   stages: string[];
   requirements: string[];
   jobId: number;
+  jobTitle: string;
   strongCount: number;
   totalApplications: number;
 }) {
@@ -102,6 +105,7 @@ export default function JobCandidatesView({
     score:       a.score,
     fit:         a.fit,
     stageIndex:  a.stageIndex,
+    jobTitle,
   }));
 
   function switchView(next: "list" | "kanban") {
@@ -240,7 +244,7 @@ export default function JobCandidatesView({
                         {group.items.map((a) => (
                           <Link
                             key={a.id}
-                            href={`/candidates/${a.candidateId}?appId=${a.id}`}
+                            href={candidateUrl(a.candidateId, a.name, a.id, jobTitle)}
                             className={`bg-white border border-slate-200 p-4 lg:p-5 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:shadow-md`}
                           >
                             <div className="flex items-center gap-3 min-w-0 sm:w-1/3">

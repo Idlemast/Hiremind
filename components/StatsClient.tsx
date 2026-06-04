@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { candidateUrl } from "@/lib/slugify";
 
 export type PlainApp = {
   id: number;
@@ -291,7 +292,7 @@ export default function StatsClient({
                 const days = Math.round((now - new Date(ref).getTime()) / 86_400_000);
                 const stage = app.jobStages[app.stageIndex] ?? `Étape ${app.stageIndex}`;
                 return (
-                  <Link key={app.id} href={`/candidates/${app.candidateId}?appId=${app.id}`}
+                  <Link key={app.id} href={candidateUrl(app.candidateId, app.candidateName, app.id, app.jobTitle)}
                     className="flex items-center justify-between p-md bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">

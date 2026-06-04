@@ -1,4 +1,5 @@
 import { getJobById, getApplications, getApplicationStatsByScore, getThresholds } from "@/lib/db";
+import { jobUrl, candidateUrl } from "@/lib/slugify";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import StagePipeline from "@/components/StagePipeline";
@@ -17,7 +18,7 @@ export default async function JobDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id }  = await params;
-  const jobId   = Number(id);
+  const jobId   = parseInt(id, 10);
 
   const [job, thresholds] = await Promise.all([getJobById(jobId), getThresholds()]);
   if (!job) notFound();
@@ -65,7 +66,7 @@ export default async function JobDetailPage({
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap shrink-0">
-          <Link href={`/jobs/${jobId}/edit`}
+          <Link href={`${jobUrl(jobId, job.title)}/edit`}
             className="p-2 sm:px-3 sm:py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"
           >
             <span className="material-symbols-outlined text-sm">edit</span>
@@ -99,7 +100,7 @@ export default async function JobDetailPage({
           <div className="flex items-center gap-3">
             <span className="text-label-caps font-label-caps text-slate-400">{stageIndex + 1} / {stages.length}</span>
             {stageIndex < stages.length - 1 && (
-              <Link href={`/jobs/${jobId}/advance`}
+              <Link href={`${jobUrl(jobId, job.title)}/advance`}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-container transition-colors shadow-sm"
               >
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -133,6 +134,7 @@ export default async function JobDetailPage({
         stages={stages}
         requirements={requirements}
         jobId={jobId}
+        jobTitle={job.title}
         strongCount={strongCount}
         totalApplications={totalApplications}
       />

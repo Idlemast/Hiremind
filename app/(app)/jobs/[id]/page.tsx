@@ -1,4 +1,4 @@
-import { getJobById, getApplicationsPage, getApplicationStatsByScore, getThresholds } from "@/lib/db";
+import { getJobById, getApplications, getApplicationStatsByScore, getThresholds } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import StagePipeline from "@/components/StagePipeline";
@@ -6,55 +6,24 @@ import SaveAsTemplateButton from "@/components/SaveAsTemplateButton";
 import DeleteJobButton from "@/components/DeleteJobButton";
 import ArchiveJobButton from "@/components/ArchiveJobButton";
 import DuplicateJobButton from "@/components/DuplicateJobButton";
-import SearchBar from "@/components/SearchBar";
-import SortSelect from "@/components/SortSelect";
-import { scoreToFit, fitToDecision, DECISION_META, getCommTemplates } from "@/lib/thresholds";
+import JobCandidatesView from "@/components/JobCandidatesView";
+import type { PlainApp } from "@/components/JobCandidatesView";
+import { scoreToFit } from "@/lib/thresholds";
 import { DEFAULT_STAGES } from "@/lib/stages";
-
-const fitConfig = {
-  strong: {
-    label: "Strong Fit",
-    bar: "bg-emerald-500", border: "border-l-emerald-500",
-    chip: "bg-emerald-50 text-emerald-700 border border-emerald-100",
-    score: "bg-primary-container/10 text-primary border border-primary/20",
-    opacity: "",
-  },
-  medium: {
-    label: "Medium Fit",
-    bar: "bg-amber-400", border: "border-l-amber-400",
-    chip: "bg-amber-50 text-amber-700 border border-amber-100",
-    score: "bg-slate-100 text-slate-500 border border-slate-200",
-    opacity: "opacity-90",
-  },
-  weak: {
-    label: "Weak Fit",
-    bar: "bg-slate-300", border: "border-l-slate-300",
-    chip: "bg-slate-50 text-slate-400 border border-slate-100",
-    score: "bg-slate-50 text-slate-400 border border-slate-100",
-    opacity: "opacity-70",
-  },
-} as const;
-
-const PAGE_SIZE = 20;
 
 export default async function JobDetailPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ q?: string; page?: string; sort?: string }>;
 }) {
-  const { id }                    = await params;
-  const { q = "", page, sort = "score" } = await searchParams;
-  const jobId         = Number(id);
-  const currentPage   = Math.max(1, Number(page) || 1);
+  const { id }  = await params;
+  const jobId   = Number(id);
 
   const [job, thresholds] = await Promise.all([getJobById(jobId), getThresholds()]);
   if (!job) notFound();
 
-  // Stats (all applications, lightweight — only scores fetched) + paginated display in parallel
-  const [{ items: rawPage, total: filteredCount }, stats] = await Promise.all([
-    getApplicationsPage(jobId, { q, sort, page: currentPage, pageSize: PAGE_SIZE }),
+  const [allApplications, stats] = await Promise.all([
+    getApplications(jobId),
     getApplicationStatsByScore(jobId, thresholds),
   ]);
 
@@ -64,14 +33,18 @@ export default async function JobDetailPage({
   const currentStage = stages[stageIndex] ?? job.stage;
   const requirements = (job.requirements as string[] | null) ?? [];
 
-  const totalPages  = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE));
-  const paginated   = rawPage.map((a) => ({ ...a, fit: scoreToFit(a.score, thresholds) }));
-
   const { total: totalApplications, strong: strongCount, medium: mediumCount, weak: weakCount } = stats;
 
-  const groups = (["strong", "medium", "weak"] as const).map((fit) => ({
-    fit, ...fitConfig[fit],
-    items: paginated.filter((a) => a.fit === fit),
+  const plainApps: PlainApp[] = allApplications.map((a) => ({
+    id:          a.id,
+    candidateId: a.candidate.id,
+    name:        a.candidate.name,
+    role:        a.candidate.role,
+    skills:      (a.candidate.skills as string[] | null) ?? [],
+    score:       a.score,
+    fit:         scoreToFit(a.score, thresholds),
+    stageIndex:  a.stageIndex,
+    appliedAt:   new Date(a.appliedAt).toISOString(),
   }));
 
   return (
@@ -138,13 +111,13 @@ export default async function JobDetailPage({
         <StagePipeline jobId={jobId} initialStages={stages} initialCurrentIndex={stageIndex} />
       </section>
 
-      {/* ── Stats ─────────────────────────────────────────── */}
+      {/* ── Stats cards ───────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
         {[
-          { label: "Candidats",  value: totalApplications,      icon: "group",        color: "text-primary" },
-          { label: "Strong Fit", value: strongCount,             icon: "check_circle", color: "text-emerald-600" },
-          { label: "À évaluer",  value: mediumCount,             icon: "pending",      color: "text-amber-600" },
-          { label: "Faible Fit", value: weakCount,               icon: "cancel",       color: "text-slate-400" },
+          { label: "Candidats",  value: totalApplications, icon: "group",        color: "text-primary" },
+          { label: "Strong Fit", value: strongCount,        icon: "check_circle", color: "text-emerald-600" },
+          { label: "À évaluer",  value: mediumCount,        icon: "pending",      color: "text-amber-600" },
+          { label: "Faible Fit", value: weakCount,          icon: "cancel",       color: "text-slate-400" },
         ].map(({ label, value, icon, color }) => (
           <div key={label} className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm text-center">
             <span className={`material-symbols-outlined text-2xl ${color}`}>{icon}</span>
@@ -154,167 +127,15 @@ export default async function JobDetailPage({
         ))}
       </div>
 
-      {/* ── Candidates + sidebar ──────────────────────────── */}
-      <div className="flex flex-col lg:flex-row gap-xl">
-        <section className="flex-1 space-y-lg min-w-0">
-
-          {/* Search + export */}
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3 flex-wrap">
-              <SearchBar placeholder="Rechercher un candidat…" defaultValue={q} keepParams={sort !== "score" ? { sort } : {}} />
-              <SortSelect
-                options={[
-                  { value: "score",  label: "Meilleur score" },
-                  { value: "name",   label: "Nom A→Z" },
-                  { value: "recent", label: "Plus récents" },
-                ]}
-                defaultValue={sort}
-              />
-              <span className="text-label-caps text-slate-400 whitespace-nowrap">
-                {filteredCount} candidat{filteredCount !== 1 ? "s" : ""}
-                {q ? ` · "${q}"` : ""}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              {totalApplications > 0 && (
-                <a href={`/api/candidates/export?jobId=${jobId}`} download
-                  className="flex items-center gap-2 px-3 py-2 bg-white border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-sm">download</span>
-                  CSV
-                </a>
-              )}
-              <Link href="/candidates/new"
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-container transition-colors shadow-sm"
-              >
-                <span className="material-symbols-outlined text-sm">person_add</span>
-                Importer
-              </Link>
-            </div>
-          </div>
-
-          {/* Empty state */}
-          {totalApplications === 0 && (
-            <div className="bg-white border border-outline-variant rounded-xl p-xl text-center text-slate-400">
-              <span className="material-symbols-outlined text-4xl block mb-2">person_search</span>
-              <p>Aucun candidat pour ce poste.</p>
-              <Link href="/candidates/new"
-                className="mt-md inline-flex items-center gap-1 text-primary font-bold text-sm hover:underline"
-              >
-                <span className="material-symbols-outlined text-sm">person_add</span>
-                Importer un candidat
-              </Link>
-            </div>
-          )}
-
-          {/* Candidate groups */}
-          <div className="space-y-xl">
-            {groups.filter((g) => g.items.length > 0).map((group) => (
-              <div key={group.fit} className={group.opacity}>
-                <div className="flex items-center gap-2 mb-md">
-                  <div className={`w-1 h-6 rounded-full ${group.bar}`} />
-                  <h3 className="font-h3 text-h3">{group.label}</h3>
-                  <span className="text-slate-400 font-body-sm text-label-caps ml-1">
-                    {group.fit === "strong" ? strongCount : group.fit === "medium" ? mediumCount : weakCount}
-                  </span>
-                </div>
-                <div className="space-y-md">
-                  {group.items.map((a) => (
-                    <Link key={a.id}
-                      href={`/candidates/${a.candidate.id}?appId=${a.id}`}
-                      className={`bg-white border border-slate-200 p-4 lg:p-5 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:shadow-md`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0 sm:w-1/3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 flex-shrink-0 flex items-center justify-center text-slate-500 font-bold text-sm">
-                          {a.candidate.name.split(" ").map((n) => n[0]).join("")}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-semibold text-body-md text-on-surface truncate">{a.candidate.name}</h4>
-                          <p className="text-body-sm text-slate-500 truncate">{a.candidate.role}</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 flex-wrap sm:flex-1 sm:px-3">
-                        {(a.candidate.skills as string[]).length > 0
-                          ? (a.candidate.skills as string[]).slice(0, 3).map((skill) => (
-                              <span key={skill} className={`px-2 py-0.5 text-label-caps font-label-caps rounded-full ${group.chip}`}>
-                                {skill}
-                              </span>
-                            ))
-                          : <span className="text-body-sm text-slate-400">Aucune compétence.</span>
-                        }
-                      </div>
-                      <div className="flex items-center gap-3 justify-between sm:justify-end shrink-0">
-                        <div className={`flex items-center gap-1 px-3 py-1 rounded-lg ${group.score}`}>
-                          <span className="material-symbols-outlined text-sm">bolt</span>
-                          <span className="font-label-caps text-label-caps">{a.score}%</span>
-                        </div>
-                        <span className="material-symbols-outlined text-slate-400">chevron_right</span>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-md border-t border-slate-100">
-              <span className="text-label-caps text-slate-400">
-                Page {currentPage} / {totalPages}
-              </span>
-              <div className="flex gap-2">
-                {currentPage > 1 && (
-                  <a href={`/jobs/${jobId}?${new URLSearchParams({ ...(q && { q }), page: String(currentPage - 1) })}`}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:border-primary hover:text-primary transition-colors"
-                  >← Précédent</a>
-                )}
-                {currentPage < totalPages && (
-                  <a href={`/jobs/${jobId}?${new URLSearchParams({ ...(q && { q }), page: String(currentPage + 1) })}`}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:border-primary hover:text-primary transition-colors"
-                  >Suivant →</a>
-                )}
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* ── Sidebar ───────────────────────────────────────── */}
-        <aside className="w-full lg:w-72 space-y-lg lg:sticky lg:top-24 lg:h-fit shrink-0">
-
-          {/* Requirements */}
-          <div className="bg-white border border-slate-200 rounded-xl p-lg shadow-sm">
-            <h4 className="font-label-caps text-label-caps text-primary uppercase tracking-widest mb-md">
-              Exigences
-            </h4>
-            {requirements.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {requirements.map((r) => (
-                  <span key={r} className="px-2 py-1 bg-white border border-slate-200 text-slate-600 text-label-caps rounded">
-                    {r}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-body-sm text-slate-400">Aucune compétence définie.</p>
-            )}
-          </div>
-
-          {/* Insight */}
-          <div className="bg-blue-900 text-white rounded-xl p-lg shadow-lg">
-            <div className="flex items-center gap-2 mb-sm">
-              <span className="material-symbols-outlined text-blue-300">auto_awesome</span>
-              <h4 className="font-h3 text-body-md font-bold">Insight</h4>
-            </div>
-            <p className="text-body-sm text-blue-100 leading-relaxed">
-              {strongCount} strong fit{strongCount !== 1 ? "s" : ""} sur {totalApplications} candidat{totalApplications !== 1 ? "s" : ""}.
-              {strongCount > 0 && totalApplications > 0
-                ? ` Taux de qualification : ${Math.round((strongCount / totalApplications) * 100)}%.`
-                : ""}
-            </p>
-          </div>
-        </aside>
-      </div>
+      {/* ── Candidates (list + kanban, client-side toggle) ─── */}
+      <JobCandidatesView
+        allApps={plainApps}
+        stages={stages}
+        requirements={requirements}
+        jobId={jobId}
+        strongCount={strongCount}
+        totalApplications={totalApplications}
+      />
     </div>
   );
 }

@@ -56,7 +56,7 @@ export default function NewJobForm({
   );
   const [deletePending, startDelete] = useTransition();
 
-  function applyTemplate(t: JobTemplate) {
+  function applyTemplate(t: typeof templateList[number]) {
     setActiveTemplate(t.id);
     setFields({
       title:        t.title,

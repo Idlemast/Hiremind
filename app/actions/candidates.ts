@@ -8,6 +8,8 @@ import { scoreToFit } from "@/lib/thresholds";
 import { analyzeInterviewNotes, notesScoreDelta } from "@/lib/interview-signals";
 import { extractSkillsFromText, parseManualSkills, mergeSkills } from "@/lib/extract-skills";
 import { Candidate, Application, Job } from "@/entities/index";
+import { candidateUrl } from "@/lib/slugify";
+import { createUniqueCandidateSalt } from "@/lib/db";
 
 export async function importCandidate(formData: FormData) {
   const jobId    = Number(formData.get("jobId"));
@@ -21,12 +23,8 @@ export async function importCandidate(formData: FormData) {
   const cvText   = String(formData.get("cvText")   ?? "");
   const rawSkills = String(formData.get("skills")  ?? "");
 
-  if (!Number.isFinite(jobId) || jobId <= 0) {
-    throw new Error("jobId invalide");
-  }
-  if (!name || !role || !company || !location) {
-    throw new Error("Champs obligatoires manquants");
-  }
+  if (!Number.isFinite(jobId) || jobId <= 0) throw new Error("jobId invalide");
+  if (!name || !role || !company || !location) throw new Error("Champs obligatoires manquants");
 
   const em  = await getEm();
   const job = await em.findOne(Job, { id: jobId });
@@ -41,21 +39,17 @@ export async function importCandidate(formData: FormData) {
 
   const candidate = em.create(Candidate, {
     name, role, company, location, email, salary, source,
-    skills, tags: [],
+    skills, tags: [], salt: await createUniqueCandidateSalt(),
   });
   em.persist(candidate);
 
   const application = em.create(Application, {
-    candidate,
-    job,
-    score: result.score,
-    gaps:  result.missingSkills,
-    why:   result.why,
+    candidate, job, score: result.score, gaps: result.missingSkills, why: result.why,
   });
   em.persist(application);
   await em.flush();
 
-  redirect(`/candidates/${candidate.id}?appId=${application.id}`);
+  redirect(candidateUrl(candidate.salt!, candidate.name, job.salt!, job.title));
 }
 
 export async function updateCandidate(id: number, formData: FormData) {
@@ -67,9 +61,7 @@ export async function updateCandidate(id: number, formData: FormData) {
   const salary    = String(formData.get("salary")   ?? "").trim() || undefined;
   const rawSkills = String(formData.get("skills")   ?? "");
 
-  if (!name || !role || !company || !location) {
-    throw new Error("Champs obligatoires manquants");
-  }
+  if (!name || !role || !company || !location) throw new Error("Champs obligatoires manquants");
 
   const em        = await getEm();
   const candidate = await em.findOne(Candidate, { id });
@@ -81,7 +73,6 @@ export async function updateCandidate(id: number, formData: FormData) {
 
   em.assign(candidate, { name, role, company, location, email, salary, skills });
 
-  // Rescore all applications for this candidate
   const applications = await em.find(Application, { candidate: { id } }, { populate: ["job"] });
   for (const app of applications) {
     const reqs = (app.job.requirements as string[] | null) ?? [];
@@ -103,9 +94,10 @@ export async function updateCandidate(id: number, formData: FormData) {
   }
 
   await em.flush();
-  revalidatePath(`/candidates/${id}`);
 
-  redirect(`/candidates/${id}`);
+  const url = candidateUrl(candidate.salt!, name);
+  revalidatePath(url);
+  redirect(url);
 }
 
 export async function updateApplicationNotes(applicationId: number, notes: string) {
@@ -133,8 +125,7 @@ export async function updateApplicationNotes(applicationId: number, notes: strin
 
   em.assign(app, { notes: trimmed, score: adjusted, why });
   await em.flush();
-  revalidatePath(`/candidates/${app.candidate.id}`);
-
+  revalidatePath(candidateUrl(app.candidate.salt!, app.candidate.name, app.job.salt!, app.job.title));
 }
 
 export async function updateApplicationStage(applicationId: number, stageIndex: number) {
@@ -147,11 +138,20 @@ export async function updateApplicationStage(applicationId: number, stageIndex: 
   const jobMax    = app.job.currentStageIndex ?? stages.length - 1;
   const idx       = Math.max(0, Math.min(stageIndex, stages.length - 1, jobMax));
 
+  const fromIndex = app.stageIndex;
   em.assign(app, { stageIndex: idx, movedAt: new Date() });
   await em.flush();
-  revalidatePath(`/candidates/${app.candidate.id}`);
-}
 
+  if (fromIndex !== idx) {
+    const conn = em.getConnection();
+    await conn.execute(
+      "INSERT INTO stage_transition(application_id, from_index, to_index) VALUES (?, ?, ?)",
+      [applicationId, fromIndex, idx]
+    );
+  }
+
+  revalidatePath(candidateUrl(app.candidate.salt!, app.candidate.name, app.job.salt!, app.job.title));
+}
 
 export async function deleteCandidate(id: number) {
   const em        = await getEm();
@@ -180,16 +180,14 @@ export async function addApplicationToJob(candidateId: number, jobId: number) {
   const result = scoreCandidate({ candidateSkills: skills, jobRequirements: reqs });
 
   const application = em.create(Application, {
-    candidate, job,
-    score: result.score,
-    gaps:  result.missingSkills,
-    why:   result.why,
+    candidate, job, score: result.score, gaps: result.missingSkills, why: result.why,
   });
   em.persist(application);
   await em.flush();
 
-  revalidatePath(`/candidates/${candidateId}`);
-  redirect(`/candidates/${candidateId}?appId=${application.id}`);
+  const url = candidateUrl(candidate.salt!, candidate.name, application.id, job.title);
+  revalidatePath(url);
+  redirect(url);
 }
 
 export async function deleteApplication(applicationId: number) {
@@ -197,12 +195,12 @@ export async function deleteApplication(applicationId: number) {
   const app = await em.findOne(Application, { id: applicationId }, { populate: ["candidate"] });
   if (!app) throw new Error("Application introuvable");
 
-  const candidateId = app.candidate.id;
   em.remove(app);
   await em.flush();
-  revalidatePath(`/candidates/${candidateId}`);
 
-  redirect(`/candidates/${candidateId}`);
+  const url = candidateUrl(app.candidate.salt!, app.candidate.name);
+  revalidatePath(url);
+  redirect(url);
 }
 
 export async function updateCandidateTags(id: number, tags: string[]) {

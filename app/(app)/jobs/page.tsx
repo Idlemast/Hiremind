@@ -92,7 +92,7 @@ export default async function JobsPage({
                       <span className="material-symbols-outlined text-sm text-blue-600">group</span>
                       <span className="text-xs font-bold text-slate-700">{appCount}</span>
                     </div>
-                    <a href={jobUrl(job.id, job.title)} className="text-primary">
+                    <a href={jobUrl(job.salt!, job.title)} className="text-primary">
                       <span className="material-symbols-outlined">arrow_forward</span>
                     </a>
                   </div>
@@ -133,7 +133,7 @@ export default async function JobsPage({
                   </div>
                 </div>
                 <div className="col-span-2 text-right">
-                  <a href={jobUrl(job.id, job.title)} className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
+                  <a href={jobUrl(job.salt!, job.title)} className="text-primary font-bold text-sm hover:text-primary-container flex items-center gap-1 ml-auto">
                     Ouvrir
                     <span className="material-symbols-outlined text-sm">arrow_forward</span>
                   </a>

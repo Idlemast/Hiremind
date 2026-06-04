@@ -1,4 +1,4 @@
-import { getApplicationById, getThresholds } from "@/lib/db";
+import { getApplicationById, getJobBySalt, getThresholds } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { jobUrl } from "@/lib/slugify";
@@ -16,19 +16,21 @@ export default async function ComparePage({
 }) {
   const { id }    = await params;
   const { a, b }  = await searchParams;
-  const jobId     = parseInt(id, 10);
+  const salt      = id.split("-")[0];
   const aId       = parseInt(a ?? "", 10);
   const bId       = parseInt(b ?? "", 10);
 
   if (!Number.isFinite(aId) || !Number.isFinite(bId) || aId === bId) notFound();
 
-  const [thresholds, appA, appB] = await Promise.all([
+  const [job, thresholds, appA, appB] = await Promise.all([
+    getJobBySalt(salt),
     getThresholds(),
     getApplicationById(aId),
     getApplicationById(bId),
   ]);
 
-  if (!appA || !appB) notFound();
+  if (!job || !appA || !appB) notFound();
+  const jobId = job.id;
   if (appA.job.id !== jobId || appB.job.id !== jobId) notFound();
 
   // Skill diff computation
@@ -46,7 +48,7 @@ export default async function ComparePage({
     const stages = (app.job.stages as string[] | null)?.length ? app.job.stages as string[] : DEFAULT_STAGES;
     return {
       id:            app.id,
-      candidateId:   app.candidate.id,
+      candidateSalt: app.candidate.salt!,
       candidateName: app.candidate.name,
       candidateRole: app.candidate.role,
       score:         app.score,
@@ -59,6 +61,7 @@ export default async function ComparePage({
       notes:         app.notes ?? null,
       salary:        app.candidate.salary ?? null,
       jobBudget:     app.job.budget ?? null,
+      jobSalt:       job!.salt!,
       jobTitle:      app.job.title,
     };
   };
@@ -79,7 +82,7 @@ export default async function ComparePage({
           <p className="text-body-sm text-slate-500 mt-0.5">{appA.job.title}</p>
         </div>
         <Link
-          href={jobUrl(jobId, appA.job.title)}
+          href={jobUrl(job!.salt!, appA.job.title)}
           className="flex items-center gap-2 px-4 py-2 bg-white border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors"
         >
           <span className="material-symbols-outlined text-sm">arrow_back</span>

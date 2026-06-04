@@ -3,6 +3,7 @@ import { cache } from "react";
 import config from "../mikro-orm.config";
 import { Job, Candidate, Application, Setting, JobTemplate } from "../entities/index";
 import { scoreToFit, DEFAULT_THRESHOLDS, type Thresholds } from "./thresholds";
+import { generateSalt } from "./slugify";
 
 const getOrm = cache(async (): Promise<MikroORM> => {
   const orm  = await MikroORM.init(config);
@@ -70,6 +71,28 @@ const getOrm = cache(async (): Promise<MikroORM> => {
   await addCol(`ALTER TABLE job ADD COLUMN current_stage_index INTEGER NOT NULL DEFAULT 0`);
   await addCol(`ALTER TABLE job ADD COLUMN budget TEXT NULL`);
   await addCol(`ALTER TABLE job ADD COLUMN status TEXT NOT NULL DEFAULT 'open'`);
+  await addCol(`ALTER TABLE job ADD COLUMN salt TEXT NULL`);
+  await addCol(`ALTER TABLE candidate ADD COLUMN salt TEXT NULL`);
+
+  await conn.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_job_salt ON job(salt) WHERE salt IS NOT NULL`);
+  await conn.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_candidate_salt ON candidate(salt) WHERE salt IS NOT NULL`);
+
+  const uniqueSalt = async (table: string): Promise<string> => {
+    while (true) {
+      const s = generateSalt();
+      const rows = await conn.execute(`SELECT 1 FROM ${table} WHERE salt = ?`, [s]) as unknown[];
+      if (rows.length === 0) return s;
+    }
+  };
+
+  const jobsNoSalt = await conn.execute("SELECT id FROM job WHERE salt IS NULL") as { id: number }[];
+  for (const row of jobsNoSalt) {
+    await conn.execute("UPDATE job SET salt = ? WHERE id = ?", [await uniqueSalt("job"), row.id]);
+  }
+  const candidatesNoSalt = await conn.execute("SELECT id FROM candidate WHERE salt IS NULL") as { id: number }[];
+  for (const row of candidatesNoSalt) {
+    await conn.execute("UPDATE candidate SET salt = ? WHERE id = ?", [await uniqueSalt("candidate"), row.id]);
+  }
 
   await conn.execute(`CREATE TABLE IF NOT EXISTS job_template (
     id           INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -101,6 +124,34 @@ export async function getJobs() {
 export async function getJobById(id: number) {
   const em = await getEm();
   return em.findOne(Job, { id });
+}
+
+export async function createUniqueJobSalt(): Promise<string> {
+  const conn = (await getEm()).getConnection();
+  while (true) {
+    const s = generateSalt();
+    const rows = await conn.execute("SELECT 1 FROM job WHERE salt = ?", [s]) as unknown[];
+    if (rows.length === 0) return s;
+  }
+}
+
+export async function createUniqueCandidateSalt(): Promise<string> {
+  const conn = (await getEm()).getConnection();
+  while (true) {
+    const s = generateSalt();
+    const rows = await conn.execute("SELECT 1 FROM candidate WHERE salt = ?", [s]) as unknown[];
+    if (rows.length === 0) return s;
+  }
+}
+
+export async function getJobBySalt(salt: string) {
+  const em = await getEm();
+  return em.findOne(Job, { salt });
+}
+
+export async function getCandidateBySalt(salt: string) {
+  const em = await getEm();
+  return em.findOne(Candidate, { salt });
 }
 
 export async function getApplications(jobId?: number, candidateId?: number) {
@@ -242,7 +293,7 @@ export async function getDashboardStats(thresholds: Thresholds): Promise<{
   total:      number;
   strong:     number;
   countByJob: Record<number, number>;
-  topApp:     { id: number; candidateId: number; candidateName: string; candidateCompany: string; jobId: number; jobTitle: string; score: number } | null;
+  topApp:     { id: number; candidateId: number; candidateSalt: string; candidateName: string; candidateCompany: string; jobId: number; jobSalt: string; jobTitle: string; score: number } | null;
 }> {
   const em   = await getEm();
   const conn = em.getConnection();
@@ -261,8 +312,10 @@ export async function getDashboardStats(thresholds: Thresholds): Promise<{
   const topRows = await conn.execute(`
     SELECT a.id, a.candidate_id, a.job_id, a.score,
            c.name    AS candidate_name,
+           c.salt    AS candidate_salt,
            c.company AS candidate_company,
-           j.title   AS job_title
+           j.title   AS job_title,
+           j.salt    AS job_salt
     FROM application a
     JOIN candidate c ON c.id = a.candidate_id
     JOIN job j       ON j.id = a.job_id
@@ -271,11 +324,11 @@ export async function getDashboardStats(thresholds: Thresholds): Promise<{
     LIMIT 1
   `, [thresholds.strong]) as {
     id: number; candidate_id: number; job_id: number; score: number;
-    candidate_name: string; candidate_company: string; job_title: string;
+    candidate_name: string; candidate_salt: string; candidate_company: string; job_title: string; job_salt: string;
   }[];
 
   const topApp = topRows[0]
-    ? { id: topRows[0].id, candidateId: topRows[0].candidate_id, candidateName: topRows[0].candidate_name, candidateCompany: topRows[0].candidate_company, jobId: topRows[0].job_id, jobTitle: topRows[0].job_title, score: topRows[0].score }
+    ? { id: topRows[0].id, candidateId: topRows[0].candidate_id, candidateSalt: topRows[0].candidate_salt, candidateName: topRows[0].candidate_name, candidateCompany: topRows[0].candidate_company, jobId: topRows[0].job_id, jobSalt: topRows[0].job_salt, jobTitle: topRows[0].job_title, score: topRows[0].score }
     : null;
 
   return { total: scores.length, strong: totalStrong, countByJob, topApp };
@@ -284,10 +337,12 @@ export async function getDashboardStats(thresholds: Thresholds): Promise<{
 // ── Lean stats query — all apps with only the fields needed by StatsClient ────
 
 export async function getApplicationsLean(): Promise<{
-  id:            number;
-  candidateId:   number;
-  candidateName: string;
+  id:             number;
+  candidateId:    number;
+  candidateSalt:  string;
+  candidateName:  string;
   jobId:         number;
+  jobSalt:       string;
   jobTitle:      string;
   jobStages:     string[];
   stageIndex:    number;
@@ -303,8 +358,8 @@ export async function getApplicationsLean(): Promise<{
   const rows = await conn.execute(`
     SELECT a.id, a.candidate_id, a.job_id, a.score,
            a.stage_index, a.gaps, a.applied_at, a.moved_at,
-           c.name AS candidate_name, c.source,
-           j.title AS job_title, j.stages AS job_stages
+           c.name AS candidate_name, c.salt AS candidate_salt, c.source,
+           j.title AS job_title, j.salt AS job_salt, j.stages AS job_stages
     FROM application a
     JOIN candidate c ON c.id = a.candidate_id
     JOIN job j       ON j.id = a.job_id
@@ -312,14 +367,16 @@ export async function getApplicationsLean(): Promise<{
   `) as {
     id: number; candidate_id: number; job_id: number; score: number;
     stage_index: number; gaps: string | null; applied_at: string; moved_at: string | null;
-    candidate_name: string; source: string; job_title: string; job_stages: string | null;
+    candidate_name: string; candidate_salt: string; source: string; job_title: string; job_salt: string; job_stages: string | null;
   }[];
 
   return rows.map((r) => ({
-    id:            r.id,
-    candidateId:   r.candidate_id,
-    candidateName: r.candidate_name,
+    id:             r.id,
+    candidateId:    r.candidate_id,
+    candidateSalt:  r.candidate_salt,
+    candidateName:  r.candidate_name,
     jobId:         r.job_id,
+    jobSalt:       r.job_salt,
     jobTitle:      r.job_title,
     jobStages:     r.job_stages   ? JSON.parse(r.job_stages)   : [],
     stageIndex:    r.stage_index,

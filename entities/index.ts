@@ -53,8 +53,9 @@ export const SettingSchema = new EntitySchema({
 // ── Classes ──────────────────────────────────────────────────────────────────
 
 export class Job {
-  [OptionalProps]?: "progress" | "openedAt" | "applications" | "requirements" | "stages" | "currentStageIndex" | "budget" | "status";
+  [OptionalProps]?: "progress" | "openedAt" | "applications" | "requirements" | "stages" | "currentStageIndex" | "budget" | "status" | "salt";
   id!: number;
+  salt?: string;
   title!: string;
   department!: string;
   location!: string;
@@ -72,8 +73,9 @@ export class Job {
 }
 
 export class Candidate {
-  [OptionalProps]?: "skills" | "tags" | "appliedAt" | "applications";
+  [OptionalProps]?: "skills" | "tags" | "appliedAt" | "applications" | "salt";
   id!: number;
+  salt?: string;
   name!: string;
   role!: string;
   company!: string;
@@ -107,6 +109,7 @@ export const JobSchema = new EntitySchema({
   class: Job,
   properties: {
     id:         { primary: true, autoincrement: true, type: "integer" },
+    salt:       { type: "string", nullable: true },
     title:      { type: "string" },
     department: { type: "string" },
     location:   { type: "string" },
@@ -128,6 +131,7 @@ export const CandidateSchema = new EntitySchema({
   class: Candidate,
   properties: {
     id:        { primary: true, autoincrement: true, type: "integer" },
+    salt:      { type: "string", nullable: true },
     name:      { type: "string" },
     role:      { type: "string" },
     company:   { type: "string" },

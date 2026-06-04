@@ -11,7 +11,7 @@ type Fit = "strong" | "medium" | "weak";
 
 export type PlainApp = {
   id: number;
-  candidateId: number;
+  candidateSalt: string;
   name: string;
   role: string;
   skills: string[];
@@ -55,6 +55,7 @@ export default function JobCandidatesView({
   stages,
   requirements,
   jobId,
+  jobSalt,
   jobTitle,
   strongCount,
   totalApplications,
@@ -64,6 +65,7 @@ export default function JobCandidatesView({
   stages: string[];
   requirements: string[];
   jobId: number;
+  jobSalt: string;
   jobTitle: string;
   strongCount: number;
   totalApplications: number;
@@ -116,13 +118,12 @@ export default function JobCandidatesView({
   const kanbanHidden = Math.max(0, allApps.length - KANBAN_LIMIT);
 
   const kanbanCards: KanbanCard[] = kanbanSource.map((a) => ({
-    appId:       a.id,
-    candidateId: a.candidateId,
-    name:        a.name,
-    score:       a.score,
-    fit:         a.fit,
-    stageIndex:  a.stageIndex,
-    jobTitle,
+    appId:         a.id,
+    candidateSalt: a.candidateSalt,
+    name:          a.name,
+    score:         a.score,
+    fit:           a.fit,
+    stageIndex:    a.stageIndex,
   }));
 
   function switchView(next: "list" | "kanban") {
@@ -234,7 +235,7 @@ export default function JobCandidatesView({
                   Top {KANBAN_LIMIT} candidats par score affichés · {kanbanHidden} non affichés
                 </p>
               )}
-              <KanbanBoard stages={stages} initialCards={kanbanCards} currentStageIndex={currentStageIndex} />
+              <KanbanBoard stages={stages} initialCards={kanbanCards} currentStageIndex={currentStageIndex} jobSalt={jobSalt} jobTitle={jobTitle} />
             </div>
           )}
 
@@ -273,7 +274,7 @@ export default function JobCandidatesView({
                           return (
                             <div key={a.id} className="relative group/card">
                               <Link
-                                href={candidateUrl(a.candidateId, a.name, a.id, jobTitle)}
+                                href={candidateUrl(a.candidateSalt, a.name, jobSalt, jobTitle)}
                                 className={`bg-white border border-slate-200 p-4 lg:p-5 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:shadow-md block ${isSelectedForCompare ? "ring-2 ring-blue-400 border-blue-300" : ""}`}
                               >
                                 <div className="flex items-center gap-3 min-w-0 sm:w-1/3">

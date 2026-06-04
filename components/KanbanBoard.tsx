@@ -9,12 +9,11 @@ type Fit = "strong" | "medium" | "weak";
 
 export type KanbanCard = {
   appId: number;
-  candidateId: number;
+  candidateSalt: string;
   name: string;
   score: number;
   fit: Fit;
   stageIndex: number;
-  jobTitle?: string;
 };
 
 const FIT_DOT: Record<Fit, string> = {
@@ -27,10 +26,14 @@ export default function KanbanBoard({
   stages,
   initialCards,
   currentStageIndex,
+  jobSalt,
+  jobTitle,
 }: {
   stages: string[];
   initialCards: KanbanCard[];
   currentStageIndex: number;
+  jobSalt: string;
+  jobTitle: string;
 }) {
   const [cards, setCards]         = useState(initialCards);
   const [draggingId, setDragging] = useState<number | null>(null);
@@ -131,7 +134,7 @@ export default function KanbanBoard({
                         {card.name}
                       </span>
                       <Link
-                        href={candidateUrl(card.candidateId, card.name, card.appId, card.jobTitle)}
+                        href={candidateUrl(card.candidateSalt, card.name, jobSalt, jobTitle)}
                         className="text-slate-200 group-hover:text-slate-400 hover:!text-primary transition-colors shrink-0"
                         draggable={false}
                         onClick={(e) => e.stopPropagation()}

@@ -2,7 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getEm, getJobById } from "@/lib/db";
+import { getEm, getJobById, createUniqueJobSalt } from "@/lib/db";
+import { jobUrl } from "@/lib/slugify";
 import { Job, Application } from "@/entities/index";
 import { parseManualSkills } from "@/lib/extract-skills";
 import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
@@ -33,12 +34,8 @@ export async function createJob(formData: FormData) {
   const em = await getEm();
   em.persist(em.create(Job, {
     title, department, location, icon, iconBg, requirements,
-    stages,
-    currentStageIndex: 0,
-    stage: stages[0],
-    progress: 0,
-    budget,
-    status: "open",
+    stages, currentStageIndex: 0, stage: stages[0], progress: 0, budget, status: "open",
+    salt: await createUniqueJobSalt(),
   }));
   await em.flush();
   redirect(`/jobs`);
@@ -75,10 +72,10 @@ export async function updateJob(id: number, formData: FormData) {
 
   await em.flush();
 
-  revalidatePath(`/jobs/${id}`);
+  const url = jobUrl(job.salt!, title);
+  revalidatePath(url);
   revalidatePath("/jobs");
-
-  redirect(`/jobs/${id}`);
+  redirect(url);
 }
 
 export async function setJobStage(jobId: number, stageIndex: number) {
@@ -108,39 +105,42 @@ export async function setJobStage(jobId: number, stageIndex: number) {
   await em.flush();
 
   revalidatePath("/jobs");
-  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(jobUrl(job.salt!, job.title));
 }
 
 export async function updateJobStages(jobId: number, stages: string[], currentStageIndex: number) {
   const em  = await getEm();
-  const idx = Math.max(0, Math.min(stages.length - 1, currentStageIndex));
+  const job = await getJobById(jobId);
+  if (!job) throw new Error("Job introuvable");
 
+  const idx = Math.max(0, Math.min(stages.length - 1, currentStageIndex));
   em.assign(em.getReference(Job, jobId), {
-    stages,
-    currentStageIndex: idx,
-    stage:    stages[idx] ?? "",
-    progress: deriveProgress(idx, stages.length),
+    stages, currentStageIndex: idx, stage: stages[idx] ?? "", progress: deriveProgress(idx, stages.length),
   });
   await em.flush();
 
   revalidatePath("/jobs");
-  revalidatePath(`/jobs/${jobId}`);
+  revalidatePath(jobUrl(job.salt!, job.title));
 }
 
 export async function archiveJob(id: number) {
-  const em = await getEm();
+  const em  = await getEm();
+  const job = await getJobById(id);
+  if (!job) throw new Error("Poste introuvable");
   em.assign(em.getReference(Job, id), { status: "closed" });
   await em.flush();
-  revalidatePath(`/jobs/${id}`);
+  revalidatePath(jobUrl(job.salt!, job.title));
   revalidatePath("/jobs");
   revalidatePath("/dashboard");
 }
 
 export async function unarchiveJob(id: number) {
-  const em = await getEm();
+  const em  = await getEm();
+  const job = await getJobById(id);
+  if (!job) throw new Error("Poste introuvable");
   em.assign(em.getReference(Job, id), { status: "open" });
   await em.flush();
-  revalidatePath(`/jobs/${id}`);
+  revalidatePath(jobUrl(job.salt!, job.title));
   revalidatePath("/jobs");
   revalidatePath("/dashboard");
 }
@@ -153,25 +153,18 @@ export async function duplicateJob(id: number) {
   const rawStages = job.stages as string[] | null | undefined;
   const stages    = rawStages?.length ? rawStages : DEFAULT_STAGES;
 
+  const copySalt = await createUniqueJobSalt();
   const copy = em.create(Job, {
-    title:             `${job.title} (copie)`,
-    department:        job.department,
-    location:          job.location,
-    icon:              job.icon,
-    iconBg:            job.iconBg,
-    requirements:      job.requirements,
-    stages,
-    currentStageIndex: 0,
-    stage:             stages[0],
-    progress:          0,
-    budget:            job.budget ?? undefined,
-    status:            "open",
+    title: `${job.title} (copie)`, department: job.department, location: job.location,
+    icon: job.icon, iconBg: job.iconBg, requirements: job.requirements,
+    stages, currentStageIndex: 0, stage: stages[0], progress: 0,
+    budget: job.budget ?? undefined, status: "open", salt: copySalt,
   });
   em.persist(copy);
   await em.flush();
 
   revalidatePath("/jobs");
-  redirect(`/jobs/${copy.id}/edit`);
+  redirect(`${jobUrl(copySalt, copy.title)}/edit`);
 }
 
 export async function deleteJob(id: number) {

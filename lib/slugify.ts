@@ -1,5 +1,15 @@
+import crypto from "crypto";
+
 // Unicode range ̀-ͯ = combining diacritical marks (accents)
 const COMBINING = /[̀-ͯ]/g;
+
+export function generateSalt(length = 10): string {
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const bytes = crypto.randomBytes(length);
+  let result = "";
+  for (const byte of bytes) result += charset[byte % charset.length];
+  return result;
+}
 
 export function slugify(s: string): string {
   return s
@@ -13,18 +23,18 @@ export function slugify(s: string): string {
     .slice(0, 60);
 }
 
-export function jobUrl(id: number, title: string): string {
-  return `/jobs/${id}-${slugify(title)}`;
+export function jobUrl(salt: string, title: string): string {
+  return `/jobs/${salt}-${slugify(title)}`;
 }
 
 export function candidateUrl(
-  id: number,
+  salt: string,
   name: string,
-  appId?: number,
+  jobSalt?: string,
   jobTitle?: string,
 ): string {
-  const base = `/candidates/${id}-${slugify(name)}`;
-  if (!appId) return base;
-  const appSegment = jobTitle ? `${appId}-${slugify(jobTitle)}` : String(appId);
-  return `${base}?appId=${appSegment}`;
+  const candSegment = `${salt}-${slugify(name)}`;
+  if (!jobSalt) return `/candidates/${candSegment}`;
+  const jobSegment = jobTitle ? `${jobSalt}-${slugify(jobTitle)}` : jobSalt;
+  return `/jobs/${jobSegment}/candidates/${candSegment}`;
 }

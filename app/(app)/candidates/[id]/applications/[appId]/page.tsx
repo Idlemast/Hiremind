@@ -13,11 +13,12 @@ export default async function ApplicationDetailPage({
   params: Promise<{ id: string; appId: string }>;
 }) {
   const { id, appId } = await params;
+  const candidateSalt = id.split("-")[0];
   const [application, thresholds] = await Promise.all([
     getApplicationById(parseInt(appId, 10)),
     getThresholds(),
   ]);
-  if (!application || application.candidate.id !== parseInt(id, 10)) notFound();
+  if (!application || application.candidate.salt !== candidateSalt) notFound();
 
   const candidate = application.candidate;
   const job       = application.job;
@@ -50,7 +51,7 @@ export default async function ApplicationDetailPage({
       <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-md">
         <div className="flex items-center gap-md min-w-0">
           <Link
-            href={candidateUrl(candidate.id, candidate.name)}
+            href={candidateUrl(candidate.salt!, candidate.name)}
             className="p-1.5 rounded-full hover:bg-slate-100 transition-colors shrink-0 text-slate-500 hover:text-primary"
           >
             <span className="material-symbols-outlined">arrow_back</span>
@@ -70,7 +71,7 @@ export default async function ApplicationDetailPage({
             </div>
             <p className="text-body-sm text-on-surface-variant mt-xs">
               {candidate.role} · {candidate.company} ·{" "}
-              <Link href={jobUrl(job.id, job.title)} className="text-primary hover:underline font-semibold">
+              <Link href={jobUrl(job.salt!, job.title)} className="text-primary hover:underline font-semibold">
                 {job.title}
               </Link>
             </p>
@@ -122,7 +123,7 @@ export default async function ApplicationDetailPage({
           </div>
           <div>
             <h3 className="font-label-caps text-label-caps text-slate-400 uppercase tracking-wider mb-1">Poste</h3>
-            <Link href={jobUrl(job.id, job.title)} className="group">
+            <Link href={jobUrl(job.salt!, job.title)} className="group">
               <p className="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">{job.title}</p>
               <p className="text-body-sm text-slate-500">{job.department}</p>
             </Link>

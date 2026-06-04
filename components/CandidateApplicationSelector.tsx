@@ -6,12 +6,11 @@ import { candidateUrl } from "@/lib/slugify";
 
 export type AppOption = {
   id: number;
+  jobSalt: string;
   jobTitle: string;
   score: number;
   fit: string;
 };
-
-// jobTitle already on AppOption — used for slug generation in candidateUrl
 
 const FIT_CHIP: Record<string, string> = {
   strong: "bg-emerald-100 text-emerald-700",
@@ -20,11 +19,11 @@ const FIT_CHIP: Record<string, string> = {
 };
 
 export default function CandidateApplicationSelector({
-  candidateId,
+  candidateSalt,
   candidateName,
   applications,
 }: {
-  candidateId: number;
+  candidateSalt: string;
   candidateName: string;
   applications: AppOption[];
 }) {
@@ -34,7 +33,7 @@ export default function CandidateApplicationSelector({
   const selected = applications.find((a) => a.id === selectedId) ?? applications[0];
 
   const open = () => {
-    if (selected) router.push(candidateUrl(candidateId, candidateName, selected.id, selected.jobTitle));
+    if (selected) router.push(candidateUrl(candidateSalt, candidateName, selected.jobSalt, selected.jobTitle));
   };
 
   if (applications.length === 1) {

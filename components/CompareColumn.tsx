@@ -6,7 +6,7 @@ import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
 
 export type CompareApp = {
   id:            number;
-  candidateId:   number;
+  candidateSalt: string;
   candidateName: string;
   candidateRole: string;
   score:         number;
@@ -19,6 +19,7 @@ export type CompareApp = {
   notes:         string | null;
   salary:        string | null;
   jobBudget:     string | null;
+  jobSalt:       string;
   jobTitle:      string;
 };
 
@@ -88,7 +89,7 @@ export default function CompareColumn({
             </div>
           )}
           <Link
-            href={candidateUrl(app.candidateId, app.candidateName, app.id, app.jobTitle)}
+            href={candidateUrl(app.candidateSalt, app.candidateName, app.jobSalt, app.jobTitle)}
             className="ml-auto flex items-center gap-1 text-primary text-sm font-semibold hover:underline"
           >
             Voir la fiche

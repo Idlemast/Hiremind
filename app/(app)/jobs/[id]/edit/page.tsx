@@ -1,4 +1,4 @@
-import { getJobById } from "@/lib/db";
+import { getJobBySalt } from "@/lib/db";
 import { updateJob } from "@/app/actions/jobs";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -9,15 +9,14 @@ export default async function EditJobPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const jobId  = parseInt(id, 10);
-  const job    = await getJobById(jobId);
+  const job    = await getJobBySalt(id.split("-")[0]);
   if (!job) notFound();
 
   const requirements = (job.requirements as string[] | null) ?? [];
 
   async function action(formData: FormData) {
     "use server";
-    await updateJob(jobId, formData);
+    await updateJob(job!.id, formData);
   }
 
   return (

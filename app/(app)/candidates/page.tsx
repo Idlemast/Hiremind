@@ -36,8 +36,8 @@ export default async function CandidatesPage({
     const cid = app.candidate.id;
     if (!byCandidate.has(cid)) {
       byCandidate.set(cid, {
-        candidateId: cid,
-        name:        app.candidate.name,
+        candidateSalt: app.candidate.salt!,
+        name:          app.candidate.name,
         role:        app.candidate.role,
         company:     app.candidate.company,
         location:    app.candidate.location,
@@ -49,7 +49,7 @@ export default async function CandidatesPage({
     }
     const entry = byCandidate.get(cid)!;
     const fit   = scoreToFit(app.score, thresholds);
-    entry.apps.push({ id: app.id, jobTitle: app.job.title, score: app.score, fit });
+    entry.apps.push({ id: app.id, jobSalt: app.job.salt!, jobTitle: app.job.title, score: app.score, fit });
     if (app.score > entry.bestScore) entry.bestScore = app.score;
     if (app.appliedAt > entry.appliedAt) entry.appliedAt = app.appliedAt;
   }
@@ -163,7 +163,7 @@ export default async function CandidatesPage({
 
             return (
               <div
-                key={g.candidateId}
+                key={g.candidateSalt}
                 className="bg-white border border-slate-200 rounded-xl p-lg flex flex-col sm:flex-row sm:items-center gap-md shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex items-center gap-md flex-1 min-w-0">
@@ -195,7 +195,7 @@ export default async function CandidatesPage({
                   </div>
                 </div>
                 <div className="shrink-0">
-                  <CandidateApplicationSelector candidateId={g.candidateId} candidateName={g.name} applications={g.apps} />
+                  <CandidateApplicationSelector candidateSalt={g.candidateSalt} candidateName={g.name} applications={g.apps} />
                 </div>
               </div>
             );

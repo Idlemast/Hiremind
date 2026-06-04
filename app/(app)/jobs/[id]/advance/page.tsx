@@ -1,4 +1,4 @@
-import { getJobById, getApplications, getThresholds } from "@/lib/db";
+import { getJobBySalt, getApplications, getThresholds } from "@/lib/db";
 import { jobUrl } from "@/lib/slugify";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -13,14 +13,15 @@ export default async function AdvanceStagePage({
   params: Promise<{ id: string }>;
 }) {
   const { id }  = await params;
-  const jobId   = parseInt(id, 10);
+  const salt    = id.split("-")[0];
 
   const [job, allApplications, thresholds] = await Promise.all([
-    getJobById(jobId),
+    getJobBySalt(salt),
     getApplications(jobId),
     getThresholds(),
   ]);
   if (!job) notFound();
+  const jobId = job.id;
 
   const rawStages  = job.stages as string[] | null | undefined;
   const stages     = rawStages?.length ? rawStages : DEFAULT_STAGES;
@@ -74,7 +75,7 @@ export default async function AdvanceStagePage({
       <div className="flex items-center justify-between">
         <div>
           <Link
-            href={jobUrl(jobId, job.title)}
+            href={jobUrl(job.salt!, job.title)}
             className="text-sm text-slate-400 hover:text-primary flex items-center gap-1 mb-sm transition-colors"
           >
             <span className="material-symbols-outlined text-sm">arrow_back</span>

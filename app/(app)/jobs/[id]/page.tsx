@@ -1,4 +1,4 @@
-import { getJobById, getApplications, getApplicationStatsByScore, getThresholds } from "@/lib/db";
+import { getJobBySalt, getApplications, getApplicationStatsByScore, getThresholds } from "@/lib/db";
 import { jobUrl, candidateUrl } from "@/lib/slugify";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -18,10 +18,11 @@ export default async function JobDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id }  = await params;
-  const jobId   = parseInt(id, 10);
+  const salt    = id.split("-")[0];
 
-  const [job, thresholds] = await Promise.all([getJobById(jobId), getThresholds()]);
+  const [job, thresholds] = await Promise.all([getJobBySalt(salt), getThresholds()]);
   if (!job) notFound();
+  const jobId = job.id;
 
   const [allApplications, stats] = await Promise.all([
     getApplications(jobId),
@@ -37,8 +38,8 @@ export default async function JobDetailPage({
   const { total: totalApplications, strong: strongCount, medium: mediumCount, weak: weakCount } = stats;
 
   const plainApps: PlainApp[] = allApplications.map((a) => ({
-    id:          a.id,
-    candidateId: a.candidate.id,
+    id:             a.id,
+    candidateSalt:  a.candidate.salt!,
     name:        a.candidate.name,
     role:        a.candidate.role,
     skills:      (a.candidate.skills as string[] | null) ?? [],
@@ -66,7 +67,7 @@ export default async function JobDetailPage({
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap shrink-0">
-          <Link href={`${jobUrl(jobId, job.title)}/edit`}
+          <Link href={`${jobUrl(job.salt!, job.title)}/edit`}
             className="p-2 sm:px-3 sm:py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"
           >
             <span className="material-symbols-outlined text-sm">edit</span>
@@ -100,7 +101,7 @@ export default async function JobDetailPage({
           <div className="flex items-center gap-3">
             <span className="text-label-caps font-label-caps text-slate-400">{stageIndex + 1} / {stages.length}</span>
             {stageIndex < stages.length - 1 && (
-              <Link href={`${jobUrl(jobId, job.title)}/advance`}
+              <Link href={`${jobUrl(job.salt!, job.title)}/advance`}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-container transition-colors shadow-sm"
               >
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
@@ -134,6 +135,7 @@ export default async function JobDetailPage({
         stages={stages}
         requirements={requirements}
         jobId={jobId}
+        jobSalt={job.salt!}
         jobTitle={job.title}
         strongCount={strongCount}
         totalApplications={totalApplications}

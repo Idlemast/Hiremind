@@ -1,4 +1,4 @@
-import { getCandidateById } from "@/lib/db";
+import { getCandidateBySalt } from "@/lib/db";
 import { updateCandidate } from "@/app/actions/candidates";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -9,14 +9,14 @@ export default async function EditCandidatePage({
   params: Promise<{ id: string }>;
 }) {
   const { id }    = await params;
-  const candidate = await getCandidateById(parseInt(id, 10));
+  const candidate = await getCandidateBySalt(id.split("-")[0]);
   if (!candidate) notFound();
 
   const skills = (candidate.skills as string[] | null) ?? [];
 
   async function action(formData: FormData) {
     "use server";
-    await updateCandidate(parseInt(id, 10), formData);
+    await updateCandidate(candidate!.id, formData);
   }
 
   return (

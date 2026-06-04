@@ -26,9 +26,11 @@ const FIT_DOT: Record<Fit, string> = {
 export default function KanbanBoard({
   stages,
   initialCards,
+  currentStageIndex,
 }: {
   stages: string[];
   initialCards: KanbanCard[];
+  currentStageIndex: number;
 }) {
   const [cards, setCards]         = useState(initialCards);
   const [draggingId, setDragging] = useState<number | null>(null);
@@ -40,12 +42,12 @@ export default function KanbanBoard({
 
   function onDrop(colIdx: number) {
     if (draggingId === null) return;
+    if (colIdx > currentStageIndex) return; // blocked by job stage cap
     const card = cards.find((c) => c.appId === draggingId);
     setDragging(null);
     setOverCol(null);
     if (!card || card.stageIndex === colIdx) return;
 
-    // Optimistic update — move card immediately, revert on failure
     const prevCards = cards;
     setCards((prev) => prev.map((c) => c.appId === draggingId ? { ...c, stageIndex: colIdx } : c));
 
@@ -61,14 +63,16 @@ export default function KanbanBoard({
   return (
     <div className="flex gap-3 overflow-x-auto pb-4 -mx-4 px-4 lg:-mx-xl lg:px-xl">
       {stages.map((stage, idx) => {
-        const col    = cards.filter((c) => c.stageIndex === idx);
-        const isOver = overCol === idx;
+        const col      = cards.filter((c) => c.stageIndex === idx);
+        const isOver   = overCol === idx;
+        const isCurrent = idx === currentStageIndex;
+        const isLocked  = idx > currentStageIndex;
 
         return (
           <div
             key={idx}
             className="flex-none w-44"
-            onDragOver={(e) => { e.preventDefault(); setOverCol(idx); }}
+            onDragOver={(e) => { if (!isLocked) { e.preventDefault(); setOverCol(idx); } }}
             onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) setOverCol(null);
             }}
@@ -76,28 +80,48 @@ export default function KanbanBoard({
           >
             {/* Column header */}
             <div className={`px-3 py-2 rounded-xl mb-2 border transition-colors ${
-              isOver ? "border-primary/40 bg-primary/5" : "border-slate-200 bg-slate-50"
+              isCurrent
+                ? "border-primary bg-primary/5"
+                : isOver
+                ? "border-primary/40 bg-primary/5"
+                : isLocked
+                ? "border-slate-100 bg-slate-50/50"
+                : "border-slate-200 bg-slate-50"
             }`}>
               <div className="flex items-center justify-between gap-2">
-                <span className="font-label-caps text-label-caps text-slate-600 truncate">{stage}</span>
-                <span className="text-label-caps text-slate-400 shrink-0 tabular-nums">{col.length}</span>
+                <span className={`font-label-caps text-label-caps truncate ${isLocked ? "text-slate-300" : isCurrent ? "text-primary" : "text-slate-600"}`}>
+                  {stage}
+                </span>
+                <div className="flex items-center gap-1 shrink-0">
+                  {isCurrent && (
+                    <span className="material-symbols-outlined text-[10px] text-primary" style={{ fontSize: "10px" }}>radio_button_checked</span>
+                  )}
+                  {isLocked && (
+                    <span className="material-symbols-outlined text-[10px] text-slate-300" style={{ fontSize: "10px" }}>lock</span>
+                  )}
+                  <span className={`text-label-caps tabular-nums ${isLocked ? "text-slate-300" : "text-slate-400"}`}>{col.length}</span>
+                </div>
               </div>
             </div>
 
             {/* Cards */}
-            <div className={`min-h-20 space-y-2 rounded-xl p-1 transition-colors ${isOver ? "bg-primary/5" : ""}`}>
+            <div className={`min-h-20 space-y-2 rounded-xl p-1 transition-colors ${
+              isOver && !isLocked ? "bg-primary/5" : ""
+            } ${isLocked ? "opacity-60" : ""}`}>
               {col.map((card) => {
                 const initials   = card.name.split(" ").map((n) => n[0]).join("").slice(0, 2);
                 const isDragging = draggingId === card.appId;
                 return (
                   <div
                     key={card.appId}
-                    draggable
+                    draggable={!isLocked}
                     onDragStart={() => onDragStart(card.appId)}
                     onDragEnd={onDragEnd}
                     className={`group bg-white border border-slate-200 rounded-lg px-2.5 py-2 shadow-sm select-none transition-all ${
                       isDragging
                         ? "opacity-40 cursor-grabbing"
+                        : isLocked
+                        ? "cursor-default"
                         : "cursor-grab hover:shadow-md hover:border-slate-300"
                     }`}
                   >
@@ -120,7 +144,7 @@ export default function KanbanBoard({
                 );
               })}
 
-              {col.length === 0 && (
+              {col.length === 0 && !isLocked && (
                 <div className={`h-14 rounded-lg border-2 border-dashed flex items-center justify-center transition-colors ${
                   isOver ? "border-primary/40" : "border-slate-200"
                 }`}>

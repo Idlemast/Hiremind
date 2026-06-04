@@ -58,6 +58,7 @@ export default function JobCandidatesView({
   jobTitle,
   strongCount,
   totalApplications,
+  currentStageIndex,
 }: {
   allApps: PlainApp[];
   stages: string[];
@@ -66,6 +67,7 @@ export default function JobCandidatesView({
   jobTitle: string;
   strongCount: number;
   totalApplications: number;
+  currentStageIndex: number;
 }) {
   const router = useRouter();
 
@@ -232,7 +234,7 @@ export default function JobCandidatesView({
                   Top {KANBAN_LIMIT} candidats par score affichés · {kanbanHidden} non affichés
                 </p>
               )}
-              <KanbanBoard stages={stages} initialCards={kanbanCards} />
+              <KanbanBoard stages={stages} initialCards={kanbanCards} currentStageIndex={currentStageIndex} />
             </div>
           )}
 
@@ -293,7 +295,13 @@ export default function JobCandidatesView({
                                     : <span className="text-body-sm text-slate-400">Aucune compétence.</span>
                                   }
                                 </div>
-                                <div className="flex items-center gap-3 justify-between sm:justify-end shrink-0 pr-8">
+                                <div className="flex items-center gap-2 justify-between sm:justify-end shrink-0 pr-8">
+                                  {a.stageIndex === currentStageIndex && (
+                                    <span className="hidden sm:flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded text-label-caps font-label-caps whitespace-nowrap">
+                                      <span className="material-symbols-outlined text-[10px]" style={{ fontSize: "10px" }}>radio_button_checked</span>
+                                      Même étape
+                                    </span>
+                                  )}
                                   <div className={`flex items-center gap-1 px-3 py-1 rounded-lg ${group.score}`}>
                                     <span className="material-symbols-outlined text-sm">bolt</span>
                                     <span className="font-label-caps text-label-caps">{a.score}%</span>

@@ -137,6 +137,7 @@ export default async function JobDetailPage({
         jobTitle={job.title}
         strongCount={strongCount}
         totalApplications={totalApplications}
+        currentStageIndex={stageIndex}
       />
     </div>
   );

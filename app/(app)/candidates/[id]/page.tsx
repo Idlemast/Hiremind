@@ -226,6 +226,7 @@ export default async function CandidateProfilePage({
               applicationId={app.id}
               stageIndex={stageIdx}
               stages={jobStages}
+              jobStageIndex={app.job.currentStageIndex ?? jobStages.length - 1}
             />
           </div>
           <div>

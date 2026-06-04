@@ -117,6 +117,7 @@ export default async function ApplicationDetailPage({
               applicationId={application.id}
               stageIndex={stageIdx}
               stages={jobStages}
+              jobStageIndex={job.currentStageIndex ?? jobStages.length - 1}
             />
           </div>
           <div>

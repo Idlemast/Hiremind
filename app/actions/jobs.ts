@@ -86,15 +86,25 @@ export async function setJobStage(jobId: number, stageIndex: number) {
   const job = await getJobById(jobId);
   if (!job) throw new Error("Job introuvable");
 
-  const rawStages = job.stages as string[] | null | undefined;
-  const stages    = rawStages?.length ? rawStages : DEFAULT_STAGES;
-  const idx       = Math.max(0, Math.min(stages.length - 1, stageIndex));
+  const rawStages    = job.stages as string[] | null | undefined;
+  const stages       = rawStages?.length ? rawStages : DEFAULT_STAGES;
+  const prevIdx      = job.currentStageIndex ?? 0;
+  const idx          = Math.max(0, Math.min(stages.length - 1, stageIndex));
 
   em.assign(em.getReference(Job, jobId), {
     currentStageIndex: idx,
     stage:    stages[idx],
     progress: deriveProgress(idx, stages.length),
   });
+
+  // When moving backward, cap any applications that exceed the new job stage
+  if (idx < prevIdx) {
+    const apps = await em.find(Application, { job: { id: jobId } });
+    for (const app of apps) {
+      if (app.stageIndex > idx) em.assign(app, { stageIndex: idx, movedAt: new Date() });
+    }
+  }
+
   await em.flush();
 
   revalidatePath("/jobs");

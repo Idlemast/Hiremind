@@ -144,7 +144,8 @@ export async function updateApplicationStage(applicationId: number, stageIndex: 
 
   const rawStages = app.job.stages as string[] | null | undefined;
   const stages    = rawStages?.length ? rawStages : [];
-  const idx       = Math.max(0, Math.min(stages.length - 1, stageIndex));
+  const jobMax    = app.job.currentStageIndex ?? stages.length - 1;
+  const idx       = Math.max(0, Math.min(stageIndex, stages.length - 1, jobMax));
 
   em.assign(app, { stageIndex: idx, movedAt: new Date() });
   await em.flush();

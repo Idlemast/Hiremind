@@ -37,26 +37,30 @@ const NEGATIVE_SIGNALS: [RegExp, string][] = [
   [/\bmanque d['']enthousiasme\b/i, "manque d'enthousiasme"],
 ];
 
+// Negative lookbehind prevents matching negated forms:
+// "pas clair", "peu motivé", "mal à l'aise", etc.
+const NEG = String.raw`(?<!(?:pas|peu|mal|non)\s)`;
+
 const POSITIVE_SIGNALS: [RegExp, string][] = [
-  [/\benthousiaste\b/i,           "enthousiaste"],
-  [/\benthousiasme\b/i,           "enthousiasme"],
-  [/\bclair[e]?\b/i,              "clair"],
-  [/\bprécis[e]?\b/i,             "précis"],
-  [/\bexemples? concrets?\b/i,    "exemples concrets"],
-  [/\bproactif|proactive\b/i,     "proactif"],
-  [/\bmotivé[e]?\b/i,             "motivé"],
-  [/\bbonne communication\b/i,    "bonne communication"],
-  [/\bpertinent[e]?\b/i,          "pertinent"],
-  [/\bstructuré[e]?\b/i,          "structuré"],
-  [/\bconvaincant[e]?\b/i,        "convaincant"],
-  [/\bà l['']aise\b/i,            "à l'aise"],
-  [/\bsolide\b/i,                 "solide"],
-  [/\brigoureux|rigoureuse\b/i,   "rigoureux"],
-  [/\bbien développé[e]?\b/i,     "bien développé"],
-  [/\bdéveloppe bien\b/i,         "développe bien"],
-  [/\bcohérent[e]?\b/i,           "cohérent"],
+  [/\benthousiaste\b/i,                         "enthousiaste"],
+  [/\benthousiasme\b/i,                         "enthousiasme"],
+  [new RegExp(`${NEG}\\bclair[e]?\\b`, "i"),    "clair"],
+  [new RegExp(`${NEG}\\bprécis[e]?\\b`, "i"),   "précis"],
+  [/\bexemples? concrets?\b/i,                  "exemples concrets"],
+  [/\bproactif|proactive\b/i,                   "proactif"],
+  [new RegExp(`${NEG}\\bmotivé[e]?\\b`, "i"),   "motivé"],
+  [/\bbonne communication\b/i,                  "bonne communication"],
+  [/\bpertinent[e]?\b/i,                        "pertinent"],
+  [new RegExp(`${NEG}\\bstructuré[e]?\\b`, "i"), "structuré"],
+  [new RegExp(`${NEG}\\bconvaincant[e]?\\b`, "i"), "convaincant"],
+  [/(?<!mal\s)\bà l['']aise\b/i,                "à l'aise"],
+  [/\bsolide\b/i,                               "solide"],
+  [/\brigoureux|rigoureuse\b/i,                 "rigoureux"],
+  [/\bbien développé[e]?\b/i,                   "bien développé"],
+  [/\bdéveloppe bien\b/i,                       "développe bien"],
+  [/\bcohérent[e]?\b/i,                         "cohérent"],
   [/\bbon (recul|esprit d['']analyse|sens critique)\b/i, "bon recul"],
-  [/\bforce de proposition\b/i,   "force de proposition"],
+  [/\bforce de proposition\b/i,                 "force de proposition"],
   [/\btrès (motivé[e]?|pertinent[e]?|clair[e]?|solide)\b/i, "très positif"],
 ];
 

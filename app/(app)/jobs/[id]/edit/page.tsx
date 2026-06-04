@@ -76,7 +76,7 @@ export default async function EditJobPage({
             <input
               type="text"
               name="budget"
-              defaultValue={(job as any).budget ?? ""}
+              defaultValue={job.budget ?? ""}
               placeholder="ex. 55k€ – 70k€"
               className="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-body-sm text-on-surface bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />

@@ -154,7 +154,7 @@ export async function duplicateJob(id: number) {
     currentStageIndex: 0,
     stage:             stages[0],
     progress:          0,
-    budget:            (job as any).budget ?? undefined,
+    budget:            job.budget ?? undefined,
     status:            "open",
   });
   em.persist(copy);

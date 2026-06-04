@@ -34,7 +34,7 @@ export default async function ApplicationDetailPage({
   const currentStage = jobStages[stageIdx] ?? jobStages[0];
   const stageProgress = deriveProgress(stageIdx, jobStages.length);
 
-  const jobBudget       = (job as any).budget as string | null | undefined;
+  const jobBudget       = job.budget;
   const candidateSalary = candidate.salary;
 
   const templates = getCommTemplates(

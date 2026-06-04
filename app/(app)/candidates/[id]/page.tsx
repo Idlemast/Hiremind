@@ -42,7 +42,7 @@ export default async function CandidateProfilePage({
   // Jobs the candidate is NOT yet applied to
   const appliedJobIds = new Set(applications.map((a) => a.job.id));
   const availableJobs: JobOption[] = allJobs
-    .filter((j) => !appliedJobIds.has(j.id) && (j as any).status !== "closed")
+    .filter((j) => !appliedJobIds.has(j.id) && j.status !== "closed")
     .map((j) => ({ id: j.id, title: j.title, department: j.department }));
 
   if (!app) {
@@ -84,7 +84,7 @@ export default async function CandidateProfilePage({
   const currentStage  = jobStages[stageIdx] ?? jobStages[0];
   const stageProgress = deriveProgress(stageIdx, jobStages.length);
 
-  const jobBudget       = (app.job as any).budget as string | null | undefined;
+  const jobBudget       = app.job.budget;
   const candidateSalary = candidate.salary;
 
   const templates = getCommTemplates(

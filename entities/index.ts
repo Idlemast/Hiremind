@@ -115,7 +115,7 @@ export const JobSchema = new EntitySchema({
     icon:       { type: "string" },
     iconBg:     { type: "string", length: 200 },
     progress:          { type: "integer", default: 0 },
-    openedAt:          { type: "Date", defaultRaw: "CURRENT_TIMESTAMP" },
+    openedAt:          { type: "Date", fieldName: "opened_at", defaultRaw: "CURRENT_TIMESTAMP" },
     requirements:      { type: JsonType, nullable: true },
     stages:            { type: JsonType, nullable: true },
     currentStageIndex: { type: "integer", default: 0, fieldName: "current_stage_index" },

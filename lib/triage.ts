@@ -20,17 +20,25 @@ function normalize(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]/g, " ").trim();
 }
 
-// Returns true if two skill strings are semantically close enough
+// Returns true if two skill strings are semantically close enough.
+// Uses token-set matching: all tokens of one string must appear in the other.
+// This avoids false positives like "Java" matching "JavaScript" (substring trap).
 function skillsMatch(a: string, b: string): boolean {
   const na = normalize(a);
   const nb = normalize(b);
   if (na === nb) return true;
-  // One contains the other (e.g. "React" matches "React (Expert)")
-  if (na.includes(nb) || nb.includes(na)) return true;
-  // Share at least one significant word (≥4 chars)
-  const wordsA = na.split(" ").filter((w) => w.length >= 4);
-  const wordsB = new Set(nb.split(" ").filter((w) => w.length >= 4));
-  return wordsA.some((w) => wordsB.has(w));
+
+  const tokA = na.split(/\s+/).filter((w) => w.length >= 3);
+  const tokB = nb.split(/\s+/).filter((w) => w.length >= 3);
+  if (tokA.length === 0 || tokB.length === 0) return false;
+
+  const setA = new Set(tokA);
+  const setB = new Set(tokB);
+  // B fully covered by A (e.g. req "React" covered by skill "React Native")
+  if ([...setB].every((w) => setA.has(w))) return true;
+  // A fully covered by B (e.g. skill "Python" covered by req "Python 3")
+  if ([...setA].every((w) => setB.has(w))) return true;
+  return false;
 }
 
 export function scoreCandidate(input: TriageInput): TriageResult {

@@ -21,7 +21,10 @@ export async function importCandidate(formData: FormData) {
   const cvText   = String(formData.get("cvText")   ?? "");
   const rawSkills = String(formData.get("skills")  ?? "");
 
-  if (!name || !role || !company || !location || !jobId) {
+  if (!Number.isFinite(jobId) || jobId <= 0) {
+    throw new Error("jobId invalide");
+  }
+  if (!name || !role || !company || !location) {
     throw new Error("Champs obligatoires manquants");
   }
 

@@ -74,11 +74,28 @@ function extractHeuristic(html: string): Partial<JobPreview> {
   return { title, company, location, department: "", requirements: skills.join(", ") };
 }
 
+function isSafeUrl(raw: string): boolean {
+  let url: URL;
+  try { url = new URL(raw); } catch { return false; }
+  if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+  const host = url.hostname.toLowerCase();
+  if (host === "localhost" || host === "::1") return false;
+  // Block numeric IPv4 addresses (private ranges)
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(host)) {
+    const [a, b] = host.split(".").map(Number);
+    if (a === 10 || a === 127 || a === 0) return false;
+    if (a === 172 && b >= 16 && b <= 31) return false;
+    if (a === 192 && b === 168) return false;
+    if (a === 169 && b === 254) return false;
+  }
+  return true;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { url } = await req.json() as { url: string };
 
-    if (!url?.startsWith("http")) {
+    if (!isSafeUrl(url)) {
       return NextResponse.json({ ok: false, error: "URL invalide" }, { status: 400 });
     }
 

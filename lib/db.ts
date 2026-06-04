@@ -25,6 +25,10 @@ const getOrm = cache(async (): Promise<MikroORM> => {
     UNIQUE(candidate_id, job_id)
   )`);
 
+  // Indexes for foreign key lookups (no-op if already present)
+  await conn.execute(`CREATE INDEX IF NOT EXISTS idx_application_job_id       ON application(job_id)`);
+  await conn.execute(`CREATE INDEX IF NOT EXISTS idx_application_candidate_id ON application(candidate_id)`);
+
   // Migrate from m:1 schema if candidate.job_id still exists
   const colInfo = await conn.execute(`PRAGMA table_info(candidate)`) as { name: string }[];
   const hasJobId = colInfo.some((c) => c.name === "job_id");
@@ -55,14 +59,18 @@ const getOrm = cache(async (): Promise<MikroORM> => {
     await conn.execute(`DROP TABLE _candidate_old`);
   }
 
-  // New application columns (fail silently if already present)
-  try { await conn.execute(`ALTER TABLE application ADD COLUMN moved_at DATETIME NULL`); } catch {}
+  // Column additions — ignore "duplicate column" but surface real errors
+  const addCol = async (sql: string) => {
+    try { await conn.execute(sql); } catch (err: any) {
+      if (!err?.message?.includes("duplicate column")) console.error("[db] schema migration failed:", err?.message ?? err);
+    }
+  };
 
-  // Legacy job column additions (fail silently if already present)
-  try { await conn.execute(`ALTER TABLE job ADD COLUMN stages TEXT NULL`); } catch {}
-  try { await conn.execute(`ALTER TABLE job ADD COLUMN current_stage_index INTEGER NOT NULL DEFAULT 0`); } catch {}
-  try { await conn.execute(`ALTER TABLE job ADD COLUMN budget TEXT NULL`); } catch {}
-  try { await conn.execute(`ALTER TABLE job ADD COLUMN status TEXT NOT NULL DEFAULT 'open'`); } catch {}
+  await addCol(`ALTER TABLE application ADD COLUMN moved_at DATETIME NULL`);
+  await addCol(`ALTER TABLE job ADD COLUMN stages TEXT NULL`);
+  await addCol(`ALTER TABLE job ADD COLUMN current_stage_index INTEGER NOT NULL DEFAULT 0`);
+  await addCol(`ALTER TABLE job ADD COLUMN budget TEXT NULL`);
+  await addCol(`ALTER TABLE job ADD COLUMN status TEXT NOT NULL DEFAULT 'open'`);
 
   await conn.execute(`CREATE TABLE IF NOT EXISTS job_template (
     id           INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,

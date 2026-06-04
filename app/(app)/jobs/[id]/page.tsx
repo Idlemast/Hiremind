@@ -103,7 +103,7 @@ export default async function JobDetailPage({
             <h2 className="font-h1 text-h1 text-on-surface truncate">{job.title}</h2>
             <p className="text-body-sm text-slate-500 mt-0.5 truncate">
               {job.department} · {job.location}
-              {(job as any).budget && <span className="ml-2 text-slate-400">· {(job as any).budget}</span>}
+              {job.budget && <span className="ml-2 text-slate-400">· {job.budget}</span>}
             </p>
           </div>
         </div>
@@ -114,7 +114,7 @@ export default async function JobDetailPage({
             <span className="material-symbols-outlined text-sm">edit</span>
             <span className="hidden sm:inline">Modifier</span>
           </Link>
-          <ArchiveJobButton jobId={jobId} status={(job as any).status ?? "open"} />
+          <ArchiveJobButton jobId={jobId} status={job.status} />
           <DuplicateJobButton jobId={jobId} />
           <SaveAsTemplateButton jobId={jobId} />
           <DeleteJobButton jobId={jobId} jobTitle={job.title} />

@@ -93,7 +93,6 @@ export class Application {
   candidate!: Candidate;
   job!: Job;
   score!: number;
-  fit!: string;
   gaps: string[] = [];
   why?: string;
   notes?: string;
@@ -151,7 +150,6 @@ export const ApplicationSchema = new EntitySchema({
     candidate:  { kind: "m:1", entity: () => Candidate },
     job:        { kind: "m:1", entity: () => Job },
     score:      { type: "integer" },
-    fit:        { type: "string" },
     gaps:       { type: JsonType, nullable: true },
     why:        { type: "text", nullable: true },
     notes:      { type: "text", nullable: true },

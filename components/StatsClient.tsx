@@ -12,7 +12,6 @@ export type PlainApp = {
   jobStages: string[];
   stageIndex: number;
   score: number;
-  fit: string;
   source: string;
   gaps: string[];
   appliedAt: string;

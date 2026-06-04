@@ -326,7 +326,6 @@ async function seed() {
         candidate:  builtCandidates[i],
         job:        appDef.job,
         score:      result.score,
-        fit:        result.fit,
         gaps:       result.missingSkills,
         why:        (appDef as any).why ?? result.why,
         stageIndex: appDef.stageIndex ?? 0,

@@ -1,4 +1,4 @@
-import { getJobById, getApplications, getThresholds } from "@/lib/db";
+import { getJobById, getApplicationsPage, getApplicationStatsByScore, getThresholds } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import StagePipeline from "@/components/StagePipeline";
@@ -49,12 +49,14 @@ export default async function JobDetailPage({
   const jobId         = Number(id);
   const currentPage   = Math.max(1, Number(page) || 1);
 
-  const [job, allApplications, thresholds] = await Promise.all([
-    getJobById(jobId),
-    getApplications(jobId),
-    getThresholds(),
-  ]);
+  const [job, thresholds] = await Promise.all([getJobById(jobId), getThresholds()]);
   if (!job) notFound();
+
+  // Stats (all applications, lightweight — only scores fetched) + paginated display in parallel
+  const [{ items: rawPage, total: filteredCount }, stats] = await Promise.all([
+    getApplicationsPage(jobId, { q, sort, page: currentPage, pageSize: PAGE_SIZE }),
+    getApplicationStatsByScore(jobId, thresholds),
+  ]);
 
   const rawStages    = job.stages as string[] | null | undefined;
   const stages       = rawStages?.length ? rawStages : DEFAULT_STAGES;
@@ -62,28 +64,10 @@ export default async function JobDetailPage({
   const currentStage = stages[stageIndex] ?? job.stage;
   const requirements = (job.requirements as string[] | null) ?? [];
 
-  const filtered = (q
-    ? allApplications.filter((a) => {
-        const term = q.toLowerCase();
-        return a.candidate.name.toLowerCase().includes(term)
-            || a.candidate.role.toLowerCase().includes(term);
-      })
-    : allApplications
-  ).map((a) => ({ ...a, fit: scoreToFit(a.score, thresholds) }));
+  const totalPages  = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE));
+  const paginated   = rawPage.map((a) => ({ ...a, fit: scoreToFit(a.score, thresholds) }));
 
-  const applications = [...filtered].sort((a, b) => {
-    if (sort === "name")   return a.candidate.name.localeCompare(b.candidate.name);
-    if (sort === "recent") return new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime();
-    return b.score - a.score; // default: score
-  });
-
-  const totalCount  = applications.length;
-  const totalPages  = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const paginated   = applications.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  const strongCount = applications.filter((a) => a.fit === "strong").length;
-  const mediumCount = applications.filter((a) => a.fit === "medium").length;
-  const weakCount   = applications.filter((a) => a.fit === "weak").length;
+  const { total: totalApplications, strong: strongCount, medium: mediumCount, weak: weakCount } = stats;
 
   const groups = (["strong", "medium", "weak"] as const).map((fit) => ({
     fit, ...fitConfig[fit],
@@ -157,7 +141,7 @@ export default async function JobDetailPage({
       {/* ── Stats ─────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
         {[
-          { label: "Candidats",  value: allApplications.length, icon: "group",        color: "text-primary" },
+          { label: "Candidats",  value: totalApplications,      icon: "group",        color: "text-primary" },
           { label: "Strong Fit", value: strongCount,             icon: "check_circle", color: "text-emerald-600" },
           { label: "À évaluer",  value: mediumCount,             icon: "pending",      color: "text-amber-600" },
           { label: "Faible Fit", value: weakCount,               icon: "cancel",       color: "text-slate-400" },
@@ -187,12 +171,12 @@ export default async function JobDetailPage({
                 defaultValue={sort}
               />
               <span className="text-label-caps text-slate-400 whitespace-nowrap">
-                {totalCount} candidat{totalCount !== 1 ? "s" : ""}
+                {filteredCount} candidat{filteredCount !== 1 ? "s" : ""}
                 {q ? ` · "${q}"` : ""}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              {allApplications.length > 0 && (
+              {totalApplications > 0 && (
                 <a href={`/api/candidates/export?jobId=${jobId}`} download
                   className="flex items-center gap-2 px-3 py-2 bg-white border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors"
                 >
@@ -210,7 +194,7 @@ export default async function JobDetailPage({
           </div>
 
           {/* Empty state */}
-          {allApplications.length === 0 && (
+          {totalApplications === 0 && (
             <div className="bg-white border border-outline-variant rounded-xl p-xl text-center text-slate-400">
               <span className="material-symbols-outlined text-4xl block mb-2">person_search</span>
               <p>Aucun candidat pour ce poste.</p>
@@ -231,7 +215,7 @@ export default async function JobDetailPage({
                   <div className={`w-1 h-6 rounded-full ${group.bar}`} />
                   <h3 className="font-h3 text-h3">{group.label}</h3>
                   <span className="text-slate-400 font-body-sm text-label-caps ml-1">
-                    {applications.filter((a) => a.fit === group.fit).length}
+                    {group.fit === "strong" ? strongCount : group.fit === "medium" ? mediumCount : weakCount}
                   </span>
                 </div>
                 <div className="space-y-md">
@@ -323,9 +307,9 @@ export default async function JobDetailPage({
               <h4 className="font-h3 text-body-md font-bold">Insight</h4>
             </div>
             <p className="text-body-sm text-blue-100 leading-relaxed">
-              {strongCount} strong fit{strongCount !== 1 ? "s" : ""} sur {allApplications.length} candidat{allApplications.length !== 1 ? "s" : ""}.
-              {strongCount > 0 && allApplications.length > 0
-                ? ` Taux de qualification : ${Math.round((strongCount / allApplications.length) * 100)}%.`
+              {strongCount} strong fit{strongCount !== 1 ? "s" : ""} sur {totalApplications} candidat{totalApplications !== 1 ? "s" : ""}.
+              {strongCount > 0 && totalApplications > 0
+                ? ` Taux de qualification : ${Math.round((strongCount / totalApplications) * 100)}%.`
                 : ""}
             </p>
           </div>

@@ -49,7 +49,6 @@ export async function importCandidate(formData: FormData) {
     candidate,
     job,
     score: result.score,
-    fit:   result.fit,
     gaps:  result.missingSkills,
     why:   result.why,
   });
@@ -100,7 +99,7 @@ export async function updateCandidate(id: number, formData: FormData) {
       const label = analysis.tendency === "positive" ? "positifs" : "négatifs";
       why += ` Entretien : signaux ${label} (${sign} pts).`;
     }
-    em.assign(app, { score: adjusted, fit, gaps: base.missingSkills, why });
+    em.assign(app, { score: adjusted, gaps: base.missingSkills, why });
   }
 
   await em.flush();
@@ -132,7 +131,7 @@ export async function updateApplicationNotes(applicationId: number, notes: strin
     why += ` Entretien : signaux ${label} (${sign} pts).`;
   }
 
-  em.assign(app, { notes: trimmed, score: adjusted, fit, why });
+  em.assign(app, { notes: trimmed, score: adjusted, why });
   await em.flush();
   revalidatePath(`/candidates/${app.candidate.id}`);
 
@@ -182,7 +181,6 @@ export async function addApplicationToJob(candidateId: number, jobId: number) {
   const application = em.create(Application, {
     candidate, job,
     score: result.score,
-    fit:   result.fit,
     gaps:  result.missingSkills,
     why:   result.why,
   });

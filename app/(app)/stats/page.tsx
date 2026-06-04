@@ -18,7 +18,6 @@ export default async function StatsPage() {
     jobStages:     (a.job.stages as string[] | null) ?? [],
     stageIndex:    a.stageIndex,
     score:         a.score,
-    fit:           a.fit,
     source:        a.candidate.source || "Autre",
     gaps:          (a.gaps as string[] | null) ?? [],
     appliedAt:     new Date(a.appliedAt).toISOString(),

@@ -70,7 +70,7 @@ export async function updateJob(id: number, formData: FormData) {
       const result = scoreCandidate({ candidateSkills: skills, jobRequirements: requirements });
       const fit    = scoreToFit(result.score);
       const why    = buildWhy(result.score, fit, result.matchedSkills, result.missingSkills, skills);
-      em.assign(app, { score: result.score, fit, gaps: result.missingSkills, why });
+      em.assign(app, { score: result.score, gaps: result.missingSkills, why });
     }
     await em.flush();
   }

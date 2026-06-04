@@ -2,7 +2,7 @@ import { MikroORM, type EntityManager } from "@mikro-orm/sqlite";
 import { cache } from "react";
 import config from "../mikro-orm.config";
 import { Job, Candidate, Application, Setting, JobTemplate } from "../entities/index";
-import { DEFAULT_THRESHOLDS, type Thresholds } from "./thresholds";
+import { scoreToFit, DEFAULT_THRESHOLDS, type Thresholds } from "./thresholds";
 
 const getOrm = cache(async (): Promise<MikroORM> => {
   const orm  = await MikroORM.init(config);
@@ -179,6 +179,62 @@ export async function getTemplates() {
     requirements: (t.requirements as string[] | null) ?? [],
     stages:       (t.stages       as string[] | null) ?? [],
   }));
+}
+
+// ── Paginated application query (filters + sort in SQL) ──────────────────────
+
+export async function getApplicationsPage(
+  jobId: number,
+  opts: { q?: string; sort?: string; page?: number; pageSize?: number },
+): Promise<{ items: Application[]; total: number }> {
+  const em = await getEm();
+  const { q = "", sort = "score", page = 1, pageSize = 20 } = opts;
+
+  const where: Record<string, unknown> = { job: { id: jobId } };
+  if (q) {
+    where.$or = [
+      { candidate: { name: { $like: `%${q}%` } } },
+      { candidate: { role: { $like: `%${q}%` } } },
+    ];
+  }
+
+  const orderBy =
+    sort === "name"   ? { candidate: { name: "ASC"  as const } } :
+    sort === "recent" ? { appliedAt:  "DESC" as const } :
+                        { score:      "DESC" as const };
+
+  const [items, total] = await Promise.all([
+    em.find(Application, where as any, {
+      populate: ["candidate", "job"],
+      orderBy,
+      limit:  pageSize,
+      offset: (page - 1) * pageSize,
+    }),
+    em.count(Application, where as any),
+  ]);
+
+  return { items, total };
+}
+
+// Lightweight stats: loads only scores via raw SQL, avoids full entity hydration
+export async function getApplicationStatsByScore(
+  jobId: number,
+  thresholds: Thresholds,
+): Promise<{ total: number; strong: number; medium: number; weak: number }> {
+  const em   = await getEm();
+  const conn = em.getConnection();
+  const rows = await conn.execute(
+    "SELECT score FROM application WHERE job_id = ?", [jobId]
+  ) as { score: number }[];
+
+  let strong = 0, medium = 0, weak = 0;
+  for (const { score } of rows) {
+    const fit = scoreToFit(score, thresholds);
+    if      (fit === "strong") strong++;
+    else if (fit === "medium") medium++;
+    else                       weak++;
+  }
+  return { total: rows.length, strong, medium, weak };
 }
 
 export async function saveThresholds(strong: number, medium: number): Promise<void> {

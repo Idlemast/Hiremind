@@ -61,7 +61,6 @@ export async function updateJob(id: number, formData: FormData) {
   if (!job) throw new Error("Poste introuvable");
 
   em.assign(em.getReference(Job, id), { title, department, location, requirements, budget });
-  await em.flush();
 
   if (rescore) {
     const apps = await em.find(Application, { job: { id } }, { populate: ["candidate"] });
@@ -72,8 +71,9 @@ export async function updateJob(id: number, formData: FormData) {
       const why    = buildWhy(result.score, fit, result.matchedSkills, result.missingSkills, skills);
       em.assign(app, { score: result.score, gaps: result.missingSkills, why });
     }
-    await em.flush();
   }
+
+  await em.flush();
 
   revalidatePath(`/jobs/${id}`);
   revalidatePath("/jobs");

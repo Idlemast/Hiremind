@@ -16,7 +16,6 @@ const getOrm = cache(async (): Promise<MikroORM> => {
     candidate_id INTEGER  NOT NULL REFERENCES candidate(id) ON DELETE CASCADE,
     job_id       INTEGER  NOT NULL REFERENCES job(id)       ON DELETE CASCADE,
     score        INTEGER  NOT NULL DEFAULT 0,
-    fit          TEXT     NOT NULL DEFAULT 'weak',
     gaps         TEXT     NULL,
     why          TEXT     NULL,
     notes        TEXT     NULL,
@@ -235,6 +234,101 @@ export async function getApplicationStatsByScore(
     else                       weak++;
   }
   return { total: rows.length, strong, medium, weak };
+}
+
+// ── Lean dashboard query (no full entity hydration) ───────────────────────────
+
+export async function getDashboardStats(thresholds: Thresholds): Promise<{
+  total:      number;
+  strong:     number;
+  countByJob: Record<number, number>;
+  topApp:     { id: number; candidateId: number; candidateName: string; candidateCompany: string; jobId: number; jobTitle: string; score: number } | null;
+}> {
+  const em   = await getEm();
+  const conn = em.getConnection();
+
+  const scores = await conn.execute(
+    "SELECT job_id, score FROM application"
+  ) as { job_id: number; score: number }[];
+
+  let totalStrong = 0;
+  const countByJob: Record<number, number> = {};
+  for (const { job_id, score } of scores) {
+    countByJob[job_id] = (countByJob[job_id] ?? 0) + 1;
+    if (scoreToFit(score, thresholds) === "strong") totalStrong++;
+  }
+
+  const topRows = await conn.execute(`
+    SELECT a.id, a.candidate_id, a.job_id, a.score,
+           c.name    AS candidate_name,
+           c.company AS candidate_company,
+           j.title   AS job_title
+    FROM application a
+    JOIN candidate c ON c.id = a.candidate_id
+    JOIN job j       ON j.id = a.job_id
+    WHERE a.score >= ?
+    ORDER BY a.score DESC
+    LIMIT 1
+  `, [thresholds.strong]) as {
+    id: number; candidate_id: number; job_id: number; score: number;
+    candidate_name: string; candidate_company: string; job_title: string;
+  }[];
+
+  const topApp = topRows[0]
+    ? { id: topRows[0].id, candidateId: topRows[0].candidate_id, candidateName: topRows[0].candidate_name, candidateCompany: topRows[0].candidate_company, jobId: topRows[0].job_id, jobTitle: topRows[0].job_title, score: topRows[0].score }
+    : null;
+
+  return { total: scores.length, strong: totalStrong, countByJob, topApp };
+}
+
+// ── Lean stats query — all apps with only the fields needed by StatsClient ────
+
+export async function getApplicationsLean(): Promise<{
+  id:            number;
+  candidateId:   number;
+  candidateName: string;
+  jobId:         number;
+  jobTitle:      string;
+  jobStages:     string[];
+  stageIndex:    number;
+  score:         number;
+  source:        string;
+  gaps:          string[];
+  appliedAt:     string;
+  movedAt:       string | null;
+}[]> {
+  const em   = await getEm();
+  const conn = em.getConnection();
+
+  const rows = await conn.execute(`
+    SELECT a.id, a.candidate_id, a.job_id, a.score,
+           a.stage_index, a.gaps, a.applied_at, a.moved_at,
+           c.name AS candidate_name, c.source,
+           j.title AS job_title, j.stages AS job_stages
+    FROM application a
+    JOIN candidate c ON c.id = a.candidate_id
+    JOIN job j       ON j.id = a.job_id
+    ORDER BY a.applied_at DESC
+  `) as {
+    id: number; candidate_id: number; job_id: number; score: number;
+    stage_index: number; gaps: string | null; applied_at: string; moved_at: string | null;
+    candidate_name: string; source: string; job_title: string; job_stages: string | null;
+  }[];
+
+  return rows.map((r) => ({
+    id:            r.id,
+    candidateId:   r.candidate_id,
+    candidateName: r.candidate_name,
+    jobId:         r.job_id,
+    jobTitle:      r.job_title,
+    jobStages:     r.job_stages   ? JSON.parse(r.job_stages)   : [],
+    stageIndex:    r.stage_index,
+    score:         r.score,
+    source:        r.source || "Autre",
+    gaps:          r.gaps         ? JSON.parse(r.gaps)         : [],
+    appliedAt:     r.applied_at,
+    movedAt:       r.moved_at,
+  }));
 }
 
 export async function saveThresholds(strong: number, medium: number): Promise<void> {

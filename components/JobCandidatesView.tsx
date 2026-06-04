@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import KanbanBoard from "./KanbanBoard";
 import type { KanbanCard } from "./KanbanBoard";
@@ -66,10 +67,24 @@ export default function JobCandidatesView({
   strongCount: number;
   totalApplications: number;
 }) {
-  const [view, setView] = useState<"list" | "kanban">("list");
-  const [q, setQ]       = useState("");
-  const [sort, setSort] = useState("score");
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+
+  const [view, setView]       = useState<"list" | "kanban">("list");
+  const [q, setQ]             = useState("");
+  const [sort, setSort]       = useState("score");
+  const [page, setPage]       = useState(1);
+  const [compareA, setCompareA] = useState<number | null>(null);
+
+  function handleCompare(appId: number) {
+    if (compareA === null) {
+      setCompareA(appId);
+    } else if (compareA === appId) {
+      setCompareA(null);
+    } else {
+      router.push(`/jobs/${jobId}/compare?a=${compareA}&b=${appId}`);
+      setCompareA(null);
+    }
+  }
 
   // Filter + sort (list view only — kanban shows all)
   const filtered = useMemo(() => {
@@ -231,7 +246,17 @@ export default function JobCandidatesView({
                 )}
 
                 <div className="space-y-xl">
-                  {groups.filter((g) => g.items.length > 0).map((group) => (
+                  {compareA !== null && (
+                  <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl text-body-sm text-blue-800">
+                    <span className="material-symbols-outlined text-blue-500">compare_arrows</span>
+                    <span className="flex-1">1 candidat sélectionné — cliquez sur <strong>Comparer</strong> d&apos;un deuxième pour lancer la comparaison.</span>
+                    <button type="button" onClick={() => setCompareA(null)} className="text-blue-500 hover:text-blue-700 font-semibold text-label-caps">
+                      Annuler
+                    </button>
+                  </div>
+                )}
+
+                {groups.filter((g) => g.items.length > 0).map((group) => (
                     <div key={group.fit} className={group.opacity}>
                       <div className="flex items-center gap-2 mb-md">
                         <div className={`w-1 h-6 rounded-full ${group.bar}`} />
@@ -241,40 +266,59 @@ export default function JobCandidatesView({
                         </span>
                       </div>
                       <div className="space-y-md">
-                        {group.items.map((a) => (
-                          <Link
-                            key={a.id}
-                            href={candidateUrl(a.candidateId, a.name, a.id, jobTitle)}
-                            className={`bg-white border border-slate-200 p-4 lg:p-5 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:shadow-md`}
-                          >
-                            <div className="flex items-center gap-3 min-w-0 sm:w-1/3">
-                              <div className="w-10 h-10 rounded-full bg-slate-100 flex-shrink-0 flex items-center justify-center text-slate-500 font-bold text-sm">
-                                {a.name.split(" ").map((n) => n[0]).join("")}
-                              </div>
-                              <div className="min-w-0">
-                                <h4 className="font-semibold text-body-md text-on-surface truncate">{a.name}</h4>
-                                <p className="text-body-sm text-slate-500 truncate">{a.role}</p>
-                              </div>
+                        {group.items.map((a) => {
+                          const isSelectedForCompare = compareA === a.id;
+                          return (
+                            <div key={a.id} className="relative group/card">
+                              <Link
+                                href={candidateUrl(a.candidateId, a.name, a.id, jobTitle)}
+                                className={`bg-white border border-slate-200 p-4 lg:p-5 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:shadow-md block ${isSelectedForCompare ? "ring-2 ring-blue-400 border-blue-300" : ""}`}
+                              >
+                                <div className="flex items-center gap-3 min-w-0 sm:w-1/3">
+                                  <div className="w-10 h-10 rounded-full bg-slate-100 flex-shrink-0 flex items-center justify-center text-slate-500 font-bold text-sm">
+                                    {a.name.split(" ").map((n) => n[0]).join("")}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h4 className="font-semibold text-body-md text-on-surface truncate">{a.name}</h4>
+                                    <p className="text-body-sm text-slate-500 truncate">{a.role}</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 flex-wrap sm:flex-1 sm:px-3">
+                                  {a.skills.length > 0
+                                    ? a.skills.slice(0, 3).map((skill) => (
+                                        <span key={skill} className={`px-2 py-0.5 text-label-caps font-label-caps rounded-full ${group.chip}`}>
+                                          {skill}
+                                        </span>
+                                      ))
+                                    : <span className="text-body-sm text-slate-400">Aucune compétence.</span>
+                                  }
+                                </div>
+                                <div className="flex items-center gap-3 justify-between sm:justify-end shrink-0 pr-8">
+                                  <div className={`flex items-center gap-1 px-3 py-1 rounded-lg ${group.score}`}>
+                                    <span className="material-symbols-outlined text-sm">bolt</span>
+                                    <span className="font-label-caps text-label-caps">{a.score}%</span>
+                                  </div>
+                                  <span className="material-symbols-outlined text-slate-400">chevron_right</span>
+                                </div>
+                              </Link>
+                              <button
+                                type="button"
+                                onClick={() => handleCompare(a.id)}
+                                title={isSelectedForCompare ? "Désélectionner" : compareA !== null ? "Comparer avec ce candidat" : "Sélectionner pour comparer"}
+                                className={[
+                                  "absolute top-3 right-3 p-1.5 rounded-lg border transition-all",
+                                  isSelectedForCompare
+                                    ? "bg-blue-500 text-white border-blue-500"
+                                    : compareA !== null
+                                    ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                                    : "opacity-0 group-hover/card:opacity-100 bg-white text-slate-400 border-slate-200 hover:text-primary hover:border-primary/40",
+                                ].join(" ")}
+                              >
+                                <span className="material-symbols-outlined text-sm">compare_arrows</span>
+                              </button>
                             </div>
-                            <div className="flex gap-2 flex-wrap sm:flex-1 sm:px-3">
-                              {a.skills.length > 0
-                                ? a.skills.slice(0, 3).map((skill) => (
-                                    <span key={skill} className={`px-2 py-0.5 text-label-caps font-label-caps rounded-full ${group.chip}`}>
-                                      {skill}
-                                    </span>
-                                  ))
-                                : <span className="text-body-sm text-slate-400">Aucune compétence.</span>
-                              }
-                            </div>
-                            <div className="flex items-center gap-3 justify-between sm:justify-end shrink-0">
-                              <div className={`flex items-center gap-1 px-3 py-1 rounded-lg ${group.score}`}>
-                                <span className="material-symbols-outlined text-sm">bolt</span>
-                                <span className="font-label-caps text-label-caps">{a.score}%</span>
-                              </div>
-                              <span className="material-symbols-outlined text-slate-400">chevron_right</span>
-                            </div>
-                          </Link>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   ))}

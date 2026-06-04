@@ -1,29 +1,15 @@
-import { getJobs, getApplications, getThresholds } from "@/lib/db";
+import { getJobs, getDashboardStats, getThresholds } from "@/lib/db";
 import { jobUrl, candidateUrl } from "@/lib/slugify";
-import { scoreToFit } from "@/lib/thresholds";
 
 export default async function DashboardPage() {
-  const [jobs, applications, thresholds] = await Promise.all([
+  const thresholds = await getThresholds();
+  const [jobs, stats] = await Promise.all([
     getJobs(),
-    getApplications(),
-    getThresholds(),
+    getDashboardStats(thresholds),
   ]);
 
-  const appWithFit = applications.map((a) => ({
-    ...a,
-    fit: scoreToFit(a.score, thresholds),
-  }));
-
-  const strong  = appWithFit.filter((a) => a.fit === "strong").length;
-  const total   = appWithFit.length;
+  const { total, strong, countByJob, topApp } = stats;
   const clarity = total > 0 ? Math.round((strong / total) * 100) : 0;
-  const pending = total;
-
-  // Count applications per job for the dashboard table
-  const appCountByJob: Record<number, number> = {};
-  for (const a of applications) {
-    appCountByJob[a.job.id] = (appCountByJob[a.job.id] ?? 0) + 1;
-  }
 
   const now     = Date.now();
   const avgDays = jobs.length > 0
@@ -37,7 +23,7 @@ export default async function DashboardPage() {
         {[
           { ribbon: "bg-blue-500",    label: "Active Reqs",      value: jobs.length,    sub: null },
           { ribbon: "bg-emerald-500", label: "Decision Clarity",  value: `${clarity}%`, sub: `${strong} strong fits` },
-          { ribbon: "bg-amber-500",   label: "Pending Reviews",   value: pending,        sub: null },
+          { ribbon: "bg-amber-500",   label: "Pending Reviews",   value: total,          sub: null },
           { ribbon: "bg-slate-400",   label: "Avg. Days Open",    value: `${avgDays}d`,  sub: null },
         ].map(({ ribbon, label, value, sub }) => (
           <div key={label} className="tonal-card rounded-xl p-lg relative overflow-hidden flex flex-col justify-between h-32">
@@ -77,48 +63,44 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-12 gap-lg">
-          {(() => {
-            const top = appWithFit.find((a) => a.fit === "strong");
-            if (!top) return null;
-            return (
-              <div className="col-span-12 lg:col-span-8 tonal-card rounded-xl p-lg flex flex-col md:flex-row gap-lg relative">
-                <div className="status-ribbon bg-primary" />
-                <div className="w-full md:w-1/3 space-y-md">
-                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-label-caps font-bold uppercase">
-                    Critical Signal
-                  </span>
-                  <h4 className="font-h2 text-h2 leading-tight">{top.job.title}</h4>
-                  <p className="text-body-sm text-secondary">
-                    {top.candidate.name} matches {top.score}% of core requirements.
-                  </p>
-                  <div className="pt-md">
-                    <a
-                      href={candidateUrl(top.candidate.id, top.candidate.name, top.id, top.job.title)}
-                      className="inline-block bg-primary text-white px-6 py-2 rounded-lg font-semibold text-sm hover:bg-primary-container transition-all"
-                    >
-                      Review Candidate
-                    </a>
-                  </div>
-                </div>
-                <div className="flex-1 h-48 md:h-auto rounded-lg bg-slate-100 flex items-center justify-center">
-                  <div className="bg-white/90 p-lg rounded-xl shadow-xl border border-white/50 text-center">
-                    <p className="font-label-caps text-label-caps text-primary mb-2">MATCH SCORE</p>
-                    <div className="w-24 h-24 rounded-xl border-4 border-emerald-500 mx-auto flex items-center justify-center mb-md">
-                      <span className="font-h2 text-h2 text-primary">{top.score}</span>
-                    </div>
-                    <p className="text-body-sm font-semibold whitespace-nowrap">
-                      {top.candidate.company}
-                    </p>
-                  </div>
+          {topApp && (
+            <div className="col-span-12 lg:col-span-8 tonal-card rounded-xl p-lg flex flex-col md:flex-row gap-lg relative">
+              <div className="status-ribbon bg-primary" />
+              <div className="w-full md:w-1/3 space-y-md">
+                <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-label-caps font-bold uppercase">
+                  Critical Signal
+                </span>
+                <h4 className="font-h2 text-h2 leading-tight">{topApp.jobTitle}</h4>
+                <p className="text-body-sm text-secondary">
+                  {topApp.candidateName} matches {topApp.score}% of core requirements.
+                </p>
+                <div className="pt-md">
+                  <a
+                    href={candidateUrl(topApp.candidateId, topApp.candidateName, topApp.id, topApp.jobTitle)}
+                    className="inline-block bg-primary text-white px-6 py-2 rounded-lg font-semibold text-sm hover:bg-primary-container transition-all"
+                  >
+                    Review Candidate
+                  </a>
                 </div>
               </div>
-            );
-          })()}
+              <div className="flex-1 h-48 md:h-auto rounded-lg bg-slate-100 flex items-center justify-center">
+                <div className="bg-white/90 p-lg rounded-xl shadow-xl border border-white/50 text-center">
+                  <p className="font-label-caps text-label-caps text-primary mb-2">MATCH SCORE</p>
+                  <div className="w-24 h-24 rounded-xl border-4 border-emerald-500 mx-auto flex items-center justify-center mb-md">
+                    <span className="font-h2 text-h2 text-primary">{topApp.score}</span>
+                  </div>
+                  <p className="text-body-sm font-semibold whitespace-nowrap">
+                    {topApp.candidateCompany}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {(() => {
             const stalled = jobs.find((j) => j.progress < 30);
             if (!stalled) return null;
-            const count = appCountByJob[stalled.id] ?? 0;
+            const count = countByJob[stalled.id] ?? 0;
             return (
               <div className="col-span-12 md:col-span-6 lg:col-span-4 tonal-card rounded-xl p-lg relative flex flex-col justify-between">
                 <div className="status-ribbon bg-amber-400" />
@@ -164,11 +146,10 @@ export default async function DashboardPage() {
           </div>
 
           {jobs.map((job) => {
-            const count = appCountByJob[job.id] ?? 0;
+            const count = countByJob[job.id] ?? 0;
             return (
               <div key={job.id} className="tonal-card rounded-xl p-lg relative overflow-hidden">
                 <div className="status-ribbon bg-blue-500" />
-                {/* Mobile layout */}
                 <div className="flex items-start justify-between gap-3 lg:hidden">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-9 h-9 rounded flex items-center justify-center shrink-0 ${job.iconBg}`}>
@@ -192,7 +173,6 @@ export default async function DashboardPage() {
                     <span className="text-label-caps font-bold text-emerald-600">{job.progress}%</span>
                   </div>
                 </div>
-                {/* Desktop layout */}
                 <div className="hidden lg:grid grid-cols-12 items-center">
                   <div className="col-span-5 flex items-center gap-4">
                     <div className={`w-10 h-10 rounded flex items-center justify-center ${job.iconBg}`}>

@@ -146,6 +146,27 @@ export default function StatsClient({
     .slice(0, 10),
   [apps, blockedDays, now]);
 
+  // ── Funnel ────────────────────────────────────────────────────────────────
+  const [funnelJobId, setFunnelJobId] = useState<number | null>(jobs[0]?.id ?? null);
+
+  const funnel = useMemo(() => {
+    if (funnelJobId === null) return [];
+    const jobApps = allApps.filter((a) => a.jobId === funnelJobId);
+    if (jobApps.length === 0) return [];
+    const stages = jobApps[0].jobStages;
+    if (stages.length === 0) return [];
+
+    return stages
+      .map((stage, idx) => {
+        const atOrAbove = jobApps.filter((a) => a.stageIndex >= idx).length;
+        const next      = idx < stages.length - 1
+          ? jobApps.filter((a) => a.stageIndex >= idx + 1).length
+          : null;
+        return { stage, count: atOrAbove, passRate: next !== null && atOrAbove > 0 ? Math.round((next / atOrAbove) * 100) : null };
+      })
+      .filter((e) => e.count > 0);
+  }, [allApps, funnelJobId]);
+
   return (
     <div className="space-y-xl">
 
@@ -311,6 +332,61 @@ export default function StatsClient({
                 );
               })}
             </div>
+          </section>
+        )}
+
+        {/* ── Funnel de conversion ─────────────────────────── */}
+        {jobs.length > 0 && (
+          <section className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm space-y-lg">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <h3 className="font-h3 text-h3 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">filter_alt</span>
+                Funnel de conversion
+              </h3>
+              <select
+                value={funnelJobId ?? ""}
+                onChange={(e) => setFunnelJobId(Number(e.target.value) || null)}
+                className="border border-outline-variant rounded-lg px-3 py-1.5 text-body-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              >
+                {jobs.map((j) => (
+                  <option key={j.id} value={j.id}>{j.title}</option>
+                ))}
+              </select>
+            </div>
+
+            {funnel.length === 0 ? (
+              <p className="text-body-sm text-slate-400">Aucune donnée pour ce poste.</p>
+            ) : (
+              <div className="space-y-sm">
+                <p className="text-label-caps text-slate-400">
+                  Approximation : nombre de candidats ayant atteint ou dépassé chaque étape.
+                </p>
+                {funnel.map(({ stage, count, passRate }, idx) => {
+                  const maxCount = funnel[0]?.count || 1;
+                  const widthPct = Math.round((count / maxCount) * 100);
+                  return (
+                    <div key={idx} className="flex items-center gap-3">
+                      <span className="text-body-sm w-36 sm:w-48 truncate shrink-0 font-medium">{stage}</span>
+                      <div className="flex-1 h-7 bg-slate-100 rounded-lg overflow-hidden relative">
+                        <div
+                          className="h-full bg-primary/20 border-r-2 border-primary/40 rounded-lg transition-all duration-300"
+                          style={{ width: `${widthPct}%` }}
+                        />
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-label-caps font-bold text-primary">
+                          {count}
+                        </span>
+                      </div>
+                      <span className="text-label-caps shrink-0 w-16 text-right">
+                        {passRate !== null
+                          ? <span className={passRate < 30 ? "text-red-500 font-bold" : passRate < 60 ? "text-amber-600 font-bold" : "text-emerald-600 font-bold"}>{passRate}% →</span>
+                          : <span className="text-slate-300">fin</span>
+                        }
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
 

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import KanbanBoard from "./KanbanBoard";
 import type { KanbanCard } from "./KanbanBoard";
-import { candidateUrl } from "@/lib/slugify";
+import { candidateUrl, jobUrl } from "@/lib/slugify";
 
 type Fit = "strong" | "medium" | "weak";
 
@@ -26,27 +26,21 @@ const PAGE_SIZE = 20;
 const fitConfig = {
   strong: {
     label: "Strong Fit",
-    bar:     "bg-emerald-500",
-    border:  "border-l-emerald-500",
-    chip:    "bg-emerald-50 text-emerald-700 border border-emerald-100",
-    score:   "bg-primary-container/10 text-primary border border-primary/20",
-    opacity: "",
+    bar:   "bg-emerald-500",
+    chip:  "bg-emerald-100 text-emerald-900",
+    score: "bg-primary/10 text-primary border border-primary/20",
   },
   medium: {
     label: "Medium Fit",
-    bar:     "bg-amber-400",
-    border:  "border-l-amber-400",
-    chip:    "bg-amber-50 text-amber-700 border border-amber-100",
-    score:   "bg-slate-100 text-slate-500 border border-slate-200",
-    opacity: "opacity-90",
+    bar:   "bg-amber-400",
+    chip:  "bg-amber-100 text-amber-900",
+    score: "bg-slate-100 text-slate-600 border border-slate-200",
   },
   weak: {
     label: "Weak Fit",
-    bar:     "bg-slate-300",
-    border:  "border-l-slate-300",
-    chip:    "bg-slate-50 text-slate-400 border border-slate-100",
-    score:   "bg-slate-50 text-slate-400 border border-slate-100",
-    opacity: "opacity-70",
+    bar:   "bg-slate-300",
+    chip:  "bg-slate-100 text-slate-600",
+    score: "bg-slate-50 text-slate-500 border border-slate-200",
   },
 } as const;
 
@@ -85,7 +79,7 @@ export default function JobCandidatesView({
     } else if (compareA === appId) {
       setCompareA(null);
     } else {
-      router.push(`/jobs/${jobId}/compare?a=${compareA}&b=${appId}`);
+      router.push(`${jobUrl(jobSalt, jobTitle)}/compare?a=${compareA}&b=${appId}`);
       setCompareA(null);
     }
   }
@@ -139,7 +133,7 @@ export default function JobCandidatesView({
         <div className="flex items-center gap-3 flex-wrap">
           {/* Search */}
           <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm pointer-events-none">
               search
             </span>
             <input
@@ -147,7 +141,7 @@ export default function JobCandidatesView({
               value={q}
               onChange={(e) => { setQ(e.target.value); setPage(1); }}
               placeholder="Rechercher un candidat…"
-              className="pl-9 pr-3 py-2 border border-outline-variant rounded-lg text-body-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary w-52"
+              className="pl-9 pr-3 py-2 border border-outline-variant rounded-lg text-body-sm bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary w-52"
             />
           </div>
 
@@ -156,7 +150,7 @@ export default function JobCandidatesView({
             <select
               value={sort}
               onChange={(e) => { setSort(e.target.value); setPage(1); }}
-              className="border border-outline-variant rounded-lg px-3 py-2 text-body-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="border border-outline-variant rounded-lg px-3 py-2 text-body-sm bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary"
             >
               <option value="score">Meilleur score</option>
               <option value="name">Nom A→Z</option>
@@ -164,7 +158,7 @@ export default function JobCandidatesView({
             </select>
           )}
 
-          <span className="text-label-caps text-slate-400 whitespace-nowrap">
+          <span className="text-label-caps text-secondary whitespace-nowrap">
             {view === "list" ? filtered.length : totalApplications} candidat{(view === "list" ? filtered.length : totalApplications) !== 1 ? "s" : ""}
             {view === "list" && q ? ` · "${q}"` : ""}
           </span>
@@ -175,7 +169,7 @@ export default function JobCandidatesView({
             <a
               href={`/api/candidates/export?jobId=${jobId}`}
               download
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-2 px-3 py-2 bg-white border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-surface-container-low transition-colors"
             >
               <span className="material-symbols-outlined text-sm">download</span>
               CSV
@@ -183,18 +177,18 @@ export default function JobCandidatesView({
           )}
           <Link
             href="/candidates/new"
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-container transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-container transition-colors"
           >
             <span className="material-symbols-outlined text-sm">person_add</span>
             Importer
           </Link>
 
           {/* View toggle */}
-          <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+          <div className="flex rounded-lg border border-outline-variant overflow-hidden">
             <button
               type="button"
               onClick={() => switchView("list")}
-              className={`p-2 transition-colors ${view === "list" ? "bg-primary text-white" : "bg-white text-slate-400 hover:text-primary"}`}
+              className={`p-2 transition-colors ${view === "list" ? "bg-primary text-white" : "bg-white text-secondary hover:text-primary"}`}
               title="Vue liste"
             >
               <span className="material-symbols-outlined text-sm">view_list</span>
@@ -202,7 +196,7 @@ export default function JobCandidatesView({
             <button
               type="button"
               onClick={() => switchView("kanban")}
-              className={`p-2 transition-colors ${view === "kanban" ? "bg-primary text-white" : "bg-white text-slate-400 hover:text-primary"}`}
+              className={`p-2 transition-colors ${view === "kanban" ? "bg-primary text-white" : "bg-white text-secondary hover:text-primary"}`}
               title="Vue kanban"
             >
               <span className="material-symbols-outlined text-sm">view_kanban</span>
@@ -213,9 +207,9 @@ export default function JobCandidatesView({
 
       {/* ── Empty state ─────────────────────────────────── */}
       {totalApplications === 0 && (
-        <div className="bg-white border border-outline-variant rounded-xl p-xl text-center text-slate-400">
+        <div className="bg-white border border-outline-variant rounded-xl p-xl text-center text-secondary">
           <span className="material-symbols-outlined text-4xl block mb-2">person_search</span>
-          <p>Aucun candidat pour ce poste.</p>
+          <p className="text-body-sm">Aucun candidat pour ce poste.</p>
           <Link href="/candidates/new" className="mt-md inline-flex items-center gap-1 text-primary font-bold text-sm hover:underline">
             <span className="material-symbols-outlined text-sm">person_add</span>
             Importer un candidat
@@ -231,7 +225,7 @@ export default function JobCandidatesView({
           {view === "kanban" && (
             <div className="space-y-sm">
               {kanbanHidden > 0 && (
-                <p className="text-label-caps text-slate-400">
+                <p className="text-label-caps text-secondary">
                   Top {KANBAN_LIMIT} candidats par score affichés · {kanbanHidden} non affichés
                 </p>
               )}
@@ -245,26 +239,26 @@ export default function JobCandidatesView({
               <section className="flex-1 space-y-lg min-w-0">
 
                 {filtered.length === 0 && q && (
-                  <p className="text-body-sm text-slate-400 py-md">Aucun résultat pour « {q} ».</p>
+                  <p className="text-body-sm text-secondary py-md">Aucun résultat pour « {q} ».</p>
                 )}
 
                 <div className="space-y-xl">
                   {compareA !== null && (
-                  <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl text-body-sm text-blue-800">
-                    <span className="material-symbols-outlined text-blue-500">compare_arrows</span>
-                    <span className="flex-1">1 candidat sélectionné — cliquez sur <strong>Comparer</strong> d&apos;un deuxième pour lancer la comparaison.</span>
-                    <button type="button" onClick={() => setCompareA(null)} className="text-blue-500 hover:text-blue-700 font-semibold text-label-caps">
-                      Annuler
-                    </button>
-                  </div>
-                )}
+                    <div className="flex items-center gap-3 px-4 py-3 bg-surface-container-low border border-outline-variant rounded-xl text-body-sm text-on-surface">
+                      <span className="material-symbols-outlined text-primary">compare_arrows</span>
+                      <span className="flex-1">1 candidat sélectionné — cliquez sur <strong>Comparer</strong> d&apos;un deuxième pour lancer la comparaison.</span>
+                      <button type="button" onClick={() => setCompareA(null)} className="text-primary hover:text-primary-container font-semibold text-label-caps">
+                        Annuler
+                      </button>
+                    </div>
+                  )}
 
-                {groups.filter((g) => g.items.length > 0).map((group) => (
-                    <div key={group.fit} className={group.opacity}>
+                  {groups.filter((g) => g.items.length > 0).map((group) => (
+                    <div key={group.fit}>
                       <div className="flex items-center gap-2 mb-md">
                         <div className={`w-1 h-6 rounded-full ${group.bar}`} />
                         <h3 className="font-h3 text-h3">{group.label}</h3>
-                        <span className="text-slate-400 text-label-caps ml-1">
+                        <span className="text-secondary text-label-caps ml-1">
                           {filtered.filter((a) => a.fit === group.fit).length}
                         </span>
                       </div>
@@ -275,25 +269,25 @@ export default function JobCandidatesView({
                             <div key={a.id} className="relative group/card">
                               <Link
                                 href={candidateUrl(a.candidateSalt, a.name, jobSalt, jobTitle)}
-                                className={`bg-white border border-slate-200 p-4 lg:p-5 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 transition-all duration-200 shadow-sm border-l-4 ${group.border} hover:shadow-md block ${isSelectedForCompare ? "ring-2 ring-blue-400 border-blue-300" : ""}`}
+                                className={`tonal-card p-4 lg:p-5 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 block ${isSelectedForCompare ? "ring-2 ring-primary/30" : ""}`}
                               >
                                 <div className="flex items-center gap-3 min-w-0 sm:w-1/3">
-                                  <div className="w-10 h-10 rounded-full bg-slate-100 flex-shrink-0 flex items-center justify-center text-slate-500 font-bold text-sm">
+                                  <div className="w-10 h-10 rounded-full bg-surface-container flex-shrink-0 flex items-center justify-center text-on-surface-variant font-bold text-sm">
                                     {a.name.split(" ").map((n) => n[0]).join("")}
                                   </div>
                                   <div className="min-w-0">
                                     <h4 className="font-semibold text-body-md text-on-surface truncate">{a.name}</h4>
-                                    <p className="text-body-sm text-slate-500 truncate">{a.role}</p>
+                                    <p className="text-body-sm text-on-surface-variant truncate">{a.role}</p>
                                   </div>
                                 </div>
                                 <div className="flex gap-2 flex-wrap sm:flex-1 sm:px-3">
                                   {a.skills.length > 0
                                     ? a.skills.slice(0, 3).map((skill) => (
-                                        <span key={skill} className={`px-2 py-0.5 text-label-caps font-label-caps rounded-full ${group.chip}`}>
+                                        <span key={skill} className={`px-2 py-0.5 text-label-caps font-label-caps rounded ${group.chip}`}>
                                           {skill}
                                         </span>
                                       ))
-                                    : <span className="text-body-sm text-slate-400">Aucune compétence.</span>
+                                    : <span className="text-body-sm text-secondary">Aucune compétence.</span>
                                   }
                                 </div>
                                 <div className="flex items-center gap-2 justify-between sm:justify-end shrink-0 pr-8">
@@ -307,7 +301,7 @@ export default function JobCandidatesView({
                                     <span className="material-symbols-outlined text-sm">bolt</span>
                                     <span className="font-label-caps text-label-caps">{a.score}%</span>
                                   </div>
-                                  <span className="material-symbols-outlined text-slate-400">chevron_right</span>
+                                  <span className="material-symbols-outlined text-secondary">chevron_right</span>
                                 </div>
                               </Link>
                               <button
@@ -317,10 +311,10 @@ export default function JobCandidatesView({
                                 className={[
                                   "absolute top-3 right-3 p-1.5 rounded-lg border transition-all",
                                   isSelectedForCompare
-                                    ? "bg-blue-500 text-white border-blue-500"
+                                    ? "bg-primary text-white border-primary"
                                     : compareA !== null
-                                    ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
-                                    : "opacity-0 group-hover/card:opacity-100 bg-white text-slate-400 border-slate-200 hover:text-primary hover:border-primary/40",
+                                    ? "bg-surface-container-low text-primary border-outline-variant hover:bg-surface-container"
+                                    : "opacity-0 group-hover/card:opacity-100 bg-white text-secondary border-outline-variant hover:text-primary hover:border-primary/40",
                                 ].join(" ")}
                               >
                                 <span className="material-symbols-outlined text-sm">compare_arrows</span>
@@ -335,8 +329,8 @@ export default function JobCandidatesView({
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-md border-t border-slate-100">
-                    <span className="text-label-caps text-slate-400">
+                  <div className="flex items-center justify-between pt-md border-t border-outline-variant">
+                    <span className="text-label-caps text-secondary">
                       Page {safePage} / {totalPages}
                     </span>
                     <div className="flex gap-2">
@@ -344,14 +338,14 @@ export default function JobCandidatesView({
                         <button
                           type="button"
                           onClick={() => setPage(safePage - 1)}
-                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:border-primary hover:text-primary transition-colors"
+                          className="px-3 py-1.5 rounded-lg border border-outline-variant text-sm text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
                         >← Précédent</button>
                       )}
                       {safePage < totalPages && (
                         <button
                           type="button"
                           onClick={() => setPage(safePage + 1)}
-                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 hover:border-primary hover:text-primary transition-colors"
+                          className="px-3 py-1.5 rounded-lg border border-outline-variant text-sm text-on-surface-variant hover:border-primary hover:text-primary transition-colors"
                         >Suivant →</button>
                       )}
                     </div>
@@ -361,29 +355,29 @@ export default function JobCandidatesView({
 
               {/* Sidebar */}
               <aside className="w-full lg:w-72 space-y-lg lg:sticky lg:top-24 lg:h-fit shrink-0">
-                <div className="bg-white border border-slate-200 rounded-xl p-lg shadow-sm">
-                  <h4 className="font-label-caps text-label-caps text-primary uppercase tracking-widest mb-md">
+                <div className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm">
+                  <h4 className="font-label-caps text-label-caps text-primary uppercase tracking-[0.05em] mb-md">
                     Exigences
                   </h4>
                   {requirements.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {requirements.map((r) => (
-                        <span key={r} className="px-2 py-1 bg-white border border-slate-200 text-slate-600 text-label-caps rounded">
+                        <span key={r} className="px-2 py-1 bg-surface-container text-on-surface-variant text-label-caps rounded">
                           {r}
                         </span>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-body-sm text-slate-400">Aucune compétence définie.</p>
+                    <p className="text-body-sm text-secondary">Aucune compétence définie.</p>
                   )}
                 </div>
 
-                <div className="bg-blue-900 text-white rounded-xl p-lg shadow-lg">
+                <div className="bg-primary text-white rounded-xl p-lg">
                   <div className="flex items-center gap-2 mb-sm">
-                    <span className="material-symbols-outlined text-blue-300">auto_awesome</span>
-                    <h4 className="font-h3 text-body-md font-bold">Insight</h4>
+                    <span className="material-symbols-outlined text-primary-fixed-dim">auto_awesome</span>
+                    <h4 className="text-body-md font-bold">Insight</h4>
                   </div>
-                  <p className="text-body-sm text-blue-100 leading-relaxed">
+                  <p className="text-body-sm text-primary-fixed-dim leading-relaxed">
                     {strongCount} strong fit{strongCount !== 1 ? "s" : ""} sur {totalApplications} candidat{totalApplications !== 1 ? "s" : ""}.
                     {strongCount > 0 && totalApplications > 0
                       ? ` Taux de qualification : ${Math.round((strongCount / totalApplications) * 100)}%.`

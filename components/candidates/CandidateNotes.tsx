@@ -45,9 +45,9 @@ export default function CandidateNotes({
           placeholder="Ajoutez vos observations, impressions ou points de vigilance sur ce candidat…"
           className="w-full border border-outline-variant rounded-lg px-3 py-2.5 text-body-sm text-on-surface bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none leading-relaxed"
         />
-        {signalAnalysis && (
+        {notes.trim() && signalAnalysis && (
           <div className={[
-            "mt-2 px-3 py-2 rounded-md text-label-caps flex flex-col gap-1",
+            "mt-sm px-3 py-2 rounded-lg text-label-caps flex flex-col gap-1",
             signalAnalysis.tendency === "negative" && "bg-red-50 text-red-700",
             signalAnalysis.tendency === "positive" && "bg-emerald-50 text-emerald-700",
             signalAnalysis.tendency === "neutral"  && "bg-slate-50 text-slate-500",
@@ -57,7 +57,7 @@ export default function CandidateNotes({
               {signalAnalysis.tendency === "positive" && "Tendance positive détectée"}
               {signalAnalysis.tendency === "neutral"  && "Signaux mixtes"}
             </span>
-            <span className="text-xs opacity-75">
+            <span className="text-xs">
               {signalAnalysis.negativeMatches.length > 0 && <>Négatif : {signalAnalysis.negativeMatches.join(", ")}</>}
               {signalAnalysis.negativeMatches.length > 0 && signalAnalysis.positiveMatches.length > 0 && " — "}
               {signalAnalysis.positiveMatches.length > 0 && <>Positif : {signalAnalysis.positiveMatches.join(", ")}</>}

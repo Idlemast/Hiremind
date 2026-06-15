@@ -2,14 +2,32 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getEm, getCandidateById } from "@/lib/db";
+import { getEm, createUniqueCandidateSalt } from "@/lib/db";
 import { scoreCandidate, buildWhy } from "@/lib/triage";
 import { scoreToFit } from "@/lib/thresholds";
 import { analyzeInterviewNotes, notesScoreDelta } from "@/lib/interview-signals";
 import { extractSkillsFromText, parseManualSkills, mergeSkills } from "@/lib/extract-skills";
 import { Candidate, Application, Job } from "@/entities/index";
 import { candidateUrl } from "@/lib/slugify";
-import { createUniqueCandidateSalt } from "@/lib/db";
+
+function computeRescore(
+  skills: string[],
+  reqs: string[],
+  notes: string | undefined,
+): { score: number; gaps: string[]; why: string } {
+  const base     = scoreCandidate({ candidateSkills: skills, jobRequirements: reqs });
+  const trimmed  = notes?.trim();
+  const analysis = trimmed ? analyzeInterviewNotes(trimmed) : null;
+  const delta    = notesScoreDelta(analysis);
+  const adjusted = Math.max(0, Math.min(100, base.score + delta));
+  const fit      = scoreToFit(adjusted);
+  let why = buildWhy(adjusted, fit, base.matchedSkills, base.missingSkills, skills);
+  if (delta !== 0 && analysis) {
+    const sign  = delta > 0 ? `+${delta}` : `${delta}`;
+    why += ` Entretien : signaux ${analysis.tendency === "positive" ? "positifs" : "négatifs"} (${sign} pts).`;
+  }
+  return { score: adjusted, gaps: base.missingSkills, why };
+}
 
 export async function importCandidate(formData: FormData) {
   const jobId    = Number(formData.get("jobId"));
@@ -76,21 +94,8 @@ export async function updateCandidate(id: number, formData: FormData) {
   const applications = await em.find(Application, { candidate: { id } }, { populate: ["job"] });
   for (const app of applications) {
     const reqs = (app.job.requirements as string[] | null) ?? [];
-    const base  = scoreCandidate({ candidateSkills: skills, jobRequirements: reqs });
-
-    const notes    = app.notes?.trim();
-    const analysis = notes ? analyzeInterviewNotes(notes) : null;
-    const delta    = notesScoreDelta(analysis);
-    const adjusted = Math.max(0, Math.min(100, base.score + delta));
-    const fit      = scoreToFit(adjusted);
-
-    let why = buildWhy(adjusted, fit, base.matchedSkills, base.missingSkills, skills);
-    if (delta !== 0 && analysis) {
-      const sign  = delta > 0 ? `+${delta}` : `${delta}`;
-      const label = analysis.tendency === "positive" ? "positifs" : "négatifs";
-      why += ` Entretien : signaux ${label} (${sign} pts).`;
-    }
-    em.assign(app, { score: adjusted, gaps: base.missingSkills, why });
+    const r    = computeRescore(skills, reqs, app.notes);
+    em.assign(app, { score: r.score, gaps: r.gaps, why: r.why });
   }
 
   await em.flush();
@@ -105,25 +110,12 @@ export async function updateApplicationNotes(applicationId: number, notes: strin
   const app = await em.findOne(Application, { id: applicationId }, { populate: ["candidate", "job"] });
   if (!app) throw new Error("Application introuvable");
 
-  const skills = (app.candidate.skills as string[] | null) ?? [];
-  const reqs   = (app.job.requirements  as string[] | null) ?? [];
+  const skills  = (app.candidate.skills as string[] | null) ?? [];
+  const reqs    = (app.job.requirements  as string[] | null) ?? [];
+  const trimmed = notes.trim() || undefined;
+  const r       = computeRescore(skills, reqs, trimmed);
 
-  const base     = scoreCandidate({ candidateSkills: skills, jobRequirements: reqs });
-  const trimmed  = notes.trim() || undefined;
-  const analysis = trimmed ? analyzeInterviewNotes(trimmed) : null;
-  const delta    = notesScoreDelta(analysis);
-
-  const adjusted = Math.max(0, Math.min(100, base.score + delta));
-  const fit      = scoreToFit(adjusted);
-
-  let why = buildWhy(adjusted, fit, base.matchedSkills, base.missingSkills, skills);
-  if (delta !== 0 && analysis) {
-    const sign  = delta > 0 ? `+${delta}` : `${delta}`;
-    const label = analysis.tendency === "positive" ? "positifs" : "négatifs";
-    why += ` Entretien : signaux ${label} (${sign} pts).`;
-  }
-
-  em.assign(app, { notes: trimmed, score: adjusted, why });
+  em.assign(app, { notes: trimmed, score: r.score, why: r.why });
   await em.flush();
   revalidatePath(candidateUrl(app.candidate.salt!, app.candidate.name, app.job.salt!, app.job.title));
 }
@@ -185,7 +177,7 @@ export async function addApplicationToJob(candidateId: number, jobId: number) {
   em.persist(application);
   await em.flush();
 
-  const url = candidateUrl(candidate.salt!, candidate.name, application.id, job.title);
+  const url = candidateUrl(candidate.salt!, candidate.name, job.salt!, job.title);
   revalidatePath(url);
   redirect(url);
 }
@@ -205,10 +197,8 @@ export async function deleteApplication(applicationId: number) {
 
 export async function updateCandidateTags(id: number, tags: string[]) {
   const em        = await getEm();
-  const candidate = await getCandidateById(id);
+  const candidate = await em.findOne(Candidate, { id });
   if (!candidate) throw new Error("Candidat introuvable");
-
-  const ref = em.getReference(Candidate, id);
-  em.assign(ref, { tags });
+  em.assign(candidate, { tags });
   await em.flush();
 }

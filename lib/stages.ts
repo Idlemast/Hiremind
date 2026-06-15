@@ -43,9 +43,6 @@ export const STAGE_OPTIONS: StageOption[] = [
   { key: "offre_acceptee",        label: "Offre acceptée",                 group: "Décision" },
 ];
 
-// Ordered labels for quick lookup
-export const STAGE_LABELS = STAGE_OPTIONS.map((o) => o.label);
-
 // Default pipeline — subset of STAGE_OPTIONS in order
 export const DEFAULT_STAGES = [
   "Sourcing",
@@ -75,9 +72,7 @@ export function deriveProgress(index: number, total: number): number {
 }
 
 // Groups for display
-export function groupedStageOptions(): Record<string, StageOption[]> {
-  return STAGE_OPTIONS.reduce<Record<string, StageOption[]>>((acc, opt) => {
-    (acc[opt.group] ??= []).push(opt);
-    return acc;
-  }, {});
-}
+export const GROUPED_STAGE_OPTIONS: Record<string, StageOption[]> = STAGE_OPTIONS.reduce<Record<string, StageOption[]>>((acc, opt) => {
+  (acc[opt.group] ??= []).push(opt);
+  return acc;
+}, {});

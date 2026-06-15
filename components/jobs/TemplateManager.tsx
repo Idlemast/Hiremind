@@ -62,7 +62,7 @@ export default function TemplateManager({
         return (
           <div
             key={t.id}
-            className="bg-white border border-slate-200 rounded-xl p-lg flex flex-col gap-md shadow-sm hover:shadow-md transition-shadow relative group"
+            className="tonal-card rounded-xl p-lg flex flex-col gap-md hover:shadow-md transition-all relative group"
           >
             {/* Delete / confirmation */}
             {confirming === t.id ? (

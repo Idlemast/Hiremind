@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 
 const pageTitles: Record<string, string> = {
   "/dashboard":  "Dashboard",
-  "/jobs":       "Jobs",
+  "/jobs":       "Postes",
   "/candidates": "Candidats",
-  "/settings":   "Settings",
+  "/stats":      "Statistiques",
+  "/settings":   "Paramètres",
 };
 
 export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) {
@@ -25,6 +26,7 @@ export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) 
 
       {/* Hamburger (mobile only) */}
       <button
+        type="button"
         onClick={onMenuToggle}
         className="lg:hidden p-2 -ml-1 rounded-full hover:bg-slate-100 transition-colors shrink-0"
         aria-label="Menu"
@@ -40,7 +42,7 @@ export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) 
               <span className="material-symbols-outlined text-slate-500 text-xl">arrow_back</span>
             </Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
-            <Link href="/jobs" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Jobs</Link>
+            <Link href="/jobs" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Postes</Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
             <span className="font-bold text-primary truncate">New Requisition</span>
           </>
@@ -50,7 +52,7 @@ export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) 
               <span className="material-symbols-outlined text-slate-500 text-xl">arrow_back</span>
             </Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
-            <Link href="/candidates" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Candidates</Link>
+            <Link href="/candidates" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Candidats</Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
             <span className="font-bold text-primary truncate">Import</span>
           </>
@@ -60,7 +62,7 @@ export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) 
               <span className="material-symbols-outlined text-slate-500 text-xl">arrow_back</span>
             </Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
-            <Link href="/candidates" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Candidates</Link>
+            <Link href="/candidates" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Candidats</Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
             <span className="font-bold text-primary truncate">Profil</span>
           </>
@@ -70,7 +72,7 @@ export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) 
               <span className="material-symbols-outlined text-slate-500 text-xl">arrow_back</span>
             </Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
-            <Link href="/jobs" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Jobs</Link>
+            <Link href="/jobs" className="text-slate-500 hover:text-primary transition-colors hidden sm:inline">Postes</Link>
             <span className="text-slate-400 hidden sm:inline">/</span>
             <span className="font-bold text-primary truncate">Poste</span>
           </>
@@ -82,7 +84,7 @@ export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) 
       </div>
 
       <div className="flex items-center gap-3 shrink-0">
-        <button className="hidden sm:block hover:text-primary transition-colors text-slate-500">
+        <button type="button" aria-label="Notifications" className="hidden sm:block hover:text-primary transition-colors text-slate-500">
           <span className="material-symbols-outlined">notifications</span>
         </button>
       </div>

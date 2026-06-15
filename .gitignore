@@ -65,3 +65,7 @@ $RECYCLE.BIN/
 # ── Deployment ────────────────────────────────────────────────────────────────
 .vercel
 *.pem
+
+.*
+.claude
+.impeccable

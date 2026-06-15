@@ -154,9 +154,9 @@ export default function NewJobForm({
                     onClick={() => handleDeleteTemplate(t.id)}
                     disabled={deletePending}
                     title="Supprimer ce template"
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-slate-300 text-white text-xs hidden group-hover:flex items-center justify-center hover:bg-red-500 transition-colors disabled:opacity-50"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-slate-100 text-slate-400 text-xs hidden group-hover:flex items-center justify-center hover:bg-red-100 hover:text-red-500 transition-colors disabled:opacity-50"
                   >
-                    ×
+                    <span className="material-symbols-outlined text-sm">close</span>
                   </button>
                 </div>
               );

@@ -38,6 +38,11 @@ const FIT_BAR: Record<Fit, string> = {
   medium: "bg-amber-400",
   weak:   "bg-slate-300",
 };
+const FIT_RING: Record<Fit, string> = {
+  strong: "border-emerald-400",
+  medium: "border-amber-300",
+  weak:   "border-slate-300",
+};
 
 export default function CompareColumn({
   app,
@@ -77,7 +82,7 @@ export default function CompareColumn({
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className="relative w-14 h-14 rounded-xl border-4 border-emerald-400 flex items-center justify-center">
+            <div className={`relative w-14 h-14 rounded-xl border-4 ${FIT_RING[app.fit]} flex items-center justify-center`}>
               <span className="font-h3 text-h3 font-bold text-primary">{app.score}</span>
             </div>
             <span className="text-label-caps text-slate-400">/ 100</span>

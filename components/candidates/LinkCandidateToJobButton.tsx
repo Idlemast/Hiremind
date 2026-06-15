@@ -32,7 +32,7 @@ export default function LinkCandidateToJobButton({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+    <div className="flex flex-wrap items-center gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
       <div className="relative">
         <select
           value={selectedId}

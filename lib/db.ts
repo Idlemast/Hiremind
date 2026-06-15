@@ -5,6 +5,14 @@ import { Job, Candidate, Application, Setting, JobTemplate } from "../entities/i
 import { scoreToFit, DEFAULT_THRESHOLDS, type Thresholds } from "./thresholds";
 import { generateSalt } from "./slugify";
 
+async function uniqueSalt(conn: { execute(sql: string, params?: unknown[]): Promise<unknown> }, table: string): Promise<string> {
+  while (true) {
+    const s = generateSalt();
+    const rows = await conn.execute(`SELECT 1 FROM ${table} WHERE salt = ?`, [s]) as unknown[];
+    if (rows.length === 0) return s;
+  }
+}
+
 const getOrm = cache(async (): Promise<MikroORM> => {
   const orm  = await MikroORM.init(config);
   const conn = orm.em.getConnection();
@@ -77,21 +85,13 @@ const getOrm = cache(async (): Promise<MikroORM> => {
   await conn.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_job_salt ON job(salt) WHERE salt IS NOT NULL`);
   await conn.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_candidate_salt ON candidate(salt) WHERE salt IS NOT NULL`);
 
-  const uniqueSalt = async (table: string): Promise<string> => {
-    while (true) {
-      const s = generateSalt();
-      const rows = await conn.execute(`SELECT 1 FROM ${table} WHERE salt = ?`, [s]) as unknown[];
-      if (rows.length === 0) return s;
-    }
-  };
-
   const jobsNoSalt = await conn.execute("SELECT id FROM job WHERE salt IS NULL") as { id: number }[];
   for (const row of jobsNoSalt) {
-    await conn.execute("UPDATE job SET salt = ? WHERE id = ?", [await uniqueSalt("job"), row.id]);
+    await conn.execute("UPDATE job SET salt = ? WHERE id = ?", [await uniqueSalt(conn, "job"), row.id]);
   }
   const candidatesNoSalt = await conn.execute("SELECT id FROM candidate WHERE salt IS NULL") as { id: number }[];
   for (const row of candidatesNoSalt) {
-    await conn.execute("UPDATE candidate SET salt = ? WHERE id = ?", [await uniqueSalt("candidate"), row.id]);
+    await conn.execute("UPDATE candidate SET salt = ? WHERE id = ?", [await uniqueSalt(conn, "candidate"), row.id]);
   }
 
   await conn.execute(`CREATE TABLE IF NOT EXISTS job_template (
@@ -134,21 +134,11 @@ export async function getJobById(id: number) {
 }
 
 export async function createUniqueJobSalt(): Promise<string> {
-  const conn = (await getEm()).getConnection();
-  while (true) {
-    const s = generateSalt();
-    const rows = await conn.execute("SELECT 1 FROM job WHERE salt = ?", [s]) as unknown[];
-    if (rows.length === 0) return s;
-  }
+  return uniqueSalt((await getEm()).getConnection(), "job");
 }
 
 export async function createUniqueCandidateSalt(): Promise<string> {
-  const conn = (await getEm()).getConnection();
-  while (true) {
-    const s = generateSalt();
-    const rows = await conn.execute("SELECT 1 FROM candidate WHERE salt = ?", [s]) as unknown[];
-    if (rows.length === 0) return s;
-  }
+  return uniqueSalt((await getEm()).getConnection(), "candidate");
 }
 
 export async function getJobBySalt(salt: string) {
@@ -191,24 +181,6 @@ export async function getApplicationCountsByJob(): Promise<Record<number, number
   const counts: Record<number, number> = {};
   for (const row of rows) counts[row.job_id] = row.cnt;
   return counts;
-}
-
-export async function getJobMeta() {
-  const em   = await getEm();
-  const jobs = await em.find(Job, {}, { fields: ["department", "location"] });
-  const departments = [...new Set(jobs.map((j) => j.department))].sort();
-  const locations   = [...new Set(jobs.map((j) => j.location))].sort();
-  return { departments, locations };
-}
-
-export async function getStats() {
-  const em = await getEm();
-  const [jobCount, candidateCount, applicationCount] = await Promise.all([
-    em.count(Job),
-    em.count(Candidate),
-    em.count(Application),
-  ]);
-  return { jobCount, candidateCount, applicationCount };
 }
 
 export async function getThresholds(): Promise<Thresholds> {

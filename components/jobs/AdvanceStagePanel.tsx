@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { setJobStage } from "@/app/actions/jobs";
+import CopyButton from "@/components/ui/CopyButton";
 import type { Fit, Decision } from "@/lib/thresholds";
 
 export interface CandidateEmailData {
@@ -28,26 +29,6 @@ const FIT_CHIP: Record<Fit, string> = {
   weak:   "bg-slate-100 text-slate-500 border-slate-200",
 };
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const handle = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <button
-      type="button"
-      onClick={handle}
-      className="flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
-    >
-      <span className="material-symbols-outlined text-sm">
-        {copied ? "check" : "content_copy"}
-      </span>
-      {copied ? "Copié !" : "Copier"}
-    </button>
-  );
-}
 
 export default function AdvanceStagePanel({
   jobId,
@@ -143,15 +124,15 @@ export default function AdvanceStagePanel({
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm shrink-0">
-                          {c.name.split(" ").map((n) => n[0]).join("")}
+                          {c.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                         </div>
                         <div>
                           <p className="font-semibold text-body-sm text-on-surface">{c.name}</p>
                           {c.email && (
-                            <p className="text-label-caps text-slate-400">{c.email}</p>
+                            <p className="text-label-caps text-slate-500">{c.email}</p>
                           )}
                         </div>
-                        <span className="text-label-caps text-slate-400">{c.score}% match</span>
+                        <span className="text-label-caps text-slate-500">{c.score}% match</span>
                       </div>
 
                       {/* Sent toggle */}

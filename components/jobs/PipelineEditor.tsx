@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { groupedStageOptions } from "@/lib/stages";
+import { GROUPED_STAGE_OPTIONS } from "@/lib/stages";
 
 type Item = { id: string; label: string };
 
 function makeItems(labels: string[]): Item[] {
   return labels.map((label, i) => ({ id: `${i}-${label}`, label }));
 }
-
-const GROUPED = groupedStageOptions();
 
 export default function PipelineEditor({
   value,
@@ -19,7 +17,8 @@ export default function PipelineEditor({
   onChange: (stages: string[]) => void;
 }) {
   const [items, setItems] = useState<Item[]>(() => makeItems(value));
-  const dragSrc            = useRef<number | null>(null);
+  const dragSrc              = useRef<number | null>(null);
+  const [draggingIdx, setDraggingIdx] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
 
   function commit(next: Item[]) {
@@ -40,6 +39,7 @@ export default function PipelineEditor({
 
   function onDragStart(idx: number) {
     dragSrc.current = idx;
+    setDraggingIdx(idx);
   }
 
   function onDragOver(idx: number, e: React.DragEvent) {
@@ -50,6 +50,7 @@ export default function PipelineEditor({
   function onDrop(idx: number) {
     const src = dragSrc.current;
     dragSrc.current = null;
+    setDraggingIdx(null);
     setDragOver(null);
     if (src === null || src === idx) return;
     const next = [...items];
@@ -61,6 +62,7 @@ export default function PipelineEditor({
 
   function onDragEnd() {
     dragSrc.current = null;
+    setDraggingIdx(null);
     setDragOver(null);
   }
 
@@ -70,7 +72,7 @@ export default function PipelineEditor({
       {/* ── Pipeline list ──────────────────────────────────── */}
       <div className="space-y-1.5">
         {items.map((item, i) => {
-          const isDragging = dragSrc.current === i;
+          const isDragging = draggingIdx === i;
           const isOver     = dragOver === i;
 
           return (
@@ -124,7 +126,7 @@ export default function PipelineEditor({
         <p className="font-label-caps text-label-caps text-slate-400 uppercase tracking-widest">
           Ajouter une étape au pipeline
         </p>
-        {Object.entries(GROUPED).map(([group, opts]) => (
+        {Object.entries(GROUPED_STAGE_OPTIONS).map(([group, opts]) => (
           <div key={group}>
             <p className="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1.5">{group}</p>
             <div className="flex flex-wrap gap-1.5">

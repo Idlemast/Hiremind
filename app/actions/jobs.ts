@@ -123,27 +123,19 @@ export async function updateJobStages(jobId: number, stages: string[], currentSt
   revalidatePath(jobUrl(job.salt!, job.title));
 }
 
-export async function archiveJob(id: number) {
+async function setJobStatus(id: number, status: "open" | "closed") {
   const em  = await getEm();
   const job = await getJobById(id);
   if (!job) throw new Error("Poste introuvable");
-  em.assign(em.getReference(Job, id), { status: "closed" });
+  em.assign(em.getReference(Job, id), { status });
   await em.flush();
   revalidatePath(jobUrl(job.salt!, job.title));
   revalidatePath("/jobs");
   revalidatePath("/dashboard");
 }
 
-export async function unarchiveJob(id: number) {
-  const em  = await getEm();
-  const job = await getJobById(id);
-  if (!job) throw new Error("Poste introuvable");
-  em.assign(em.getReference(Job, id), { status: "open" });
-  await em.flush();
-  revalidatePath(jobUrl(job.salt!, job.title));
-  revalidatePath("/jobs");
-  revalidatePath("/dashboard");
-}
+export async function archiveJob(id: number)   { return setJobStatus(id, "closed"); }
+export async function unarchiveJob(id: number) { return setJobStatus(id, "open"); }
 
 export async function duplicateJob(id: number) {
   const em  = await getEm();

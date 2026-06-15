@@ -1,7 +1,7 @@
 import { EntitySchema } from "@mikro-orm/sqlite";
 import { JsonType, OptionalProps } from "@mikro-orm/core";
-import type { Candidate } from "./Candidate";
-import type { Job } from "./Job";
+import { Candidate } from "./Candidate";
+import { Job } from "./Job";
 
 export class Application {
   [OptionalProps]?: "gaps" | "why" | "notes" | "stageIndex" | "appliedAt" | "movedAt";
@@ -22,8 +22,8 @@ export const ApplicationSchema = new EntitySchema({
   tableName: "application",
   properties: {
     id:         { primary: true, autoincrement: true, type: "integer" },
-    candidate:  { kind: "m:1", entity: "Candidate" },
-    job:        { kind: "m:1", entity: "Job" },
+    candidate:  { kind: "m:1", entity: () => Candidate },
+    job:        { kind: "m:1", entity: () => Job },
     score:      { type: "integer" },
     gaps:       { type: JsonType, nullable: true },
     why:        { type: "text", nullable: true },

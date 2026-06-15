@@ -1,6 +1,6 @@
 import { EntitySchema, Collection } from "@mikro-orm/sqlite";
 import { JsonType, OptionalProps } from "@mikro-orm/core";
-import type { Application } from "./Application";
+import { Application } from "./Application";
 
 export class Job {
   [OptionalProps]?: "progress" | "openedAt" | "applications" | "requirements" | "stages" | "currentStageIndex" | "budget" | "status" | "salt";
@@ -40,6 +40,6 @@ export const JobSchema = new EntitySchema({
     currentStageIndex: { type: "integer", default: 0, fieldName: "current_stage_index" },
     budget:            { type: "string", nullable: true },
     status:            { type: "string", default: "open" },
-    applications:      { kind: "1:m", entity: "Application", mappedBy: "job" },
+    applications:      { kind: "1:m", entity: () => Application, mappedBy: "job" },
   },
 });

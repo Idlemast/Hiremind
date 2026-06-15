@@ -33,7 +33,7 @@ export default function CandidateStageControl({
       >
         <span className="material-symbols-outlined text-sm">chevron_left</span>
       </button>
-      <span className="text-label-caps text-slate-400 flex-1 text-center">
+      <span className="text-label-caps text-slate-500 flex-1 text-center">
         {stageIndex + 1} / {stages.length}
       </span>
       <button
@@ -46,7 +46,7 @@ export default function CandidateStageControl({
         <span className="material-symbols-outlined text-sm">chevron_right</span>
       </button>
       {atJobLimit && stageIndex < stages.length - 1 && (
-        <span className="material-symbols-outlined text-sm text-amber-400" title="Limite du poste atteinte">lock</span>
+        <span className="material-symbols-outlined text-sm text-amber-600" title="Limite du poste atteinte">lock</span>
       )}
     </div>
   );

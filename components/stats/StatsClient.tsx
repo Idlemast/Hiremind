@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { candidateUrl } from "@/lib/slugify";
+import { scoreToFit } from "@/lib/thresholds";
 
 export type PlainApp = {
   id: number;
@@ -32,12 +33,6 @@ const PERIODS = {
 type PeriodKey = keyof typeof PERIODS;
 
 const SOURCE_COLORS = ["bg-blue-500","bg-violet-500","bg-emerald-500","bg-amber-500","bg-rose-500","bg-slate-400"];
-
-function scoreToFit(score: number, t: Thresholds) {
-  if (score >= t.strong) return "strong";
-  if (score >= t.medium) return "medium";
-  return "weak";
-}
 
 export default function StatsClient({
   allApps,

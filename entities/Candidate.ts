@@ -1,6 +1,6 @@
 import { EntitySchema, Collection } from "@mikro-orm/sqlite";
 import { JsonType, OptionalProps } from "@mikro-orm/core";
-import type { Application } from "./Application";
+import { Application } from "./Application";
 
 export class Candidate {
   [OptionalProps]?: "skills" | "tags" | "appliedAt" | "applications" | "salt";
@@ -34,6 +34,6 @@ export const CandidateSchema = new EntitySchema({
     skills:    { type: JsonType, nullable: true },
     tags:      { type: JsonType, nullable: true },
     appliedAt: { type: "Date", fieldName: "applied_at", defaultRaw: "CURRENT_TIMESTAMP" },
-    applications: { kind: "1:m", entity: "Application", mappedBy: "candidate" },
+    applications: { kind: "1:m", entity: () => Application, mappedBy: "candidate" },
   },
 });

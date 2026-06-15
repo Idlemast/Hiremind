@@ -37,7 +37,7 @@ export default function JobUrlImporter({ onImport }: Props) {
       <div className="flex items-center gap-sm">
         <span className="material-symbols-outlined text-primary">link</span>
         <h3 className="font-h3 text-h3 text-on-surface">Import from URL</h3>
-        <span className="text-xs text-slate-400 font-body-sm">optional</span>
+        <span className="text-label-caps text-slate-400">optional</span>
       </div>
       <p className="text-body-sm text-slate-500">
         Paste a job posting URL — Greenhouse, Lever, LinkedIn, Indeed, etc. The form will be pre-filled automatically.

@@ -11,22 +11,14 @@
     "db:seed": "tsx scripts/db-init.ts && tsx scripts/seed.ts",
     "db:seed:only": "tsx scripts/seed.ts"
   },
-  "mikro-orm": {
-    "useTsNode": true,
-    "configPaths": [
-      "./mikro-orm.config.ts"
-    ]
-  },
   "dependencies": {
     "@mikro-orm/core": "^7.1.3",
-    "@mikro-orm/migrations": "^7.1.3",
     "@mikro-orm/sqlite": "^7.1.3",
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "@mikro-orm/cli": "^7.1.3",
     "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",

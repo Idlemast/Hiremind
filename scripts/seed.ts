@@ -79,40 +79,40 @@ async function seed() {
 
   const designer = em.create(Job, {
     title: "Senior Product Designer", department: "Design", location: "Remote",
-    stages: P_DESIGN, currentStageIndex: 3, stage: P_DESIGN[3],
-    icon: "palette", iconBg: "bg-purple-50 text-purple-600", progress: 60,
+    stages: P_DESIGN, currentStageIndex: 3,
+    icon: "palette", iconBg: "bg-purple-50 text-purple-600",
     budget: "$150k – $180k", status: "open",
     requirements: REQS.designer.requirements,
     openedAt: daysAgo(68),
   });
   const engineer = em.create(Job, {
     title: "Lead Frontend Engineer", department: "Engineering", location: "London, UK",
-    stages: P_ENG, currentStageIndex: 4, stage: P_ENG[4],
-    icon: "code", iconBg: "bg-blue-50 text-primary", progress: 80,
+    stages: P_ENG, currentStageIndex: 4,
+    icon: "code", iconBg: "bg-blue-50 text-primary",
     budget: "$160k – $200k", status: "open",
     requirements: REQS.engineer.requirements,
     openedAt: daysAgo(55),
   });
   const pm = em.create(Job, {
     title: "Product Manager", department: "Product", location: "New York, NY",
-    stages: P_PM, currentStageIndex: 1, stage: P_PM[1],
-    icon: "campaign", iconBg: "bg-orange-50 text-orange-600", progress: 20,
+    stages: P_PM, currentStageIndex: 1,
+    icon: "campaign", iconBg: "bg-orange-50 text-orange-600",
     budget: "$130k – $160k", status: "open",
     requirements: REQS.pm.requirements,
     openedAt: daysAgo(42),
   });
   const dataEng = em.create(Job, {
     title: "Senior Data Engineer", department: "Data", location: "Paris, FR",
-    stages: P_DATA, currentStageIndex: 2, stage: P_DATA[2],
-    icon: "analytics", iconBg: "bg-teal-50 text-teal-600", progress: 40,
+    stages: P_DATA, currentStageIndex: 2,
+    icon: "analytics", iconBg: "bg-teal-50 text-teal-600",
     budget: "$110k – $140k", status: "open",
     requirements: REQS.data.requirements,
     openedAt: daysAgo(28),
   });
   const devops = em.create(Job, {
     title: "DevOps Engineer", department: "Infrastructure", location: "Berlin, DE",
-    stages: P_DEVOPS, currentStageIndex: 1, stage: P_DEVOPS[1],
-    icon: "settings_suggest", iconBg: "bg-slate-50 text-slate-600", progress: 20,
+    stages: P_DEVOPS, currentStageIndex: 1,
+    icon: "settings_suggest", iconBg: "bg-slate-50 text-slate-600",
     budget: "$120k – $150k", status: "open",
     requirements: REQS.devops.requirements,
     openedAt: daysAgo(14),

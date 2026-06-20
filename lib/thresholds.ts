@@ -73,10 +73,9 @@ export function getCommTemplates(
   return { advance, reject };
 }
 
+const frListFormatter = new Intl.ListFormat("fr", { style: "long", type: "conjunction" });
 function joinList(items: string[]): string {
-  if (items.length === 0) return "";
-  if (items.length === 1) return items[0];
-  return `${items.slice(0, -1).join(", ")} et ${items[items.length - 1]}`;
+  return frListFormatter.format(items);
 }
 
 function buildRejectionEmail(

@@ -71,6 +71,11 @@ export function deriveProgress(index: number, total: number): number {
   return Math.round((index / (total - 1)) * 100);
 }
 
+// Job.stage is derived, never stored — single source of truth for "what's the current stage name".
+export function currentStageName(stages: string[], index: number): string {
+  return stages[index] ?? stages[0] ?? "";
+}
+
 // Groups for display
 export const GROUPED_STAGE_OPTIONS: Record<string, StageOption[]> = STAGE_OPTIONS.reduce<Record<string, StageOption[]>>((acc, opt) => {
   (acc[opt.group] ??= []).push(opt);

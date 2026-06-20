@@ -6,7 +6,7 @@ import { getEm, getJobById, createUniqueJobSalt } from "@/lib/db";
 import { jobUrl } from "@/lib/slugify";
 import { Job, Application } from "@/entities/index";
 import { parseManualSkills } from "@/lib/extract-skills";
-import { DEFAULT_STAGES, deriveProgress } from "@/lib/stages";
+import { DEFAULT_STAGES } from "@/lib/stages";
 import { scoreCandidate, buildWhy } from "@/lib/triage";
 import { scoreToFit } from "@/lib/thresholds";
 
@@ -34,7 +34,7 @@ export async function createJob(formData: FormData) {
   const em = await getEm();
   em.persist(em.create(Job, {
     title, department, location, icon, iconBg, requirements,
-    stages, currentStageIndex: 0, stage: stages[0], progress: 0, budget, status: "open",
+    stages, currentStageIndex: 0, budget, status: "open",
     salt: await createUniqueJobSalt(),
   }));
   await em.flush();
@@ -88,11 +88,7 @@ export async function setJobStage(jobId: number, stageIndex: number) {
   const prevIdx      = job.currentStageIndex ?? 0;
   const idx          = Math.max(0, Math.min(stages.length - 1, stageIndex));
 
-  em.assign(em.getReference(Job, jobId), {
-    currentStageIndex: idx,
-    stage:    stages[idx],
-    progress: deriveProgress(idx, stages.length),
-  });
+  em.assign(em.getReference(Job, jobId), { currentStageIndex: idx });
 
   // When moving backward, cap any applications that exceed the new job stage
   if (idx < prevIdx) {
@@ -114,9 +110,7 @@ export async function updateJobStages(jobId: number, stages: string[], currentSt
   if (!job) throw new Error("Job introuvable");
 
   const idx = Math.max(0, Math.min(stages.length - 1, currentStageIndex));
-  em.assign(em.getReference(Job, jobId), {
-    stages, currentStageIndex: idx, stage: stages[idx] ?? "", progress: deriveProgress(idx, stages.length),
-  });
+  em.assign(em.getReference(Job, jobId), { stages, currentStageIndex: idx });
   await em.flush();
 
   revalidatePath("/jobs");
@@ -149,7 +143,7 @@ export async function duplicateJob(id: number) {
   const copy = em.create(Job, {
     title: `${job.title} (copie)`, department: job.department, location: job.location,
     icon: job.icon, iconBg: job.iconBg, requirements: job.requirements,
-    stages, currentStageIndex: 0, stage: stages[0], progress: 0,
+    stages, currentStageIndex: 0,
     budget: job.budget ?? undefined, status: "open", salt: copySalt,
   });
   em.persist(copy);

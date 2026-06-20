@@ -1,12 +1,19 @@
 import { getJobs, getDashboardStats, getThresholds } from "@/lib/db";
 import { jobUrl, candidateUrl } from "@/lib/slugify";
+import { currentStageName, deriveProgress } from "@/lib/stages";
 
 export default async function DashboardPage() {
   const thresholds = await getThresholds();
-  const [jobs, stats] = await Promise.all([
+  const [rawJobs, stats] = await Promise.all([
     getJobs(undefined, "open"),
     getDashboardStats(thresholds),
   ]);
+
+  const jobs = rawJobs.map((j) => {
+    const stages = (j.stages as string[] | null) ?? [];
+    const idx    = j.currentStageIndex ?? 0;
+    return { ...j, stageName: currentStageName(stages, idx), progressPct: deriveProgress(idx, stages.length) };
+  });
 
   const { total, strong, countByJob, topApp } = stats;
   const clarity = total > 0 ? Math.round((strong / total) * 100) : 0;
@@ -93,7 +100,7 @@ export default async function DashboardPage() {
           )}
 
           {(() => {
-            const stalled = jobs.find((j) => j.progress < 30);
+            const stalled = jobs.find((j) => j.progressPct < 30);
             if (!stalled) return null;
             const count = countByJob[stalled.id] ?? 0;
             return (
@@ -102,11 +109,11 @@ export default async function DashboardPage() {
                   <div className="flex justify-between items-start">
                     <h4 className="font-h3 text-h3 leading-tight">{stalled.title}</h4>
                     <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-label-caps font-bold uppercase">
-                      {stalled.stage}
+                      {stalled.stageName}
                     </span>
                   </div>
                   <p className="text-body-sm text-secondary">
-                    {count} candidate{count !== 1 ? "s" : ""} · {stalled.progress}% complete.
+                    {count} candidate{count !== 1 ? "s" : ""} · {stalled.progressPct}% complete.
                   </p>
                 </div>
                 <div className="mt-lg">
@@ -159,11 +166,11 @@ export default async function DashboardPage() {
                 </div>
                 <div className="mt-3 lg:hidden space-y-2">
                   <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
+                    <div className="h-full bg-emerald-500" style={{ width: `${job.progressPct}%` }} />
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-label-caps text-slate-500">{job.stage}</span>
-                    <span className="text-label-caps font-bold text-emerald-600">{job.progress}%</span>
+                    <span className="text-label-caps text-slate-500">{job.stageName}</span>
+                    <span className="text-label-caps font-bold text-emerald-600">{job.progressPct}%</span>
                   </div>
                 </div>
                 <div className="hidden lg:grid grid-cols-12 items-center">
@@ -184,11 +191,11 @@ export default async function DashboardPage() {
                   </div>
                   <div className="col-span-3 pr-8">
                     <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
+                      <div className="h-full bg-emerald-500" style={{ width: `${job.progressPct}%` }} />
                     </div>
                     <div className="flex justify-between mt-sm">
-                      <span className="text-label-caps font-bold text-slate-500 uppercase">STAGE: {job.stage}</span>
-                      <span className="text-label-caps font-bold text-emerald-600 uppercase">{job.progress}%</span>
+                      <span className="text-label-caps font-bold text-slate-500 uppercase">STAGE: {job.stageName}</span>
+                      <span className="text-label-caps font-bold text-emerald-600 uppercase">{job.progressPct}%</span>
                     </div>
                   </div>
                   <div className="col-span-2 text-right">

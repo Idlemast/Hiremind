@@ -16,15 +16,6 @@ export async function toggleIntegrationActive(id: number) {
   revalidatePath("/integrations");
 }
 
-export async function toggleIntegrationAutoSync(id: number) {
-  const em = await getEm();
-  const integration = await em.findOne(Integration, { id });
-  if (!integration) throw new Error("Intégration introuvable");
-  em.assign(integration, { autoSync: !integration.autoSync });
-  await em.flush();
-  revalidatePath("/integrations");
-}
-
 export async function syncIntegrationNow(id: number) {
   const em = await getEm();
   em.assign(em.getReference(Integration, id), { lastSyncAt: new Date() });

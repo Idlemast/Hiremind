@@ -10,7 +10,7 @@ import DuplicateJobButton from "@/components/jobs/DuplicateJobButton";
 import JobCandidatesView from "@/components/jobs/JobCandidatesView";
 import type { PlainApp } from "@/components/jobs/JobCandidatesView";
 import { scoreToFit } from "@/lib/thresholds";
-import { DEFAULT_STAGES } from "@/lib/stages";
+import { DEFAULT_STAGES, currentStageName, deriveProgress } from "@/lib/stages";
 
 export default async function JobDetailPage({
   params,
@@ -32,7 +32,8 @@ export default async function JobDetailPage({
   const rawStages    = job.stages as string[] | null | undefined;
   const stages       = rawStages?.length ? rawStages : DEFAULT_STAGES;
   const stageIndex   = job.currentStageIndex ?? 0;
-  const currentStage = stages[stageIndex] ?? job.stage;
+  const currentStage = currentStageName(stages, stageIndex);
+  const progressPct  = deriveProgress(stageIndex, stages.length);
   const requirements = (job.requirements as string[] | null) ?? [];
 
   const { total: totalApplications, strong: strongCount, medium: mediumCount, weak: weakCount } = stats;
@@ -109,7 +110,7 @@ export default async function JobDetailPage({
               Pipeline de recrutement
             </h3>
             <p className="text-body-sm text-slate-500 mt-0.5">
-              Étape actuelle : <strong>{currentStage}</strong> · {job.progress}% complété
+              Étape actuelle : <strong>{currentStage}</strong> · {progressPct}% complété
             </p>
           </div>
           <div className="flex items-center gap-3">

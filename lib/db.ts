@@ -113,7 +113,6 @@ const getOrm = cache(async (): Promise<MikroORM> => {
     name          TEXT     NOT NULL,
     description   TEXT     NOT NULL,
     active        INTEGER  NOT NULL DEFAULT 0,
-    auto_sync     INTEGER  NOT NULL DEFAULT 0,
     last_sync_at  DATETIME NULL
   )`);
   const integrationCount = await conn.execute(`SELECT COUNT(*) as n FROM integration`) as { n: number }[];
@@ -186,11 +185,6 @@ export async function getApplicationById(id: number) {
   return em.findOne(Application, { id }, { populate: ["candidate", "job"] });
 }
 
-export async function getCandidateById(id: number) {
-  const em = await getEm();
-  return em.findOne(Candidate, { id });
-}
-
 export async function getApplicationCountsByJob(): Promise<Record<number, number>> {
   const em   = await getEm();
   const conn = em.getConnection();
@@ -236,41 +230,6 @@ export async function getTemplates() {
     requirements: (t.requirements as string[] | null) ?? [],
     stages:       (t.stages       as string[] | null) ?? [],
   }));
-}
-
-// ── Paginated application query (filters + sort in SQL) ──────────────────────
-
-export async function getApplicationsPage(
-  jobId: number,
-  opts: { q?: string; sort?: string; page?: number; pageSize?: number },
-): Promise<{ items: Application[]; total: number }> {
-  const em = await getEm();
-  const { q = "", sort = "score", page = 1, pageSize = 20 } = opts;
-
-  const where: Record<string, unknown> = { job: { id: jobId } };
-  if (q) {
-    where.$or = [
-      { candidate: { name: { $like: `%${q}%` } } },
-      { candidate: { role: { $like: `%${q}%` } } },
-    ];
-  }
-
-  const orderBy =
-    sort === "name"   ? { candidate: { name: "ASC"  as const } } :
-    sort === "recent" ? { appliedAt:  "DESC" as const } :
-                        { score:      "DESC" as const };
-
-  const [items, total] = await Promise.all([
-    em.find(Application, where as any, {
-      populate: ["candidate", "job"],
-      orderBy,
-      limit:  pageSize,
-      offset: (page - 1) * pageSize,
-    }),
-    em.count(Application, where as any),
-  ]);
-
-  return { items, total };
 }
 
 // Lightweight stats: loads only scores via raw SQL, avoids full entity hydration

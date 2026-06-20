@@ -5,9 +5,5 @@ import { JobSchema, CandidateSchema, ApplicationSchema, SettingSchema, JobTempla
 export default defineConfig({
   dbName: path.join(process.cwd(), "hiremind.db"),
   entities: [JobSchema, CandidateSchema, ApplicationSchema, SettingSchema, JobTemplateSchema, IntegrationSchema],
-  migrations: {
-    path: path.join(process.cwd(), "migrations"),
-    glob: "!(*.d).{js,ts}",
-  },
   debug: process.env.NODE_ENV === "development",
 });

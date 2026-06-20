@@ -35,7 +35,6 @@ export default async function IntegrationsPage() {
               name={i.name}
               description={i.description}
               active={i.active}
-              autoSync={i.autoSync}
               lastSyncLabel={relativeSync(i.lastSyncAt)}
             />
           ))}

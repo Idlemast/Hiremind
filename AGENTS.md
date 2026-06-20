@@ -98,6 +98,21 @@ const b = job.budget;       // string | undefined
 const s = job.status;       // string ("open" | "closed")
 ```
 
+### Job — `stage` et `progress` sont dérivés, jamais écrits
+
+`Job.stage` et `Job.progress` sont des colonnes orphelines (même cas que `fit` sur `Application`) : elles existent en DB mais ne sont plus tenues à jour. Ne jamais les lire ni les écrire directement.
+
+```typescript
+// ❌ INTERDIT — valeurs périmées, plus jamais mises à jour
+const label = job.stage;
+em.create(Job, { ..., stage: stages[0], progress: 0 });
+
+// ✅ CORRECT — toujours dériver depuis stages + currentStageIndex
+import { currentStageName, deriveProgress } from "@/lib/stages";
+const label    = currentStageName(job.stages as string[], job.currentStageIndex ?? 0);
+const progress = deriveProgress(job.currentStageIndex ?? 0, (job.stages as string[]).length);
+```
+
 ### Sérialisation Server → Client
 
 Les entités MikroORM ne traversent pas la boundary Server → Client. Convertir en plain objects avant de passer en props :
@@ -257,6 +272,7 @@ Ne pas fusionner ces deux pages ni dupliquer leur logique sans réfléchir — e
 - ❌ `catch {}` autour d'une opération DB (utiliser `addCol()` ou logger).
 - ❌ Charger `getApplications()` sans `jobId` sur une page qui affiche un seul poste.
 - ❌ Stocker `fit` sur `Application` (champ supprimé, ne pas le réintroduire).
+- ❌ Lire ou écrire `Job.stage` / `Job.progress` directement — dériver via `currentStageName()` / `deriveProgress()` (`lib/stages.ts`).
 - ❌ Passer une entité MikroORM directement en prop Client Component.
 - ❌ `(entity as any).field` — si le champ n'est pas sur le type, l'ajouter à la classe et au schema.
 - ❌ Créer un endpoint API pour une mutation qui peut être une Server Action.

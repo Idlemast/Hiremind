@@ -3,15 +3,18 @@ import { JsonType, OptionalProps } from "@mikro-orm/core";
 import { Application } from "./Application";
 
 export class Job {
-  [OptionalProps]?: "progress" | "openedAt" | "applications" | "requirements" | "stages" | "currentStageIndex" | "budget" | "status" | "salt";
+  [OptionalProps]?: "stage" | "progress" | "openedAt" | "applications" | "requirements" | "stages" | "currentStageIndex" | "budget" | "status" | "salt";
   id!: number;
   salt?: string;
   title!: string;
   department!: string;
   location!: string;
-  stage!: string;
+  // Derived from stages[currentStageIndex] — never read directly, see lib/stages.ts#currentStageName().
+  // Column kept (like Application.fit) because SQLite can't cheaply drop it; always ignore its stored value.
+  stage: string = "";
   icon!: string;
   iconBg!: string;
+  // Derived from currentStageIndex/stages.length — see lib/stages.ts#deriveProgress(). Same caveat as `stage`.
   progress: number = 0;
   openedAt: Date = new Date();
   requirements: string[] = [];
@@ -30,7 +33,7 @@ export const JobSchema = new EntitySchema({
     title:      { type: "string" },
     department: { type: "string" },
     location:   { type: "string" },
-    stage:      { type: "string" },
+    stage:      { type: "string", default: "" },
     icon:       { type: "string" },
     iconBg:     { type: "string", length: 200 },
     progress:          { type: "integer", default: 0 },

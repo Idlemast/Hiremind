@@ -1,5 +1,6 @@
 import { getJobs, getTemplates, getApplicationCountsByJob, getFilledJobIds } from "@/lib/db";
 import { jobUrl } from "@/lib/slugify";
+import { currentStageName, deriveProgress } from "@/lib/stages";
 import SearchBar from "@/components/ui/SearchBar";
 import TemplateManager from "@/components/jobs/TemplateManager";
 
@@ -62,7 +63,9 @@ export default async function JobsPage({
         )}
 
         {jobs.map((job) => {
-          const stageName  = job.stage;
+          const jobStages  = (job.stages as string[] | null) ?? [];
+          const stageName  = currentStageName(jobStages, job.currentStageIndex ?? 0);
+          const progressPct = deriveProgress(job.currentStageIndex ?? 0, jobStages.length);
           const appCount   = appCounts[job.id] ?? 0;
           const daysOpen   = Math.round((Date.now() - new Date(job.openedAt).getTime()) / 86_400_000);
           const openedLabel = daysOpen === 0 ? "aujourd'hui" : daysOpen === 1 ? "hier" : `il y a ${daysOpen}j`;
@@ -105,11 +108,11 @@ export default async function JobsPage({
                   </div>
                 </div>
                 <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
+                  <div className="h-full bg-emerald-500" style={{ width: `${progressPct}%` }} />
                 </div>
                 <div className="flex justify-between">
                   <span className="text-label-caps text-slate-500 truncate max-w-[60%]">{stageName}</span>
-                  <span className="text-label-caps font-bold text-emerald-600">{job.progress}%</span>
+                  <span className="text-label-caps font-bold text-emerald-600">{progressPct}%</span>
                 </div>
               </div>
 
@@ -143,11 +146,11 @@ export default async function JobsPage({
                 </div>
                 <div className="col-span-3 pr-8">
                   <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-sm">
-                    <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
+                    <div className="h-full bg-emerald-500" style={{ width: `${progressPct}%` }} />
                   </div>
                   <div className="flex justify-between">
                     <span className="text-label-caps font-bold text-slate-400 truncate max-w-[60%]">{stageName}</span>
-                    <span className="text-label-caps font-bold text-emerald-600">{job.progress}%</span>
+                    <span className="text-label-caps font-bold text-emerald-600">{progressPct}%</span>
                   </div>
                 </div>
                 <div className="col-span-2 text-right">

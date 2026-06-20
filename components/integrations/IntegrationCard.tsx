@@ -1,21 +1,19 @@
 "use client";
 
 import { useTransition } from "react";
-import { toggleIntegrationActive, toggleIntegrationAutoSync, syncIntegrationNow } from "@/app/actions/integrations";
+import { toggleIntegrationActive, syncIntegrationNow } from "@/app/actions/integrations";
 
 export default function IntegrationCard({
   id,
   name,
   description,
   active,
-  autoSync,
   lastSyncLabel,
 }: {
   id: number;
   name: string;
   description: string;
   active: boolean;
-  autoSync: boolean;
   lastSyncLabel: string;
 }) {
   const [pending, startTransition] = useTransition();
@@ -38,18 +36,7 @@ export default function IntegrationCard({
 
       <p className="text-body-sm text-secondary">Dernière synchronisation : {lastSyncLabel}</p>
 
-      <div className="flex items-center justify-between gap-2 pt-sm border-t border-outline-variant">
-        <label className="flex items-center gap-2 text-body-sm text-on-surface-variant">
-          <input
-            type="checkbox"
-            checked={autoSync}
-            disabled={pending || !active}
-            onChange={() => startTransition(() => toggleIntegrationAutoSync(id))}
-            className="accent-primary"
-          />
-          Auto-sync
-        </label>
-
+      <div className="flex items-center justify-end gap-2 pt-sm border-t border-outline-variant">
         <div className="flex items-center gap-2">
           {active && (
             <button

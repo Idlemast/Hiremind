@@ -1,7 +1,7 @@
 import { MikroORM, type EntityManager } from "@mikro-orm/sqlite";
 import { cache } from "react";
 import config from "../mikro-orm.config";
-import { Job, Candidate, Application, Setting, JobTemplate } from "../entities/index";
+import { Job, Candidate, Application, Setting, JobTemplate, Integration } from "../entities/index";
 import { scoreToFit, DEFAULT_THRESHOLDS, type Thresholds } from "./thresholds";
 import { generateSalt } from "./slugify";
 
@@ -81,6 +81,9 @@ const getOrm = cache(async (): Promise<MikroORM> => {
   await addCol(`ALTER TABLE job ADD COLUMN status TEXT NOT NULL DEFAULT 'open'`);
   await addCol(`ALTER TABLE job ADD COLUMN salt TEXT NULL`);
   await addCol(`ALTER TABLE candidate ADD COLUMN salt TEXT NULL`);
+  await addCol(`ALTER TABLE application ADD COLUMN interview_at DATETIME NULL`);
+  await addCol(`ALTER TABLE application ADD COLUMN interview_status TEXT NULL`);
+  await addCol(`ALTER TABLE application ADD COLUMN interview_link TEXT NULL`);
 
   await conn.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_job_salt ON job(salt) WHERE salt IS NOT NULL`);
   await conn.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_candidate_salt ON candidate(salt) WHERE salt IS NOT NULL`);
@@ -106,6 +109,22 @@ const getOrm = cache(async (): Promise<MikroORM> => {
     stages       TEXT     NULL,
     created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
   )`);
+
+  await conn.execute(`CREATE TABLE IF NOT EXISTS integration (
+    id            INTEGER  NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name          TEXT     NOT NULL,
+    description   TEXT     NOT NULL,
+    active        INTEGER  NOT NULL DEFAULT 0,
+    auto_sync     INTEGER  NOT NULL DEFAULT 0,
+    last_sync_at  DATETIME NULL
+  )`);
+  const integrationCount = await conn.execute(`SELECT COUNT(*) as n FROM integration`) as { n: number }[];
+  if (integrationCount[0].n === 0) {
+    await conn.execute(`INSERT INTO integration (name, description) VALUES
+      ('Greenhouse', 'Système de suivi des candidats d''entreprise'),
+      ('Lever', 'Solution collaborative de recrutement'),
+      ('Workday', 'Plateforme cloud pour la finance et les RH')`);
+  }
 
   return orm;
 });
@@ -365,6 +384,63 @@ export async function getApplicationsLean(): Promise<{
     appliedAt:     r.applied_at,
     movedAt:       r.moved_at,
   }));
+}
+
+// ── Interview scheduling ──────────────────────────────────────────────────────
+
+export async function getScheduledInterviews(): Promise<{
+  id: number; candidateName: string; candidateSalt: string;
+  jobTitle: string; jobSalt: string; score: number;
+  interviewAt: string; interviewStatus: string; interviewLink: string | null;
+}[]> {
+  const em   = await getEm();
+  const conn = em.getConnection();
+  const rows = await conn.execute(`
+    SELECT a.id, a.score, a.interview_at, a.interview_status, a.interview_link,
+           c.name AS candidate_name, c.salt AS candidate_salt,
+           j.title AS job_title, j.salt AS job_salt
+    FROM application a
+    JOIN candidate c ON c.id = a.candidate_id
+    JOIN job j       ON j.id = a.job_id
+    WHERE a.interview_at IS NOT NULL
+    ORDER BY a.interview_at ASC
+  `) as {
+    id: number; score: number; interview_at: string; interview_status: string; interview_link: string | null;
+    candidate_name: string; candidate_salt: string; job_title: string; job_salt: string;
+  }[];
+
+  return rows.map((r) => ({
+    id: r.id, score: r.score,
+    candidateName: r.candidate_name, candidateSalt: r.candidate_salt,
+    jobTitle: r.job_title, jobSalt: r.job_salt,
+    interviewAt: r.interview_at, interviewStatus: r.interview_status ?? "pending",
+    interviewLink: r.interview_link,
+  }));
+}
+
+export async function getUnscheduledApplications(limit = 8): Promise<{
+  id: number; candidateName: string; jobTitle: string; score: number;
+}[]> {
+  const em   = await getEm();
+  const conn = em.getConnection();
+  const rows = await conn.execute(`
+    SELECT a.id, a.score, c.name AS candidate_name, j.title AS job_title
+    FROM application a
+    JOIN candidate c ON c.id = a.candidate_id
+    JOIN job j       ON j.id = a.job_id
+    WHERE a.interview_at IS NULL
+    ORDER BY a.score DESC
+    LIMIT ?
+  `, [limit]) as { id: number; score: number; candidate_name: string; job_title: string }[];
+
+  return rows.map((r) => ({ id: r.id, score: r.score, candidateName: r.candidate_name, jobTitle: r.job_title }));
+}
+
+// ── Integrations (read-only, no real external sync — see AGENTS.md) ──────────
+
+export async function getIntegrations() {
+  const em = await getEm();
+  return em.find(Integration, {}, { orderBy: { name: "ASC" } });
 }
 
 export async function saveThresholds(strong: number, medium: number): Promise<void> {

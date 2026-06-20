@@ -147,15 +147,6 @@ body {
   border-color: var(--color-surface-tint);
 }
 
-/* Status ribbon — 4px left-edge color indicator on cards */
-.status-ribbon {
-  width: 4px;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
-}
-
 /* Fade-in animation for page sections */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }

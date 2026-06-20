@@ -26,7 +26,8 @@ app/
     settings/
   actions/        ← Server Actions ("use server")
   api/            ← Route Handlers (REST)
-components/       ← Composants React (Client et Server)
+components/       ← Composants React (Client et Server), organisés par domaine :
+  candidates/, jobs/, layout/, settings/, stats/, ui/
 entities/         ← Classes MikroORM + EntitySchema
 lib/              ← Logique métier pure (triage, thresholds, stats…)
 migrations/       ← Migrations MikroORM (init uniquement)
@@ -164,7 +165,6 @@ Classes utilitaires custom (définies dans `globals.css`) :
 | Classe | Usage |
 |--------|-------|
 | `tonal-card` | Card surface principale |
-| `status-ribbon` | Bandeau coloré en bord gauche de card |
 | `text-primary` | Bleu primaire (#00288E) |
 | `text-on-surface` | Texte principal |
 | `text-on-surface-variant` | Texte secondaire |
@@ -208,7 +208,7 @@ Voir `DeleteJobButton.tsx` — confirmation inline dans le composant, pas de `wi
 
 ### Bouton de copie
 
-Utiliser `<CopyButton text={...} />` (`components/CopyButton.tsx`). Ne pas recréer la logique clipboard inline.
+Utiliser `<CopyButton text={...} />` (`components/ui/CopyButton.tsx`). Ne pas recréer la logique clipboard inline.
 
 ### Recherche URL-first (pages candidats et liste de postes)
 
@@ -230,11 +230,25 @@ Ne pas réintroduire `?view=kanban` dans les search params — la page charge to
 
 ### KanbanBoard
 
-- `components/KanbanBoard.tsx` : Client Component, drag-and-drop HTML5 natif.
+- `components/jobs/KanbanBoard.tsx` : Client Component, drag-and-drop HTML5 natif.
 - Reçoit `stages: string[]` + `initialCards: KanbanCard[]`.
 - Mise à jour optimiste : `setCards()` immédiat, Server Action en `useTransition`, rollback sur erreur. **Pas de `router.refresh()`.**
 - Limité à 100 cards (top score) — géré dans `JobCandidatesView`, pas dans `KanbanBoard`.
 - Cards minimalistes : point de couleur fit + nom + icône lien au survol.
+
+### URLs basées sur un salt (pas l'ID numérique)
+
+`Job` et `Candidate` ont un champ `salt?: string` (10 caractères aléatoires, `lib/slugify.ts#generateSalt()`). Toujours construire les URLs via `jobUrl(salt, title)` / `candidateUrl(salt, name, jobSalt?, jobTitle?)` — jamais `\`/jobs/${job.id}\`` à la main.
+
+Les routes lisent le salt comme le segment avant le premier `-` (`id.split("-")[0]`) puis résolvent via `getJobBySalt()` / `getCandidateBySalt()`. Le reste du segment (slug du titre/nom) est cosmétique, jamais vérifié.
+
+### Fiche candidature — deux points d'entrée, pas une route unique
+
+- `/candidates/[id]` : redirecteur seulement (vers la 1ère Application du candidat, ou état vide si aucune).
+- `/jobs/[id]/candidates/[candidateId]` (`CandidateJobProfilePage`) : profil **canonique**, point d'entrée poste-first. Seule version avec `TagEditor` + boutons de suppression + lien candidat↔poste.
+- `/candidates/[id]/applications/[appId]` (`ApplicationDetailPage`) : point d'entrée candidat-first (depuis `/candidates` ou le switcher multi-candidatures). Contenu plus restreint (pas de tags, pas de suppression).
+
+Ne pas fusionner ces deux pages ni dupliquer leur logique sans réfléchir — elles servent des points d'entrée différents avec des permissions d'action différentes.
 
 ---
 
@@ -249,3 +263,5 @@ Ne pas réintroduire `?view=kanban` dans les search params — la page charge to
 - ❌ `fetch(userProvidedUrl)` côté serveur sans validation via `isSafeUrl()`.
 - ❌ Appeler `router.refresh()` dans `KanbanBoard` — la mise à jour optimiste suffit, le refresh cause un rechargement visible.
 - ❌ Réintroduire `?view=kanban` dans les search params de `/jobs/[id]` — le toggle est en `useState` dans `JobCandidatesView`.
+- ❌ Construire une URL job/candidat à la main avec l'ID numérique — toujours `jobUrl()` / `candidateUrl()` (`lib/slugify.ts`).
+- ❌ Réintroduire `.status-ribbon` (bandeau de couleur en bord de card) — banni explicitement par `DESIGN.md` et supprimé de `globals.css`, remplacé par des chips/points de couleur.

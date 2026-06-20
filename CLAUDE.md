@@ -28,9 +28,12 @@ L'application tourne en local sur la machine du recruteur. Il n'y a pas encore d
 - Templates de postes réutilisables
 - Statistiques globales (`/stats`) avec tendance temporelle, gaps fréquents, candidats bloqués
 - Export CSV des candidatures
+- Comparaison côte-à-côte de deux candidatures (`/jobs/[id]/compare`)
+- URLs basées sur un salt aléatoire (non-énumérables) plutôt que sur l'ID numérique
 
 ## Fichiers de référence
 
+- `DESIGN.md` / `PRODUCT.md` (racine de l'app) — spec de design system et registre produit/marque vivants ; source de vérité pour le style, à tenir à jour si le système visuel change
 - `todo.md` (racine du projet) — fonctionnalités restantes à implémenter avec détail technique
 - `updates.md` (racine du projet) — journal de bord des sessions de développement
 - `wiki/` — documentation produit (vision, concepts, design)

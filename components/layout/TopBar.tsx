@@ -4,11 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard":  "Dashboard",
-  "/jobs":       "Postes",
-  "/candidates": "Candidats",
-  "/stats":      "Statistiques",
-  "/settings":   "Paramètres",
+  "/dashboard":    "Dashboard",
+  "/jobs":         "Postes",
+  "/candidates":   "Candidats",
+  "/interviews":   "Entretiens",
+  "/integrations": "Intégrations",
+  "/stats":        "Statistiques",
+  "/settings":     "Paramètres",
 };
 
 export default function TopBar({ onMenuToggle }: { onMenuToggle?: () => void }) {

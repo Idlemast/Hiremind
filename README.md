@@ -61,7 +61,8 @@ Open [http://localhost:3000](http://localhost:3000) — the app redirects to `/d
 | `pnpm start` | Start the production build |
 | `pnpm lint` | Run ESLint |
 | `pnpm db:init` | Create the SQLite schema (drops existing tables) |
-| `pnpm db:seed` | Seed sample jobs and candidates |
+| `pnpm db:seed` | `db:init` + seed sample jobs and candidates |
+| `pnpm db:seed:only` | Seed sample data without resetting the schema |
 | `pnpm db:reset` | `db:init` + `db:seed` in one step |
 
 ## Environment variables

@@ -1,10 +1,10 @@
 import { defineConfig } from "@mikro-orm/sqlite";
 import path from "path";
-import { JobSchema, CandidateSchema, ApplicationSchema, SettingSchema, JobTemplateSchema } from "./entities/index";
+import { JobSchema, CandidateSchema, ApplicationSchema, SettingSchema, JobTemplateSchema, IntegrationSchema } from "./entities/index";
 
 export default defineConfig({
   dbName: path.join(process.cwd(), "hiremind.db"),
-  entities: [JobSchema, CandidateSchema, ApplicationSchema, SettingSchema, JobTemplateSchema],
+  entities: [JobSchema, CandidateSchema, ApplicationSchema, SettingSchema, JobTemplateSchema, IntegrationSchema],
   migrations: {
     path: path.join(process.cwd(), "migrations"),
     glob: "!(*.d).{js,ts}",

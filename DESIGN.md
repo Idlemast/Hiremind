@@ -231,7 +231,7 @@ All chips: Label Caps type. Remove button appears on hover only (`opacity: 0 →
 - **Shadow:** Card Ambient — `0 2px 4px rgba(0, 0, 0, 0.04)`.
 - **Border:** `1px solid #e2e8f0` at rest; shifts to Decisive Navy (`#00288e`) on hover. Transition: `border-color 200ms ease`.
 - **Internal Padding:** `lg` (24px) for standard cards; `md` (16px) for compact cards.
-- **Overflow:** `hidden` required when using absolute-positioned child elements (status ribbon, score overlays).
+- **Overflow:** `hidden` required when using absolute-positioned child elements (e.g. score overlays).
 
 ### Inputs / Fields
 - **Style:** White background, 1px `outline-subtle` border (`#c4c5d5`) at rest, 4px radius.
@@ -254,7 +254,7 @@ All chips: Label Caps type. Remove button appears on hover only (`opacity: 0 →
 - **No animation on fill.** Static, clear states only. No pulse, no shimmer. Calm, authoritative.
 
 ### Status Indicators
-The system uses an absolute-positioned 4px strip (`width: 4px, position: absolute, left: 0, top: 0`) for fit signals on cards. This is the existing `.status-ribbon` pattern. Phase toward semantic chip alternatives (Signal Strong/Medium/Weak chips) when refactoring, as the absolute-div strip approach is the progenitor of the `border-left` anti-pattern. The chip carries the same signal without structural fragility.
+Fit/priority signals are carried by semantic chips and small color dots, never by a colored border or strip on the card itself. The previous `.status-ribbon` pattern (an absolute-positioned 4px left strip) was removed app-wide on 2026-06-20 as the progenitor of the `border-left` anti-pattern — see the Don't rule below.
 
 ## 6. Do's and Don'ts
 
@@ -268,7 +268,7 @@ The system uses an absolute-positioned 4px strip (`width: 4px, position: absolut
 - **Do** keep all transitions at 150–250ms with `ease-in-out` or `ease-out` curves. No bounce, no elastic, no spring.
 
 ### Don't:
-- **Don't** use `border-left` or `border-right` greater than 1px as a colored stripe on cards, list items, or callouts. This is an absolute ban. The `.status-ribbon` div is the existing workaround; the better replacement is a semantic chip or tinted-background row. The `border-l-4` class found in `JobCandidatesView.tsx` line 278 is a direct violation — remove it.
+- **Don't** use `border-left` or `border-right` greater than 1px as a colored stripe on cards, list items, or callouts. This is an absolute ban. The `.status-ribbon` pattern (removed app-wide 2026-06-20) was the previous workaround; the replacement is a semantic chip, dot, or tinted-background row.
 - **Don't** use Workday, SAP, or Greenhouse's dense sidebar hierarchies, corporate gray palettes, or fortress navigation trees. HireMind is structured but not bureaucratic.
 - **Don't** use Notion's bubbly warmth, Linear's calculated coolness, or any consumer-SaaS rounded-everything aesthetic. Components are deliberate and professional, not playful.
 - **Don't** apply `backdrop-blur` to any surface other than the TopBar. The blur's meaning is "fixed above scroll." One instance.

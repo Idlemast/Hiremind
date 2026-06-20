@@ -47,7 +47,10 @@ export default async function JobDetailPage({
     fit:         scoreToFit(a.score, thresholds),
     stageIndex:  a.stageIndex,
     appliedAt:   new Date(a.appliedAt).toISOString(),
+    hired:       a.hired,
   }));
+
+  const isFilled = allApplications.some((a) => a.hired);
 
   return (
     <div className="p-4 lg:p-xl max-w-7xl mx-auto space-y-xl">
@@ -59,7 +62,18 @@ export default async function JobDetailPage({
             <span className="material-symbols-outlined text-2xl">{job.icon}</span>
           </div>
           <div className="min-w-0">
-            <h2 className="font-h1 text-h1 text-on-surface truncate">{job.title}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-h1 text-h1 text-on-surface truncate">{job.title}</h2>
+              {job.status === "closed" && (
+                <span className="text-label-caps font-semibold px-2 py-0.5 rounded uppercase text-secondary bg-surface-container shrink-0">Clôturé</span>
+              )}
+              {isFilled && (
+                <span className="flex items-center gap-1 text-label-caps font-semibold px-2 py-0.5 rounded uppercase text-emerald-700 bg-emerald-100 shrink-0">
+                  <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
+                  Poste validé
+                </span>
+              )}
+            </div>
             <p className="text-body-sm text-slate-500 mt-0.5 truncate">
               {job.department} · {job.location}
               {job.budget && <span className="ml-2 text-slate-400">· {job.budget}</span>}

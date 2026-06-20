@@ -7,7 +7,6 @@ const nav = [
   { href: "/dashboard",    label: "Dashboard",     icon: "dashboard" },
   { href: "/candidates",   label: "Candidats",     icon: "group" },
   { href: "/jobs",         label: "Postes",        icon: "work" },
-  { href: "/interviews",   label: "Entretiens",    icon: "event" },
   { href: "/integrations", label: "Intégrations",  icon: "cable" },
   { href: "/stats",        label: "Statistiques",  icon: "bar_chart" },
   { href: "/settings",     label: "Paramètres",    icon: "settings" },

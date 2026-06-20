@@ -22,9 +22,8 @@ export default async function CandidateBasePage({
     redirect(candidateUrl(candidate.salt!, candidate.name, first.job.salt!, first.job.title));
   }
 
-  const allJobs = await getJobs();
-  const availableJobs: JobOption[] = allJobs
-    .filter((j) => j.status !== "closed")
+  const openJobs = await getJobs(undefined, "open");
+  const availableJobs: JobOption[] = openJobs
     .map((j) => ({ id: j.id, title: j.title, department: j.department }));
 
   return (

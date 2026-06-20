@@ -2,7 +2,7 @@ import { getJobs } from "@/lib/db";
 import { importCandidate } from "@/app/actions/candidates";
 
 export default async function ImportCandidatePage() {
-  const jobs = await getJobs();
+  const jobs = await getJobs(undefined, "open");
 
   return (
     <div className="p-4 lg:p-xl max-w-3xl mx-auto space-y-lg">

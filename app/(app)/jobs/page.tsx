@@ -1,4 +1,4 @@
-import { getJobs, getTemplates, getApplicationCountsByJob } from "@/lib/db";
+import { getJobs, getTemplates, getApplicationCountsByJob, getFilledJobIds } from "@/lib/db";
 import { jobUrl } from "@/lib/slugify";
 import SearchBar from "@/components/ui/SearchBar";
 import TemplateManager from "@/components/jobs/TemplateManager";
@@ -9,17 +9,23 @@ export default async function JobsPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
-  const [jobs, templates, appCounts] = await Promise.all([
+  const [rawJobs, templates, appCounts, filledJobIds] = await Promise.all([
     getJobs(q || undefined),
     getTemplates(),
     getApplicationCountsByJob(),
+    getFilledJobIds(),
   ]);
+
+  const openCount = rawJobs.filter((j) => j.status !== "closed").length;
+  const jobs = [...rawJobs].sort((a, b) =>
+    a.status === b.status ? 0 : a.status === "closed" ? 1 : -1
+  );
 
   return (
     <div className="p-4 lg:p-xl space-y-xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <p className="text-body-sm text-slate-500">{jobs.length} active requisition{jobs.length !== 1 ? "s" : ""}</p>
+          <p className="text-body-sm text-slate-500">{openCount} active requisition{openCount !== 1 ? "s" : ""}</p>
           <SearchBar placeholder="Search by role, department…" defaultValue={q} />
         </div>
         <a
@@ -60,8 +66,10 @@ export default async function JobsPage({
           const appCount   = appCounts[job.id] ?? 0;
           const daysOpen   = Math.round((Date.now() - new Date(job.openedAt).getTime()) / 86_400_000);
           const openedLabel = daysOpen === 0 ? "aujourd'hui" : daysOpen === 1 ? "hier" : `il y a ${daysOpen}j`;
+          const isClosed = job.status === "closed";
+          const isFilled = filledJobIds.has(job.id);
           return (
-            <div key={job.id} className="tonal-card rounded-xl p-lg">
+            <div key={job.id} className={`tonal-card rounded-xl p-lg ${isClosed ? "opacity-60" : ""}`}>
 
               {/* Mobile card */}
               <div className="lg:hidden space-y-3">
@@ -71,7 +79,18 @@ export default async function JobsPage({
                       <span className="material-symbols-outlined text-base">{job.icon}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-sm text-slate-900 truncate">{job.title}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-sm text-slate-900 truncate">{job.title}</p>
+                        {isClosed && (
+                          <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded uppercase text-secondary bg-surface-container shrink-0">Clôturé</span>
+                        )}
+                        {isFilled && (
+                          <span className="flex items-center gap-1 text-label-caps font-semibold px-1.5 py-0.5 rounded uppercase text-emerald-700 bg-emerald-100 shrink-0">
+                            <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
+                            Validé
+                          </span>
+                        )}
+                      </div>
                       <p className="text-label-caps text-slate-500 truncate">{job.department} · {job.location} · <span className="text-slate-400">Ouvert {openedLabel}</span></p>
                     </div>
                   </div>
@@ -101,7 +120,18 @@ export default async function JobsPage({
                     <span className="material-symbols-outlined">{job.icon}</span>
                   </div>
                   <div>
-                    <p className="font-h3 text-body-md font-bold text-slate-900">{job.title}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-h3 text-body-md font-bold text-slate-900">{job.title}</p>
+                      {isClosed && (
+                        <span className="text-label-caps font-semibold px-1.5 py-0.5 rounded uppercase text-secondary bg-surface-container">Clôturé</span>
+                      )}
+                      {isFilled && (
+                        <span className="flex items-center gap-1 text-label-caps font-semibold px-1.5 py-0.5 rounded uppercase text-emerald-700 bg-emerald-100">
+                          <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
+                          Validé
+                        </span>
+                      )}
+                    </div>
                     <p className="text-label-caps text-slate-500">{job.department} · {job.location} · <span className="text-slate-400">Ouvert {openedLabel}</span></p>
                   </div>
                 </div>

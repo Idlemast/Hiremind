@@ -4,7 +4,7 @@ import { jobUrl, candidateUrl } from "@/lib/slugify";
 export default async function DashboardPage() {
   const thresholds = await getThresholds();
   const [jobs, stats] = await Promise.all([
-    getJobs(),
+    getJobs(undefined, "open"),
     getDashboardStats(thresholds),
   ]);
 

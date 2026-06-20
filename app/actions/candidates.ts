@@ -8,7 +8,7 @@ import { scoreToFit } from "@/lib/thresholds";
 import { analyzeInterviewNotes, notesScoreDelta } from "@/lib/interview-signals";
 import { extractSkillsFromText, parseManualSkills, mergeSkills } from "@/lib/extract-skills";
 import { Candidate, Application, Job } from "@/entities/index";
-import { candidateUrl } from "@/lib/slugify";
+import { candidateUrl, jobUrl } from "@/lib/slugify";
 
 function computeRescore(
   skills: string[],
@@ -143,6 +143,19 @@ export async function updateApplicationStage(applicationId: number, stageIndex: 
   }
 
   revalidatePath(candidateUrl(app.candidate.salt!, app.candidate.name, app.job.salt!, app.job.title));
+}
+
+export async function setApplicationHired(applicationId: number, hired: boolean) {
+  const em  = await getEm();
+  const app = await em.findOne(Application, { id: applicationId }, { populate: ["candidate", "job"] });
+  if (!app) throw new Error("Application introuvable");
+
+  em.assign(app, { hired });
+  await em.flush();
+
+  revalidatePath(candidateUrl(app.candidate.salt!, app.candidate.name, app.job.salt!, app.job.title));
+  revalidatePath(jobUrl(app.job.salt!, app.job.title));
+  revalidatePath("/jobs");
 }
 
 export async function deleteCandidate(id: number) {

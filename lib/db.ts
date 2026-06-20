@@ -81,9 +81,7 @@ const getOrm = cache(async (): Promise<MikroORM> => {
   await addCol(`ALTER TABLE job ADD COLUMN status TEXT NOT NULL DEFAULT 'open'`);
   await addCol(`ALTER TABLE job ADD COLUMN salt TEXT NULL`);
   await addCol(`ALTER TABLE candidate ADD COLUMN salt TEXT NULL`);
-  await addCol(`ALTER TABLE application ADD COLUMN interview_at DATETIME NULL`);
-  await addCol(`ALTER TABLE application ADD COLUMN interview_status TEXT NULL`);
-  await addCol(`ALTER TABLE application ADD COLUMN interview_link TEXT NULL`);
+  await addCol(`ALTER TABLE application ADD COLUMN hired INTEGER NOT NULL DEFAULT 0`);
 
   await conn.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_job_salt ON job(salt) WHERE salt IS NOT NULL`);
   await conn.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_candidate_salt ON candidate(salt) WHERE salt IS NOT NULL`);
@@ -135,15 +133,17 @@ export async function getEm(): Promise<EntityManager> {
 
 // ── Query helpers ─────────────────────────────────────────────────────────────
 
-export async function getJobs(q?: string) {
+export async function getJobs(q?: string, status?: "open" | "closed") {
   const em = await getEm();
-  const where = q
-    ? { $or: [
-        { title:      { $like: `%${q}%` } },
-        { department: { $like: `%${q}%` } },
-        { location:   { $like: `%${q}%` } },
-      ] }
-    : {};
+  const where: Record<string, unknown> = {};
+  if (q) {
+    where.$or = [
+      { title:      { $like: `%${q}%` } },
+      { department: { $like: `%${q}%` } },
+      { location:   { $like: `%${q}%` } },
+    ];
+  }
+  if (status) where.status = status;
   return em.find(Job, where, { orderBy: { openedAt: "DESC" } });
 }
 
@@ -200,6 +200,15 @@ export async function getApplicationCountsByJob(): Promise<Record<number, number
   const counts: Record<number, number> = {};
   for (const row of rows) counts[row.job_id] = row.cnt;
   return counts;
+}
+
+export async function getFilledJobIds(): Promise<Set<number>> {
+  const em   = await getEm();
+  const conn = em.getConnection();
+  const rows = await conn.execute(
+    "SELECT DISTINCT job_id FROM application WHERE hired = 1"
+  ) as { job_id: number }[];
+  return new Set(rows.map((r) => r.job_id));
 }
 
 export async function getThresholds(): Promise<Thresholds> {
@@ -297,7 +306,7 @@ export async function getDashboardStats(thresholds: Thresholds): Promise<{
   const conn = em.getConnection();
 
   const scores = await conn.execute(
-    "SELECT job_id, score FROM application"
+    `SELECT a.job_id, a.score FROM application a JOIN job j ON j.id = a.job_id WHERE j.status = 'open'`
   ) as { job_id: number; score: number }[];
 
   let totalStrong = 0;
@@ -317,7 +326,7 @@ export async function getDashboardStats(thresholds: Thresholds): Promise<{
     FROM application a
     JOIN candidate c ON c.id = a.candidate_id
     JOIN job j       ON j.id = a.job_id
-    WHERE a.score >= ?
+    WHERE a.score >= ? AND j.status = 'open'
     ORDER BY a.score DESC
     LIMIT 1
   `, [thresholds.strong]) as {
@@ -384,56 +393,6 @@ export async function getApplicationsLean(): Promise<{
     appliedAt:     r.applied_at,
     movedAt:       r.moved_at,
   }));
-}
-
-// ── Interview scheduling ──────────────────────────────────────────────────────
-
-export async function getScheduledInterviews(): Promise<{
-  id: number; candidateName: string; candidateSalt: string;
-  jobTitle: string; jobSalt: string; score: number;
-  interviewAt: string; interviewStatus: string; interviewLink: string | null;
-}[]> {
-  const em   = await getEm();
-  const conn = em.getConnection();
-  const rows = await conn.execute(`
-    SELECT a.id, a.score, a.interview_at, a.interview_status, a.interview_link,
-           c.name AS candidate_name, c.salt AS candidate_salt,
-           j.title AS job_title, j.salt AS job_salt
-    FROM application a
-    JOIN candidate c ON c.id = a.candidate_id
-    JOIN job j       ON j.id = a.job_id
-    WHERE a.interview_at IS NOT NULL
-    ORDER BY a.interview_at ASC
-  `) as {
-    id: number; score: number; interview_at: string; interview_status: string; interview_link: string | null;
-    candidate_name: string; candidate_salt: string; job_title: string; job_salt: string;
-  }[];
-
-  return rows.map((r) => ({
-    id: r.id, score: r.score,
-    candidateName: r.candidate_name, candidateSalt: r.candidate_salt,
-    jobTitle: r.job_title, jobSalt: r.job_salt,
-    interviewAt: r.interview_at, interviewStatus: r.interview_status ?? "pending",
-    interviewLink: r.interview_link,
-  }));
-}
-
-export async function getUnscheduledApplications(limit = 8): Promise<{
-  id: number; candidateName: string; jobTitle: string; score: number;
-}[]> {
-  const em   = await getEm();
-  const conn = em.getConnection();
-  const rows = await conn.execute(`
-    SELECT a.id, a.score, c.name AS candidate_name, j.title AS job_title
-    FROM application a
-    JOIN candidate c ON c.id = a.candidate_id
-    JOIN job j       ON j.id = a.job_id
-    WHERE a.interview_at IS NULL
-    ORDER BY a.score DESC
-    LIMIT ?
-  `, [limit]) as { id: number; score: number; candidate_name: string; job_title: string }[];
-
-  return rows.map((r) => ({ id: r.id, score: r.score, candidateName: r.candidate_name, jobTitle: r.job_title }));
 }
 
 // ── Integrations (read-only, no real external sync — see AGENTS.md) ──────────

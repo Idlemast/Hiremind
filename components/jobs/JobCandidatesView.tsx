@@ -19,6 +19,7 @@ export type PlainApp = {
   fit: Fit;
   stageIndex: number;
   appliedAt: string;
+  hired: boolean;
 };
 
 const PAGE_SIZE = 20;
@@ -256,7 +257,12 @@ export default function JobCandidatesView({
                                     {a.name.split(" ").map((n) => n[0]).join("")}
                                   </div>
                                   <div className="min-w-0">
-                                    <h4 className="font-semibold text-body-md text-on-surface truncate">{a.name}</h4>
+                                    <div className="flex items-center gap-1.5">
+                                      <h4 className="font-semibold text-body-md text-on-surface truncate">{a.name}</h4>
+                                      {a.hired && (
+                                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0" style={{ fontVariationSettings: "'FILL' 1" }} title="Embauché">military_tech</span>
+                                      )}
+                                    </div>
                                     <p className="text-body-sm text-on-surface-variant truncate">{a.role}</p>
                                   </div>
                                 </div>

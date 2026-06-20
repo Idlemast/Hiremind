@@ -6,6 +6,7 @@ import TagEditor from "@/components/ui/TagEditor";
 import CandidateNotes from "@/components/candidates/CandidateNotes";
 import CandidateStageControl from "@/components/candidates/CandidateStageControl";
 import DeleteCandidateButton from "@/components/candidates/DeleteCandidateButton";
+import HiredToggle from "@/components/candidates/HiredToggle";
 import DeleteApplicationButton from "@/components/candidates/DeleteApplicationButton";
 import CopyButton from "@/components/ui/CopyButton";
 import LinkCandidateToJobButton from "@/components/candidates/LinkCandidateToJobButton";
@@ -23,11 +24,11 @@ export default async function CandidateJobProfilePage({
   const jobSalt       = id.split("-")[0];
   const candidateSalt = candidateId.split("-")[0];
 
-  const [job, candidate, thresholds, allJobs] = await Promise.all([
+  const [job, candidate, thresholds, openJobs] = await Promise.all([
     getJobBySalt(jobSalt),
     getCandidateBySalt(candidateSalt),
     getThresholds(),
-    getJobs(),
+    getJobs(undefined, "open"),
   ]);
   if (!job || !candidate) notFound();
 
@@ -38,8 +39,8 @@ export default async function CandidateJobProfilePage({
   const tags = (candidate.tags as string[] | null) ?? [];
 
   const appliedJobIds = new Set(applications.map((a) => a.job.id));
-  const availableJobs: JobOption[] = allJobs
-    .filter((j) => !appliedJobIds.has(j.id) && j.status !== "closed")
+  const availableJobs: JobOption[] = openJobs
+    .filter((j) => !appliedJobIds.has(j.id))
     .map((j) => ({ id: j.id, title: j.title, department: j.department }));
 
   const skills = (candidate.skills as string[]) ?? [];
@@ -117,6 +118,7 @@ export default async function CandidateJobProfilePage({
           </div>
         </div>
         <div className="flex gap-sm shrink-0 flex-wrap">
+          <HiredToggle applicationId={app.id} hired={app.hired} />
           <Link
             href={`${candidateUrl(candidate.salt!, candidate.name)}/edit`}
             className="p-2 sm:px-4 sm:py-2 bg-white border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 text-sm"

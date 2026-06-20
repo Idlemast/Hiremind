@@ -4,7 +4,7 @@ import { Candidate } from "./Candidate";
 import { Job } from "./Job";
 
 export class Application {
-  [OptionalProps]?: "gaps" | "why" | "notes" | "stageIndex" | "appliedAt" | "movedAt" | "interviewAt" | "interviewStatus" | "interviewLink";
+  [OptionalProps]?: "gaps" | "why" | "notes" | "stageIndex" | "appliedAt" | "movedAt" | "hired";
   id!: number;
   candidate!: Candidate;
   job!: Job;
@@ -15,9 +15,7 @@ export class Application {
   stageIndex: number = 0;
   appliedAt: Date = new Date();
   movedAt?: Date;
-  interviewAt?: Date;
-  interviewStatus?: string; // "pending" | "confirmed" | "reschedule"
-  interviewLink?: string;
+  hired: boolean = false;
 }
 
 export const ApplicationSchema = new EntitySchema({
@@ -34,8 +32,6 @@ export const ApplicationSchema = new EntitySchema({
     stageIndex:       { type: "integer", default: 0, fieldName: "stage_index" },
     appliedAt:        { type: "Date",    fieldName: "applied_at",        defaultRaw: "CURRENT_TIMESTAMP" },
     movedAt:          { type: "Date",    fieldName: "moved_at",  nullable: true },
-    interviewAt:      { type: "Date",    fieldName: "interview_at",     nullable: true },
-    interviewStatus:  { type: "string",  fieldName: "interview_status", nullable: true },
-    interviewLink:    { type: "string",  fieldName: "interview_link",   nullable: true },
+    hired:            { type: "boolean", default: false },
   },
 });

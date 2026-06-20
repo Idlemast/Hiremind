@@ -33,7 +33,7 @@ export default async function JobsPage({
 
       <div className="space-y-md">
         {/* Table header — desktop only */}
-        <div className="hidden lg:grid grid-cols-12 px-lg text-slate-400">
+        <div className="hidden lg:grid grid-cols-12 px-lg text-slate-500">
           <div className="col-span-5 font-label-caps text-label-caps">ROLE &amp; DEPARTMENT</div>
           <div className="col-span-2 font-label-caps text-label-caps text-center">VOLUME</div>
           <div className="col-span-3 font-label-caps text-label-caps">HIRE PROGRESS</div>
@@ -61,8 +61,7 @@ export default async function JobsPage({
           const daysOpen   = Math.round((Date.now() - new Date(job.openedAt).getTime()) / 86_400_000);
           const openedLabel = daysOpen === 0 ? "aujourd'hui" : daysOpen === 1 ? "hier" : `il y a ${daysOpen}j`;
           return (
-            <div key={job.id} className="tonal-card rounded-xl p-lg relative overflow-hidden">
-              <div className="status-ribbon bg-blue-500" />
+            <div key={job.id} className="tonal-card rounded-xl p-lg">
 
               {/* Mobile card */}
               <div className="lg:hidden space-y-3">
@@ -90,7 +89,7 @@ export default async function JobsPage({
                   <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-label-caps text-slate-400 truncate max-w-[60%]">{stageName}</span>
+                  <span className="text-label-caps text-slate-500 truncate max-w-[60%]">{stageName}</span>
                   <span className="text-label-caps font-bold text-emerald-600">{job.progress}%</span>
                 </div>
               </div>

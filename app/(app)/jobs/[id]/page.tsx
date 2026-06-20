@@ -99,7 +99,7 @@ export default async function JobDetailPage({
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-label-caps font-label-caps text-slate-400">{stageIndex + 1} / {stages.length}</span>
+            <span className="text-label-caps font-label-caps text-slate-500">{stageIndex + 1} / {stages.length}</span>
             {stageIndex < stages.length - 1 && (
               <Link href={`${jobUrl(job.salt!, job.title)}/advance`}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-container transition-colors shadow-sm"
@@ -119,12 +119,12 @@ export default async function JobDetailPage({
           { label: "Candidats",  value: totalApplications, icon: "group",        color: "text-primary" },
           { label: "Strong Fit", value: strongCount,        icon: "check_circle", color: "text-emerald-600" },
           { label: "À évaluer",  value: mediumCount,        icon: "pending",      color: "text-amber-600" },
-          { label: "Faible Fit", value: weakCount,          icon: "cancel",       color: "text-slate-400" },
+          { label: "Faible Fit", value: weakCount,          icon: "cancel",       color: "text-slate-500" },
         ].map(({ label, value, icon, color }) => (
-          <div key={label} className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm text-center">
+          <div key={label} className="tonal-card rounded-xl p-lg text-center">
             <span className={`material-symbols-outlined text-2xl ${color}`}>{icon}</span>
-            <p className="font-h1 text-2xl font-bold text-on-surface mt-1">{value}</p>
-            <p className="text-label-caps text-slate-400">{label}</p>
+            <p className="font-h2 text-h2 text-on-surface mt-1">{value}</p>
+            <p className="text-label-caps text-slate-500 mt-0.5">{label}</p>
           </div>
         ))}
       </div>

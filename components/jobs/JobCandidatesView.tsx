@@ -131,74 +131,53 @@ export default function JobCandidatesView({
       {/* ── Filter bar ──────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
-          {/* Search */}
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm pointer-events-none">
-              search
-            </span>
+          <div className="relative h-9">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-sm pointer-events-none">search</span>
             <input
               type="search"
               value={q}
               onChange={(e) => { setQ(e.target.value); setPage(1); }}
               placeholder="Rechercher un candidat…"
-              className="pl-9 pr-3 py-2 border border-outline-variant rounded-lg text-body-sm bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary w-52"
+              className="h-full pl-9 pr-3 py-0 border border-outline-variant rounded-lg text-body-sm bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary w-52"
             />
           </div>
-
-          {/* Sort (list only) */}
           {view === "list" && (
             <select
               value={sort}
               onChange={(e) => { setSort(e.target.value); setPage(1); }}
-              className="border border-outline-variant rounded-lg px-3 py-2 text-body-sm bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary"
+              className="h-9 border border-outline-variant rounded-lg px-3 py-0 text-body-sm bg-white focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary"
             >
               <option value="score">Meilleur score</option>
               <option value="name">Nom A→Z</option>
               <option value="recent">Plus récents</option>
             </select>
           )}
-
           <span className="text-label-caps text-secondary whitespace-nowrap">
             {view === "list" ? filtered.length : totalApplications} candidat{(view === "list" ? filtered.length : totalApplications) !== 1 ? "s" : ""}
             {view === "list" && q ? ` · "${q}"` : ""}
           </span>
         </div>
-
         <div className="flex items-center gap-2">
           {totalApplications > 0 && (
             <a
               href={`/api/candidates/export?jobId=${jobId}`}
               download
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-surface-container-low transition-colors"
+              className="h-9 flex items-center gap-2 px-3 bg-white border border-outline-variant text-on-surface-variant rounded-lg text-sm font-semibold hover:bg-surface-container-low transition-colors"
             >
-              <span className="material-symbols-outlined text-sm">download</span>
-              CSV
+              <span className="material-symbols-outlined text-sm">download</span>CSV
             </a>
           )}
           <Link
             href="/candidates/new"
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-container transition-colors"
+            className="h-9 flex items-center gap-2 px-4 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-container transition-colors"
           >
-            <span className="material-symbols-outlined text-sm">person_add</span>
-            Importer
+            <span className="material-symbols-outlined text-sm">person_add</span>Importer
           </Link>
-
-          {/* View toggle */}
-          <div className="flex rounded-lg border border-outline-variant overflow-hidden">
-            <button
-              type="button"
-              onClick={() => switchView("list")}
-              className={`p-2 transition-colors ${view === "list" ? "bg-primary text-white" : "bg-white text-secondary hover:text-primary"}`}
-              title="Vue liste"
-            >
+          <div className="h-9 flex rounded-lg border border-outline-variant overflow-hidden">
+            <button type="button" onClick={() => switchView("list")} className={`h-full px-2 flex items-center justify-center transition-colors ${view === "list" ? "bg-primary text-white" : "bg-white text-secondary hover:text-primary"}`} title="Vue liste">
               <span className="material-symbols-outlined text-sm">view_list</span>
             </button>
-            <button
-              type="button"
-              onClick={() => switchView("kanban")}
-              className={`p-2 transition-colors ${view === "kanban" ? "bg-primary text-white" : "bg-white text-secondary hover:text-primary"}`}
-              title="Vue kanban"
-            >
+            <button type="button" onClick={() => switchView("kanban")} className={`h-full px-2 flex items-center justify-center transition-colors ${view === "kanban" ? "bg-primary text-white" : "bg-white text-secondary hover:text-primary"}`} title="Vue kanban">
               <span className="material-symbols-outlined text-sm">view_kanban</span>
             </button>
           </div>
@@ -266,6 +245,7 @@ export default function JobCandidatesView({
                         {group.items.map((a) => {
                           const isSelectedForCompare = compareA === a.id;
                           return (
+
                             <div key={a.id} className="relative group/card">
                               <Link
                                 href={candidateUrl(a.candidateSalt, a.name, jobSalt, jobTitle)}
@@ -283,9 +263,7 @@ export default function JobCandidatesView({
                                 <div className="flex gap-2 flex-wrap sm:flex-1 sm:px-3">
                                   {a.skills.length > 0
                                     ? a.skills.slice(0, 3).map((skill) => (
-                                        <span key={skill} className={`px-2 py-0.5 text-label-caps font-label-caps rounded ${group.chip}`}>
-                                          {skill}
-                                        </span>
+                                        <span key={skill} className={`px-2 py-0.5 text-label-caps font-label-caps rounded ${group.chip}`}>{skill}</span>
                                       ))
                                     : <span className="text-body-sm text-secondary">Aucune compétence.</span>
                                   }
@@ -304,22 +282,11 @@ export default function JobCandidatesView({
                                   <span className="material-symbols-outlined text-secondary">chevron_right</span>
                                 </div>
                               </Link>
-                              <button
-                                type="button"
-                                onClick={() => handleCompare(a.id)}
-                                title={isSelectedForCompare ? "Désélectionner" : compareA !== null ? "Comparer avec ce candidat" : "Sélectionner pour comparer"}
-                                className={[
-                                  "absolute top-3 right-3 p-1.5 rounded-lg border transition-all",
-                                  isSelectedForCompare
-                                    ? "bg-primary text-white border-primary"
-                                    : compareA !== null
-                                    ? "bg-surface-container-low text-primary border-outline-variant hover:bg-surface-container"
-                                    : "opacity-0 group-hover/card:opacity-100 bg-white text-secondary border-outline-variant hover:text-primary hover:border-primary/40",
-                                ].join(" ")}
-                              >
+                              <button type="button" onClick={() => handleCompare(a.id)} title={isSelectedForCompare ? "Désélectionner" : compareA !== null ? "Comparer avec ce candidat" : "Sélectionner pour comparer"} className={["absolute top-3 right-3 p-1.5 rounded-lg border transition-all", isSelectedForCompare ? "bg-primary text-white border-primary" : compareA !== null ? "bg-surface-container-low text-primary border-outline-variant hover:bg-surface-container" : "opacity-0 group-hover/card:opacity-100 bg-white text-secondary border-outline-variant hover:text-primary hover:border-primary/40"].join(" ")}>
                                 <span className="material-symbols-outlined text-sm">compare_arrows</span>
                               </button>
                             </div>
+
                           );
                         })}
                       </div>
@@ -354,6 +321,7 @@ export default function JobCandidatesView({
               </section>
 
               {/* Sidebar */}
+
               <aside className="w-full lg:w-72 space-y-lg lg:sticky lg:top-24 lg:h-fit shrink-0">
                 <div className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm">
                   <h4 className="font-label-caps text-label-caps text-primary uppercase tracking-[0.05em] mb-md">
@@ -385,6 +353,7 @@ export default function JobCandidatesView({
                   </p>
                 </div>
               </aside>
+
             </div>
           )}
         </div>

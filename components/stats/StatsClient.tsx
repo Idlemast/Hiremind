@@ -168,7 +168,7 @@ export default function StatsClient({
 
       {/* ── Période ────────────────────────────────────────── */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-label-caps text-slate-400 uppercase tracking-widest">Période</span>
+        <span className="text-label-caps text-secondary uppercase">Période</span>
         {(Object.entries(PERIODS) as [PeriodKey, typeof PERIODS[PeriodKey]][]).map(([key, {label}]) => (
           <button key={key} type="button" onClick={() => setPeriod(key)}
             className={["px-4 py-1.5 rounded-full text-label-caps font-label-caps border transition-colors",
@@ -181,15 +181,17 @@ export default function StatsClient({
       {/* ── KPIs ───────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-md">
         {[
-          { label: "Candidatures", value: total,          color: "text-primary",     ribbon: "bg-blue-500" },
-          { label: "Strong Fit",   value: strongCount,    color: "text-emerald-600", ribbon: "bg-emerald-500" },
-          { label: "À évaluer",    value: mediumCount,    color: "text-amber-600",   ribbon: "bg-amber-400" },
-          { label: "Score moyen",  value: `${avgScore}%`, color: "text-primary",     ribbon: "bg-slate-400" },
-        ].map(({label,value,color,ribbon}) => (
-          <div key={label} className="tonal-card rounded-xl p-lg relative overflow-hidden flex flex-col justify-between h-28">
-            <div className={`status-ribbon ${ribbon}`} />
-            <p className="font-label-caps text-label-caps text-secondary uppercase">{label}</p>
-            <h3 className={`font-h1 text-h1 ${color}`}>{value}</h3>
+          { dot: "bg-blue-500",    label: "Candidatures", value: total          },
+          { dot: "bg-emerald-500", label: "Strong Fit",   value: strongCount    },
+          { dot: "bg-amber-400",   label: "À évaluer",    value: mediumCount    },
+          { dot: "bg-slate-400",   label: "Score moyen",  value: `${avgScore}%` },
+        ].map(({dot, label, value}) => (
+          <div key={label} className="tonal-card rounded-xl p-lg flex flex-col gap-sm">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
+              <p className="font-label-caps text-label-caps text-secondary uppercase">{label}</p>
+            </div>
+            <p className="font-h2 text-h2 text-on-surface">{value}</p>
           </div>
         ))}
       </div>

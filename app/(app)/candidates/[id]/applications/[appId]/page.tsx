@@ -90,8 +90,7 @@ export default async function ApplicationDetailPage({
       <div className="grid grid-cols-12 gap-lg">
 
         {/* The Why */}
-        <div className="col-span-12 lg:col-span-8 bg-white p-lg rounded-xl border border-outline-variant shadow-sm relative overflow-hidden">
-          <div className="status-ribbon bg-emerald-500" />
+        <div className="col-span-12 lg:col-span-8 bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
           <div className="flex items-center gap-sm mb-md">
             <span className="material-symbols-outlined text-emerald-600">auto_awesome</span>
             <h3 className="font-h3 text-h3">The Why</h3>
@@ -104,7 +103,7 @@ export default async function ApplicationDetailPage({
         {/* Hiring Stage */}
         <div className="col-span-12 lg:col-span-4 bg-white p-lg rounded-xl border border-outline-variant shadow-sm flex flex-col justify-between gap-md">
           <div>
-            <h3 className="font-label-caps text-label-caps text-slate-400 mb-md uppercase tracking-wider">Étape</h3>
+            <h3 className="font-label-caps text-label-caps text-secondary uppercase mb-md">Étape</h3>
             <div className="flex mb-sm items-center justify-between">
               <span className="text-label-caps font-semibold py-1 px-2 uppercase rounded-full text-emerald-600 bg-emerald-100 truncate max-w-[70%]">
                 {currentStage}
@@ -122,14 +121,14 @@ export default async function ApplicationDetailPage({
             />
           </div>
           <div>
-            <h3 className="font-label-caps text-label-caps text-slate-400 uppercase tracking-wider mb-1">Poste</h3>
+            <h3 className="font-label-caps text-label-caps text-secondary uppercase mb-1">Poste</h3>
             <Link href={jobUrl(job.salt!, job.title)} className="group">
               <p className="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">{job.title}</p>
               <p className="text-body-sm text-slate-500">{job.department}</p>
             </Link>
             {candidateSalary && jobBudget && (
               <div className="mt-sm pt-sm border-t border-slate-100">
-                <p className="text-label-caps text-slate-400 uppercase tracking-wider mb-1">Prétentions vs Budget</p>
+                <p className="text-label-caps text-secondary uppercase mb-1">Prétentions vs Budget</p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-body-sm font-semibold">{candidateSalary}</span>
                   <span className="text-slate-300">→</span>
@@ -160,8 +159,7 @@ export default async function ApplicationDetailPage({
             )}
           </div>
 
-          <div className="bg-white p-lg rounded-xl border border-outline-variant shadow-sm relative overflow-hidden">
-            <div className="status-ribbon bg-error" />
+          <div className="bg-white p-lg rounded-xl border border-outline-variant shadow-sm">
             <h3 className="font-h3 text-h3 mb-md flex items-center gap-sm">
               <span className="material-symbols-outlined text-error">cancel</span>
               Gaps

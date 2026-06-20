@@ -21,18 +21,18 @@ export default async function DashboardPage() {
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-lg">
         {[
-          { ribbon: "bg-blue-500",    label: "Active Reqs",      value: jobs.length,    sub: null },
-          { ribbon: "bg-emerald-500", label: "Decision Clarity",  value: `${clarity}%`, sub: `${strong} strong fits` },
-          { ribbon: "bg-amber-500",   label: "Pending Reviews",   value: total,          sub: null },
-          { ribbon: "bg-slate-400",   label: "Avg. Days Open",    value: `${avgDays}d`,  sub: null },
-        ].map(({ ribbon, label, value, sub }) => (
-          <div key={label} className="tonal-card rounded-xl p-lg relative overflow-hidden flex flex-col justify-between h-32">
-            <div className={`status-ribbon ${ribbon}`} />
-            <p className="font-label-caps text-label-caps text-secondary uppercase">{label}</p>
-            <div className="flex items-baseline gap-2">
-              <h2 className="font-h1 text-h1 text-primary">{value}</h2>
-              {sub && <span className="text-emerald-600 text-xs font-bold">{sub}</span>}
+          { dot: "bg-blue-500",    label: "Active Reqs",      value: jobs.length,    sub: null },
+          { dot: "bg-emerald-500", label: "Decision Clarity",  value: `${clarity}%`, sub: `${strong} strong fits` },
+          { dot: "bg-amber-500",   label: "Pending Reviews",   value: total,          sub: null },
+          { dot: "bg-slate-400",   label: "Avg. Days Open",    value: `${avgDays}d`,  sub: null },
+        ].map(({ dot, label, value, sub }) => (
+          <div key={label} className="tonal-card rounded-xl p-lg flex flex-col gap-sm">
+            <div className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
+              <p className="font-label-caps text-label-caps text-secondary uppercase">{label}</p>
             </div>
+            <p className="font-h2 text-h2 text-on-surface">{value}</p>
+            {sub && <p className="text-emerald-600 text-xs font-semibold">{sub}</p>}
           </div>
         ))}
       </section>
@@ -64,8 +64,7 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-12 gap-lg">
           {topApp && (
-            <div className="col-span-12 lg:col-span-8 tonal-card rounded-xl p-lg flex flex-col md:flex-row gap-lg relative">
-              <div className="status-ribbon bg-primary" />
+            <div className="col-span-12 lg:col-span-8 tonal-card rounded-xl p-lg flex flex-col md:flex-row gap-lg">
               <div className="w-full md:w-1/3 space-y-md">
                 <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-label-caps font-bold uppercase">
                   Critical Signal
@@ -84,14 +83,10 @@ export default async function DashboardPage() {
                 </div>
               </div>
               <div className="flex-1 h-48 md:h-auto rounded-lg bg-slate-100 flex items-center justify-center">
-                <div className="bg-white/90 p-lg rounded-xl shadow-xl border border-white/50 text-center">
-                  <p className="font-label-caps text-label-caps text-primary mb-2">MATCH SCORE</p>
-                  <div className="w-24 h-24 rounded-xl border-4 border-emerald-500 mx-auto flex items-center justify-center mb-md">
-                    <span className="font-h2 text-h2 text-primary">{topApp.score}</span>
-                  </div>
-                  <p className="text-body-sm font-semibold whitespace-nowrap">
-                    {topApp.candidateCompany}
-                  </p>
+                <div className="text-center px-4 py-2">
+                  <span className="font-label-caps text-label-caps text-secondary block mb-0.5">match score</span>
+                  <span className="font-h1 text-h1 text-on-surface block">{topApp.score}%</span>
+                  <span className="text-xs text-secondary mt-1 block">{topApp.candidateCompany}</span>
                 </div>
               </div>
             </div>
@@ -102,8 +97,7 @@ export default async function DashboardPage() {
             if (!stalled) return null;
             const count = countByJob[stalled.id] ?? 0;
             return (
-              <div className="col-span-12 md:col-span-6 lg:col-span-4 tonal-card rounded-xl p-lg relative flex flex-col justify-between">
-                <div className="status-ribbon bg-amber-400" />
+              <div className="col-span-12 md:col-span-6 lg:col-span-4 tonal-card rounded-xl p-lg flex flex-col justify-between">
                 <div className="space-y-sm">
                   <div className="flex justify-between items-start">
                     <h4 className="font-h3 text-h3 leading-tight">{stalled.title}</h4>
@@ -138,7 +132,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="space-y-md">
-          <div className="hidden lg:grid grid-cols-12 px-lg text-slate-400">
+          <div className="hidden lg:grid grid-cols-12 px-lg text-slate-500">
             <div className="col-span-5 font-label-caps text-label-caps">ROLE &amp; DEPARTMENT</div>
             <div className="col-span-2 font-label-caps text-label-caps text-center">VOLUME</div>
             <div className="col-span-3 font-label-caps text-label-caps">HIRE PROGRESS</div>
@@ -148,8 +142,7 @@ export default async function DashboardPage() {
           {jobs.map((job) => {
             const count = countByJob[job.id] ?? 0;
             return (
-              <div key={job.id} className="tonal-card rounded-xl p-lg relative overflow-hidden">
-                <div className="status-ribbon bg-blue-500" />
+              <div key={job.id} className="tonal-card rounded-xl p-lg">
                 <div className="flex items-start justify-between gap-3 lg:hidden">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={`w-9 h-9 rounded flex items-center justify-center shrink-0 ${job.iconBg}`}>
@@ -169,7 +162,7 @@ export default async function DashboardPage() {
                     <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-label-caps text-slate-400">{job.stage}</span>
+                    <span className="text-label-caps text-slate-500">{job.stage}</span>
                     <span className="text-label-caps font-bold text-emerald-600">{job.progress}%</span>
                   </div>
                 </div>
@@ -194,7 +187,7 @@ export default async function DashboardPage() {
                       <div className="h-full bg-emerald-500" style={{ width: `${job.progress}%` }} />
                     </div>
                     <div className="flex justify-between mt-sm">
-                      <span className="text-label-caps font-bold text-slate-400 uppercase">STAGE: {job.stage}</span>
+                      <span className="text-label-caps font-bold text-slate-500 uppercase">STAGE: {job.stage}</span>
                       <span className="text-label-caps font-bold text-emerald-600 uppercase">{job.progress}%</span>
                     </div>
                   </div>

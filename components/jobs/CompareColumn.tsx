@@ -33,11 +33,6 @@ const FIT_LABEL: Record<Fit, string> = {
   medium: "À évaluer",
   weak:   "Weak Fit",
 };
-const FIT_BAR: Record<Fit, string> = {
-  strong: "bg-emerald-500",
-  medium: "bg-amber-400",
-  weak:   "bg-slate-300",
-};
 const FIT_RING: Record<Fit, string> = {
   strong: "border-emerald-400",
   medium: "border-amber-300",
@@ -104,8 +99,7 @@ export default function CompareColumn({
       </div>
 
       {/* ── The Why ─────────────────────────────────────────── */}
-      <div className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm relative overflow-hidden">
-        <div className={`status-ribbon ${FIT_BAR[app.fit]}`} />
+      <div className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm">
         <h4 className="font-h3 text-h3 mb-sm flex items-center gap-2">
           <span className="material-symbols-outlined text-emerald-600">auto_awesome</span>
           The Why
@@ -157,8 +151,7 @@ export default function CompareColumn({
 
       {/* ── Gaps ────────────────────────────────────────────── */}
       {app.gaps.length > 0 && (
-        <div className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm relative overflow-hidden">
-          <div className="status-ribbon bg-error" />
+        <div className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm">
           <h4 className="font-h3 text-h3 mb-sm flex items-center gap-2">
             <span className="material-symbols-outlined text-error">cancel</span>
             Gaps ({app.gaps.length})
@@ -176,7 +169,7 @@ export default function CompareColumn({
 
       {/* ── Stage ───────────────────────────────────────────── */}
       <div className="bg-white border border-outline-variant rounded-xl p-lg shadow-sm">
-        <h4 className="font-label-caps text-label-caps text-slate-400 uppercase tracking-wider mb-sm">Étape pipeline</h4>
+        <h4 className="font-label-caps text-label-caps text-secondary uppercase mb-sm">Étape pipeline</h4>
         <div className="flex items-center justify-between mb-sm">
           <span className="text-label-caps font-semibold py-1 px-2 uppercase rounded-full text-emerald-600 bg-emerald-100">
             {stage}

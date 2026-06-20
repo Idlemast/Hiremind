@@ -32,7 +32,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="h-full antialiased">{children}</body>
+      <body className="h-full antialiased">{children}{/* impeccable-live-start */}
+<script src="http://localhost:8400/live.js"></script>
+{/* impeccable-live-end */}
+</body>
     </html>
   );
 }
